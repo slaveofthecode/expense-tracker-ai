@@ -1,0 +1,21 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    "AGENTS.md",
+    ".harness/memory/memory.md"
+  ],
+  "agent": {
+    "orchestrator": {
+      "description": "Coordina tareas complejas delegando a sub-agentes",
+      "prompt": "Lee .harness/agents/orchestrator.md"
+    },
+    "developer": {
+      "description": "Escribe código siguiendo las convenciones del proyecto",
+      "prompt": "Lee .harness/agents/developer.md"
+    },
+    "tester": {
+      "description": "Valida funcionamiento y buenas prácticas",
+      "prompt": "Lee .harness/agents/tester.md"
+    }
+  }
+}
