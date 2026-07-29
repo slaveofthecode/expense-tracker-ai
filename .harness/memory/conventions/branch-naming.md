@@ -2,31 +2,32 @@
 
 ## Formato
 
-<pre><code>
+```
 <tipo>/<número>-<descripción-corta>
-</code></pre>
+```
 
 ## Tipos
 
-| Tipo     | Uso                                    |
-| -------- | -------------------------------------- |
-| feat     | Nueva funcionalidad                    |
-| bug      | Corrección de error                    |
-| task     | Tareas de mantenimiento (deps, config) |
-| refactor | Refactorización sin cambio funcional   |
-| docs     | Cambios en documentación               |
+| Tipo      | Uso                                    |
+|-----------|----------------------------------------|
+| feat      | Nueva funcionalidad                    |
+| bug       | Corrección de error                    |
+| chore     | Tareas de mantenimiento (deps, config) |
+| refactor  | Refactorización sin cambio funcional   |
+| docs      | Cambios en documentación               |
+
+## Reglas
+
+- Antes de crear un branch, hacer `git pull origin main` para partir desde el estado más reciente de `main`
+- Descripción en inglés, separada por guiones (`-`)
+- Números correlativos por repositorio (no por tipo)
+- Usar minúsculas
+- Sin caracteres especiales ni acentos
 
 ## Ejemplos
 
 - `feat/001-add-new-column`
 - `bug/002-remove-unused-variable`
-- `task/003-update-bun-deps`
+- `chore/003-update-bun-deps`
 - `refactor/004-rename-user-service`
-
-## Reglas
-
-- Descripción en inglés, separada por guiones (`-`)
-- Número correlativo por repositorio (no por tipo)
-- Usar minúsculas
-- Sin caracteres especiales ni acentos
-  Y agregar una línea en AGENTS.md (en la sección de convenciones) referenciando este archivo.
+- `docs/005-update-readme`
