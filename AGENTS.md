@@ -1,7 +1,4 @@
 <!-- Fuente de verdad principal. Todos los tools la leen. -->
-<!--
-¿Por qué? Es el estándar emergente (usado por Claude, Cursor, Copilot, OpenCode). Un solo archivo que todos los tools leen.
--->
 
 # Expense Tracker AI
 
