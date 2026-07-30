@@ -1,53 +1,52 @@
-# Expense Tracker AI - Harness Documentation
+# Expense Tracker AI
 
-## Qué es esto?
+App de gastos con interfaz TUI (terminal), diseñada para llevar un control personal de gastos recurrentes, cuotas de tarjetas, préstamos y gastos compartidos.
 
-Este directorio `.harness/` contiene la configuración de agentes AI para desarrollar esta aplicación. Es un **harness básico** diseñado para ser legible por múltiples herramientas (Cursor, Claude, OpenCode, etc.).
+## Stack
 
-## Estructura
+| Tecnología | Uso |
+|---|---|
+| **Bun** | Runtime + package manager |
+| **TypeScript** | Lenguaje (strict mode) |
+| **Ink + React** | Interfaz TUI |
+| **SQLite** | Persistencia (v2+) |
 
-```
-.harness/
-├── agents/          # Definiciones de roles de agentes
-│   ├── orchestrator.md   # Coordina tareas complejas
-│   ├── developer.md      # Escribe código
-│   └── tester.md         # Valida código
-├── skills/          # Capacidades on-demand (se cargan solo cuando se necesitan)
-│   └── code-review/
-│       └── skill.md
-├── commands/        # Atajos para tareas frecuentes
-│   └── test.md
-└── memory/          # Memoria persistente entre sesiones
-    ├── memory.md
-    ├── project/
-    │   └── architecture.md
-    └── conventions/
-        └── code-style.md
+## Requisitos
+
+- [Bun](https://bun.sh) >= 1.0
+
+## Cómo empezar
+
+```bash
+bun install
+bun start
 ```
 
-## Cómo funciona
+## Comandos
 
-### Agentes
-Cada agente tiene un rol específico. El orquestador coordina, el developer escribe código, el tester valida.
+| Comando | Descripción |
+|---|---|
+| `bun start` | Iniciar la app TUI |
+| `bun test` | Ejecutar tests |
+| `bun run build` | Compilar |
 
-### Skills
-Son capacidades que se cargan solo cuando se necesitan. No siempre están activas.
+## Estructura del proyecto
 
-### Commands
-Son atajos: cuando el usuario dice "test", se ejecuta el comando definido en `commands/test.md`.
+```
+expense-tracker-ai/
+├── index.html        # Website público
+├── README.md         # Este archivo
+├── AGENTS.md         # Reglas para AI agents
 
-### Memory
-Los agentes "olvidan" entre sesiones. La memoria permite recordar decisiones y preferencias.
+├── docs/             # Documentación
+│   ├── ROADMAP.md    # Visión de versiones
+│   └── ARCHITECTURE.md # Decisiones técnicas
+├── .harness/         # Config de AI agents
+└── src/              # Código de la app
+```
 
-## Archivos importantes
+## Documentación
 
-- `AGENTS.md` (root): Fuente de verdad principal. Todos los tools la leen.
-- `opencode.json`: Configuración específica de OpenCode.
-
-## Para aprender más
-
-Cada archivo `.md` tiene comentarios al inicio explicando **por qué** existe. Lee los archivos en orden:
-1. `AGENTS.md`
-2. `.harness/agents/orchestrator.md`
-3. `.harness/skills/code-review/skill.md`
-4. `.harness/memory/memory.md`
+- [Arquitectura y decisiones técnicas](docs/ARCHITECTURE.md)
+- [Roadmap de versiones](docs/ROADMAP.md)
+- [Convención de branches](.harness/memory/conventions/branch-naming.md)
