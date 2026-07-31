@@ -43,7 +43,7 @@ Escribe código siguiendo las convenciones del proyecto, dejando listo para que 
 
 ### tester
 
-Revisa codigo y aplica los tests correspondiente para un correcto funcionamiento
+Revisa codigo y aplica los tests correspondiente para un correcto funcionamiento, y valida calidad contra `.harness/memory/conventions/code-style.md`
 
 ### reviewer
 

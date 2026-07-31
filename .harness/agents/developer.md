@@ -2,7 +2,6 @@
 name: developer
 description: Escribe código siguiendo las convenciones del proyecto
 tools: [read, write, edit, bash]
-model: anthropic/claude-sonnet-4-5
 ---
 
 # Developer

@@ -5,6 +5,16 @@
 - Usar `const` por defecto, `let` solo cuando sea necesario
 - Nunca usar `any`
 - Tipar explícitamente funciones y variables públicas
+- **Evitar non-null assertions (`!`) en código de producción.** Preferir guards (`if (!x) return`) o early returns.
+- En tests, `!` está permitido solo si va precedido de `expect(x).toBeDefined()`.
+
+## React
+
+- **No usar `useCallback` ni `useMemo` sin beneficio real.** Solo aplican cuando:
+  - La función se pasa a un child con `React.memo`
+  - La función es dependencia de un `useEffect`/`useMemo`/`useCallback`
+  - Se ha medido un problema de performance
+- Preferir funciones planas dentro del componente a hooks de memorización.
 
 ## Nombres
 
