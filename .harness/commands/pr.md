@@ -14,7 +14,7 @@ Crea un Pull Request en GitHub usando la cuenta autenticada.
 3. Obtiene el diff de cambios con `git diff main...HEAD --stat` y `git diff main...HEAD`
 4. Genera un título y descripción en inglés representativos de los cambios
 5. Muestra al usuario el resumen y pide confirmación antes de crear el PR
-6. Si el usuario confirma, ejecuta `gh pr create` con el título y body generados
+6. Si el usuario confirma, ejecuta `gh pr create --assignee "@me"` con el título y body generados
 7. Devuelve la URL del PR creado
 
 ## Formato del PR

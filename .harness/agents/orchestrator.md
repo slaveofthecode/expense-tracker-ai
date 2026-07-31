@@ -2,7 +2,6 @@
 name: orchestrator
 description: Coordina tareas complejas delegando a sub-agentes
 tools: [read, bash, task]
-model: anthropic/claude-sonnet-4-5
 ---
 
 # Orquestador

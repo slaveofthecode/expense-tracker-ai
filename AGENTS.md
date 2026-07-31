@@ -8,12 +8,14 @@ App de gastos con AI para análisis y categorización automática.
 
 - Usar `bun` en reemplazo de npm
 - Node.js + TypeScript
-- [pendiente: definir DB, framework, etc.]
+- TUI con Ink + React
+- Persistencia: SQLite (v2+)
 
 ## Comandos
 
 - `bun test` - Ejecutar tests
 - `bun run build` - Compilar
+- `bun start` - Iniciar app TUI
 
 ## Convenciones
 
@@ -23,6 +25,11 @@ App de gastos con AI para análisis y categorización automática.
 - Branches: seguir la convención en `.harness/memory/conventions/branch-naming.md`
 - La AI nunca debe hacer `git add`, `git commit` ni `git push`. El único responsable de stage/commit/push es el humano.
 - [agregar más conforme aprendas]
+
+## Referencias
+
+- `docs/ARCHITECTURE.md`: Decisiones técnicas y modelo de datos
+- `docs/ROADMAP.md`: Visión de versiones
 
 ## Agentes Disponibles
 
@@ -36,7 +43,7 @@ Escribe código siguiendo las convenciones del proyecto, dejando listo para que 
 
 ### tester
 
-Revisa codigo y aplica los tests correspondiente para un correcto funcionamiento
+Revisa codigo y aplica los tests correspondiente para un correcto funcionamiento, y valida calidad contra `.harness/memory/conventions/code-style.md`
 
 ### reviewer
 

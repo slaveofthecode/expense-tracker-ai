@@ -514,8 +514,8 @@
       <div class="hero-badge">AI-Powered Expense Tracking</div>
       <h1>Expense Tracker AI</h1>
       <p>
-        Smart expense tracking with AI-powered analysis and automatic categorization.
-        Built with Bun, TypeScript, and a multi-agent AI development workflow.
+        Terminal-based expense tracker with AI-powered analysis and automatic categorization.
+        Built with Ink + React, Bun, TypeScript, and a multi-agent AI development workflow.
       </p>
       <div class="hero-actions">
         <a href="https://github.com/gustavolopez/expense-tracker-ai" class="btn btn-primary" target="_blank" rel="noopener">View on GitHub</a>
@@ -593,6 +593,15 @@
           </div>
         </div>
         <div class="card">
+          <div class="card-icon">🖥️</div>
+          <h3>Ink + React</h3>
+          <p>Component-based TUI framework. Declarative terminal interfaces with React components and JSX.</p>
+          <div class="card-tags">
+            <span class="tag">TUI</span>
+            <span class="tag">Terminal</span>
+          </div>
+        </div>
+        <div class="card">
           <div class="card-icon">🧠</div>
           <h3>AI Agents</h3>
           <p>Multi-agent system with orchestrator, developer, tester, and reviewer roles working in concert.</p>
@@ -616,6 +625,21 @@
         <p>The brain of the project. This directory defines how AI agents collaborate to build the app.</p>
       </div>
 
+      <h3 style="margin-bottom: 1rem; font-size: 1.125rem;">Repository Structure</h3>
+      <div class="tree" style="margin-bottom: 2rem;">
+        <div class="depth-1 file">├── index.html        <span class="comment"># Public website</span></div>
+        <div class="depth-1 file">├── README.md         <span class="comment"># Human docs + changelog</span></div>
+        <div class="depth-1 file">├── AGENTS.md         <span class="comment"># AI instructions</span></div>
+        <div class="depth-1 file">├── opencode.json     <span class="comment"># OpenCode config</span></div>
+        <div class="depth-1 dir">├── docs/</div>
+        <div class="depth-2 file">│   ├── ROADMAP.md    <span class="comment"># Version roadmap</span></div>
+        <div class="depth-2 file">│   └── ARCHITECTURE.md <span class="comment"># Technical decisions</span></div>
+        <div class="depth-1 dir">├── .harness/</div>
+        <div class="depth-2 file">│   └── ...           <span class="comment"># AI agent config</span></div>
+        <div class="depth-1 dir">└── src/               <span class="comment"># Application code</span></div>
+      </div>
+
+      <h3 style="margin-bottom: 1rem; font-size: 1.125rem;">.harness Detail</h3>
       <div class="tree">
         <div class="depth-1 dir">.harness/</div>
         <div class="depth-2 dir">├── agents/</div>
@@ -626,10 +650,10 @@
         <div class="depth-3 file">│   └── code-review/</div>
         <div class="depth-4 file">│       └── skill.md     <span class="comment"># On-demand code review</span></div>
         <div class="depth-2 dir">├── commands/</div>
-        <div class="depth-3 file">│   └── test.md          <span class="comment"># "bun test" shortcut</span></div>
+        <div class="depth-3 file">│   ├── test.md          <span class="comment"># "bun test" shortcut</span></div>
+        <div class="depth-3 file">│   └── pr.md            <span class="comment"># Create GitHub PR</span></div>
         <div class="depth-2 dir">└── memory/</div>
-        <div class="depth-3 dir">    ├── project/</div>
-        <div class="depth-4 file">    │   └── architecture.md  <span class="comment"># Technical decisions</span></div>
+        <div class="depth-3 file">    ├── memory.md         <span class="comment"># Session memory</span></div>
         <div class="depth-3 dir">    └── conventions/</div>
         <div class="depth-4 file">        ├── code-style.md     <span class="comment"># Coding standards</span></div>
         <div class="depth-4 file">        └── branch-naming.md  <span class="comment"># Branch conventions</span></div>
