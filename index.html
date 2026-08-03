@@ -499,6 +499,7 @@
       </button>
       <ul class="nav-links">
         <li><a href="#about">About</a></li>
+        <li><a href="#run">Run</a></li>
         <li><a href="#tech">Stack</a></li>
         <li><a href="#harness">Harness</a></li>
         <li><a href="#branching">Branching</a></li>
@@ -521,7 +522,7 @@
       </p>
       <div class="hero-actions">
         <a href="https://github.com/gustavolopez/expense-tracker-ai" class="btn btn-primary" target="_blank" rel="noopener">View on GitHub</a>
-        <a href="#harness" class="btn btn-secondary">Explore the Harness</a>
+        <a href="#run" class="btn btn-secondary">Run It Live</a>
       </div>
     </div>
   </section>
@@ -560,6 +561,62 @@
             The project intentionally keeps its harness minimal. The goal is to understand
             how AI-agent architecture works in practice, without over-engineering.
           </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       How to Run
+       ========================================== -->
+  <section id="run">
+    <div class="container">
+      <div class="section-header">
+        <h2>Run It Live</h2>
+        <div class="section-divider"></div>
+        <p>Try the app in your own terminal. You only need Bun and a couple of commands.</p>
+      </div>
+
+      <div class="card" style="margin-bottom: 1.5rem;">
+        <h3>Requirements</h3>
+        <p>
+          <a href="https://bun.sh" target="_blank" rel="noopener">Bun</a> >= 1.0.
+          The TUI needs a real terminal (raw mode is not supported on piped stdin).
+        </p>
+      </div>
+
+      <div class="card" style="margin-bottom: 1.5rem;">
+        <h3>Steps</h3>
+        <pre><code>git clone https://github.com/slaveofthecode/expense-tracker-ai.git
+cd expense-tracker-ai
+bun install
+bun start</code></pre>
+        <p style="margin-top: 1rem; margin-bottom: 0;">
+          The first run seeds sample data into a local database. From then on, everything you add,
+          edit, or delete persists in <code>.data/expenses.db</code> (gitignored).
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>In-app shortcuts</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Key</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td><code>↑</code> / <code>↓</code></td><td>Navigate lists</td></tr>
+              <tr><td><code>Enter</code></td><td>Select / next form field</td></tr>
+              <tr><td><code>Esc</code></td><td>Back / quit</td></tr>
+              <tr><td><code>a</code></td><td>Add expense</td></tr>
+              <tr><td><code>i</code></td><td>Add item</td></tr>
+              <tr><td><code>e</code></td><td>Edit (item on dashboard, expense in detail)</td></tr>
+              <tr><td><code>d</code></td><td>Delete (with confirmation)</td></tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -682,17 +739,20 @@
         <div class="card">
           <div class="card-icon">🎭</div>
           <h3>Agents</h3>
-          <p>Role definitions for each AI agent. Each agent has a specific purpose, allowed tools, and behavioral rules.</p>
+          <p>Role definitions for each AI agent (orchestrator, developer, tester, reviewer). Each has a specific purpose, allowed tools, and behavioral rules.</p>
+          <p style="font-size: 0.8125rem; color: #999;"><strong>Who/When:</strong> the role matching the task — orchestrator plans, developer codes, tester validates, reviewer checks quality.</p>
           <div class="card-tags">
             <span class="tag tag-accent">orchestrator</span>
             <span class="tag tag-accent">developer</span>
             <span class="tag tag-accent">tester</span>
+            <span class="tag tag-accent">reviewer</span>
           </div>
         </div>
         <div class="card">
           <div class="card-icon">🔧</div>
           <h3>Skills</h3>
           <p>Optional capabilities loaded on demand. The <code>code-review</code> skill checks for bugs, security issues, and bad practices.</p>
+          <p style="font-size: 0.8125rem; color: #999;"><strong>Who/When:</strong> the agent performing the review, on request, whenever a code review is needed. Not run automatically on every task.</p>
           <div class="card-tags">
             <span class="tag tag-accent">code-review</span>
           </div>
@@ -700,15 +760,18 @@
         <div class="card">
           <div class="card-icon">⚙️</div>
           <h3>Commands</h3>
-          <p>Shortcuts for frequent tasks. The <code>test</code> command runs the test suite and reports results.</p>
+          <p>Shortcuts for frequent tasks, invoked by the user. <code>test</code> validates types, code-style, and tests. <code>pr</code> generates a title/description and creates a GitHub PR.</p>
+          <p style="font-size: 0.8125rem; color: #999;"><strong>Who/When:</strong> <code>test</code> runs via the tester agent; <code>pr</code> via the orchestrator. Both run whenever the user invokes them.</p>
           <div class="card-tags">
             <span class="tag tag-accent">test</span>
+            <span class="tag tag-accent">pr</span>
           </div>
         </div>
         <div class="card">
           <div class="card-icon">🧠</div>
           <h3>Memory</h3>
-          <p>Persistent storage for decisions and conventions across sessions. Agents read this to stay consistent.</p>
+          <p>Persistent storage for project decisions, user preferences, and session history. Conventions live under <code>memory/conventions/</code>.</p>
+          <p style="font-size: 0.8125rem; color: #999;"><strong>Who/When:</strong> all agents read it at session start and update it as preferences are learned. <code>code-style</code> applies on every coding task; <code>branch-naming</code> when creating branches.</p>
           <div class="card-tags">
             <span class="tag tag-accent">architecture</span>
             <span class="tag tag-accent">code-style</span>
