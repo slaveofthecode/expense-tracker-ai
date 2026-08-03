@@ -8,6 +8,14 @@ export const ITEM_TYPES = [
 
 export type ItemType = (typeof ITEM_TYPES)[number];
 
+export const ITEM_TYPE_LABELS: Record<ItemType, string> = {
+  credit_card: "Tarjeta de Crédito",
+  loan: "Préstamo",
+  recurring: "Recurrente",
+  insurance: "Seguro",
+  other: "Otro",
+};
+
 export interface Item {
   id: string;
   name: string;
