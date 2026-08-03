@@ -4,12 +4,12 @@ App de gastos con interfaz TUI (terminal), diseñada para llevar un control pers
 
 ## Stack
 
-| Tecnología | Uso |
-|---|---|
-| **Bun** | Runtime + package manager |
-| **TypeScript** | Lenguaje (strict mode) |
-| **Ink + React** | Interfaz TUI |
-| **SQLite** | Persistencia (v2+) |
+| Tecnología      | Uso                       |
+| --------------- | ------------------------- |
+| **Bun**         | Runtime + package manager |
+| **TypeScript**  | Lenguaje (strict mode)    |
+| **Ink + React** | Interfaz TUI              |
+| **SQLite**      | Persistencia (v2+)        |
 
 ## Requisitos
 
@@ -24,11 +24,11 @@ bun start
 
 ## Comandos
 
-| Comando | Descripción |
-|---|---|
-| `bun start` | Iniciar la app TUI |
-| `bun test` | Ejecutar tests |
-| `bun run build` | Compilar |
+| Comando         | Descripción        |
+| --------------- | ------------------ |
+| `bun start`     | Iniciar la app TUI |
+| `bun test`      | Ejecutar tests     |
+| `bun run build` | Compilar           |
 
 ## Estructura del proyecto
 
