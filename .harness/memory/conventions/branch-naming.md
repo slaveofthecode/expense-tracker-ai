@@ -18,7 +18,8 @@
 
 ## Reglas
 
-- Antes de crear un branch, hacer `git pull origin main` para partir desde el estado más reciente de `main`.
+- **NUNCA trabajar directamente sobre `main`.** Todo trabajo (código o docs) se hace siempre en una branch. `main` solo recibe merges de PRs.
+- Antes de crear una branch, hacer `git pull origin main` para partir desde el estado más reciente de `main`.
 - Descripción en inglés, separada por guiones (`-`).
 - Números correlativos por repositorio (no por tipo).
 - Usar minúsculas.
