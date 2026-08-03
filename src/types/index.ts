@@ -1,4 +1,12 @@
-export type ItemType = "credit_card" | "loan" | "recurring" | "insurance" | "other";
+export const ITEM_TYPES = [
+  "credit_card",
+  "loan",
+  "recurring",
+  "insurance",
+  "other",
+] as const;
+
+export type ItemType = (typeof ITEM_TYPES)[number];
 
 export interface Item {
   id: string;
@@ -26,6 +34,20 @@ export interface Expense {
   ownership: Ownership;
 }
 
+export interface NewItem {
+  name: string;
+  type: ItemType;
+}
+
+export interface NewExpense {
+  itemId: string;
+  description: string;
+  amount: number;
+  date: string;
+  installments?: Installment;
+  ownership: Ownership;
+}
+
 export interface MonthlySummary {
   itemId: string;
   month: string;
@@ -36,4 +58,8 @@ export interface MonthlySummary {
 export type Screen =
   | { name: "dashboard" }
   | { name: "itemDetail"; itemId: string }
-  | { name: "expenseDetail"; expenseId: string; itemId: string };
+  | { name: "expenseDetail"; expenseId: string; itemId: string }
+  | { name: "addItem" }
+  | { name: "editItem"; itemId: string }
+  | { name: "addExpense"; itemId?: string }
+  | { name: "editExpense"; expenseId: string; itemId: string };
