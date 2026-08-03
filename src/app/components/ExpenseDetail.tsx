@@ -1,19 +1,52 @@
 import { Box, Text, useInput } from "ink";
+import { useState } from "react";
 import type { Expense, Item } from "../../types";
 import { formatCurrency, myShare, ownershipLabel } from "../../utils/format";
+import { Confirm } from "./Confirm";
 
 interface ExpenseDetailProps {
   expense: Expense;
   item: Item;
+  onEdit: () => void;
+  onDelete: (expenseId: string, itemId: string) => void;
   onBack: () => void;
 }
 
-export function ExpenseDetail({ expense, item, onBack }: ExpenseDetailProps) {
+export function ExpenseDetail({
+  expense,
+  item,
+  onEdit,
+  onDelete,
+  onBack,
+}: ExpenseDetailProps) {
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+
   useInput((_input, key) => {
+    if (confirmingDelete) return;
     if (key.escape) {
       onBack();
+      return;
+    }
+    if (_input.toLowerCase() === "e") {
+      onEdit();
+    }
+    if (_input.toLowerCase() === "d") {
+      setConfirmingDelete(true);
     }
   });
+
+  if (confirmingDelete) {
+    return (
+      <Confirm
+        message={`Delete "${expense.description}"?`}
+        onConfirm={() => {
+          setConfirmingDelete(false);
+          onDelete(expense.id, item.id);
+        }}
+        onCancel={() => setConfirmingDelete(false)}
+      />
+    );
+  }
 
   const myAmount = myShare(expense.amount, expense.ownership.percentage);
 
@@ -60,7 +93,7 @@ export function ExpenseDetail({ expense, item, onBack }: ExpenseDetailProps) {
 
       <Box marginTop={1}>
         <Text dimColor color="#555">
-          Esc Back
+          e Edit · d Delete · Esc Back
         </Text>
       </Box>
     </Box>

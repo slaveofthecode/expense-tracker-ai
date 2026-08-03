@@ -1,11 +1,27 @@
 import { useState } from "react";
-import { Text } from "ink";
-import { items } from "../data/items";
-import { expenses } from "../data/expenses";
+import type { Database } from "bun:sqlite";
+import {
+  listItems,
+  listExpenses,
+  createItem,
+  updateItem,
+  deleteItem,
+  createExpense,
+  updateExpense,
+  deleteExpense,
+} from "../db/repository";
 import { Dashboard } from "./components/Dashboard";
 import { ItemDetail } from "./components/ItemDetail";
 import { ExpenseDetail } from "./components/ExpenseDetail";
-import type { Screen } from "../types";
+import { ItemForm } from "./components/ItemForm";
+import { ExpenseForm, defaultExpenseFormInitial } from "./components/ExpenseForm";
+import { todayISO } from "../utils/format";
+import { currentMonth, getLatestMonth } from "../utils/summaries";
+import type { NewExpense, NewItem, Screen } from "../types";
+
+interface AppProps {
+  db: Database;
+}
 
 function getBackScreen(current: Screen): Screen {
   switch (current.name) {
@@ -13,27 +29,77 @@ function getBackScreen(current: Screen): Screen {
       return { name: "dashboard" };
     case "expenseDetail":
       return { name: "itemDetail", itemId: current.itemId };
+    case "addItem":
+    case "editItem":
+      return { name: "dashboard" };
+    case "addExpense":
+      return current.itemId
+        ? { name: "itemDetail", itemId: current.itemId }
+        : { name: "dashboard" };
+    case "editExpense":
+      return {
+        name: "expenseDetail",
+        expenseId: current.expenseId,
+        itemId: current.itemId,
+      };
     default:
       return current;
   }
 }
 
-export function App() {
+export function App({ db }: AppProps) {
+  const [items, setItems] = useState(() => listItems(db));
+  const [expenses, setExpenses] = useState(() => listExpenses(db));
   const [screen, setScreen] = useState<Screen>({ name: "dashboard" });
+
+  const month = getLatestMonth(expenses) ?? currentMonth();
+
+  const refresh = () => {
+    setItems(listItems(db));
+    setExpenses(listExpenses(db));
+  };
 
   const handleQuit = () => {
     process.exit(0);
   };
 
-  const handleSelectItem = (itemId: string) => {
-    setScreen({ name: "itemDetail", itemId });
+  const handleAddItem = (input: NewItem) => {
+    createItem(db, input);
+    refresh();
+    setScreen({ name: "dashboard" });
   };
 
-  const handleSelectExpense = (expenseId: string) => {
-    const expense = expenses.find((e) => e.id === expenseId);
-    if (expense) {
-      setScreen({ name: "expenseDetail", expenseId, itemId: expense.itemId });
-    }
+  const handleUpdateItem = (itemId: string, input: NewItem) => {
+    updateItem(db, itemId, input);
+    refresh();
+    setScreen({ name: "dashboard" });
+  };
+
+  const handleDeleteItem = (itemId: string) => {
+    deleteItem(db, itemId);
+    refresh();
+  };
+
+  const handleAddExpense = (input: NewExpense) => {
+    createExpense(db, input);
+    refresh();
+    setScreen(
+      input.itemId
+        ? { name: "itemDetail", itemId: input.itemId }
+        : { name: "dashboard" },
+    );
+  };
+
+  const handleUpdateExpense = (expenseId: string, input: NewExpense) => {
+    updateExpense(db, expenseId, input);
+    refresh();
+    setScreen({ name: "expenseDetail", expenseId, itemId: input.itemId });
+  };
+
+  const handleDeleteExpense = (expenseId: string, itemId: string) => {
+    deleteExpense(db, expenseId);
+    refresh();
+    setScreen({ name: "itemDetail", itemId });
   };
 
   const handleBack = () => {
@@ -46,7 +112,12 @@ export function App() {
         <Dashboard
           items={items}
           expenses={expenses}
-          onSelectItem={handleSelectItem}
+          month={month}
+          onSelectItem={(itemId) => setScreen({ name: "itemDetail", itemId })}
+          onAddItem={() => setScreen({ name: "addItem" })}
+          onEditItem={(itemId) => setScreen({ name: "editItem", itemId })}
+          onDeleteItem={handleDeleteItem}
+          onAddExpense={() => setScreen({ name: "addExpense" })}
           onQuit={handleQuit}
         />
       );
@@ -54,14 +125,15 @@ export function App() {
     case "itemDetail": {
       const item = items.find((i) => i.id === screen.itemId);
       if (!item) return null;
-      const itemExpenses = expenses.filter(
-        (e) => e.itemId === screen.itemId,
-      );
+      const itemExpenses = expenses.filter((e) => e.itemId === screen.itemId);
       return (
         <ItemDetail
           item={item}
           expenses={itemExpenses}
-          onSelectExpense={handleSelectExpense}
+          onSelectExpense={(expenseId) =>
+            setScreen({ name: "expenseDetail", expenseId, itemId: item.id })
+          }
+          onAddExpense={() => setScreen({ name: "addExpense", itemId: item.id })}
           onBack={handleBack}
         />
       );
@@ -73,7 +145,92 @@ export function App() {
       const item = items.find((i) => i.id === expense.itemId);
       if (!item) return null;
       return (
-        <ExpenseDetail expense={expense} item={item} onBack={handleBack} />
+        <ExpenseDetail
+          expense={expense}
+          item={item}
+          onEdit={() =>
+            setScreen({
+              name: "editExpense",
+              expenseId: expense.id,
+              itemId: item.id,
+            })
+          }
+          onDelete={handleDeleteExpense}
+          onBack={handleBack}
+        />
+      );
+    }
+
+    case "addItem":
+      return (
+        <ItemForm
+          title="Add Item"
+          initialName=""
+          initialType="other"
+          onSubmit={handleAddItem}
+          onBack={handleBack}
+        />
+      );
+
+    case "editItem": {
+      const item = items.find((i) => i.id === screen.itemId);
+      if (!item) return null;
+      return (
+        <ItemForm
+          title={`Edit Item — ${item.name}`}
+          initialName={item.name}
+          initialType={item.type}
+          onSubmit={(input) => handleUpdateItem(item.id, input)}
+          onBack={handleBack}
+        />
+      );
+    }
+
+    case "addExpense": {
+      const preselected = screen.itemId
+        ? items.find((i) => i.id === screen.itemId)
+        : undefined;
+      const initial = defaultExpenseFormInitial(items);
+      return (
+        <ExpenseForm
+          title="Add Expense"
+          items={items}
+          initial={{
+            ...initial,
+            itemId: preselected?.id ?? initial.itemId,
+          }}
+          onSubmit={handleAddExpense}
+          onBack={handleBack}
+        />
+      );
+    }
+
+    case "editExpense": {
+      const expense = expenses.find((e) => e.id === screen.expenseId);
+      if (!expense) return null;
+      const item = items.find((i) => i.id === expense.itemId);
+      if (!item) return null;
+      return (
+        <ExpenseForm
+          title="Edit Expense"
+          items={items}
+          initial={{
+            itemId: expense.itemId,
+            description: expense.description,
+            amount: String(expense.amount),
+            date: expense.date,
+            installmentsTotal: expense.installments
+              ? String(expense.installments.total)
+              : "",
+            installmentsCurrent: expense.installments
+              ? String(expense.installments.current)
+              : "",
+            ownershipPercentage: String(expense.ownership.percentage),
+            ownershipPerson: expense.ownership.person ?? "",
+          }}
+          onSubmit={(input) => handleUpdateExpense(expense.id, input)}
+          onBack={handleBack}
+        />
       );
     }
   }
