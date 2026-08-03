@@ -10,14 +10,15 @@ TUI funcional con datos hardcodeados que muestra items de gastos con sus totales
 - [x] Mock data con items y gastos de ejemplo
 - [x] Dashboard con lista de items y total del mes
 - [x] Detalle de item con sus gastos
-- [ ] Persistencia en SQLite
+- [x] Persistencia en SQLite
 
 ## v2 — Persistencia e Ingreso de Datos
 
-- SQLite como base de datos local
-- Formularios TUI para agregar gastos
-- CRUD de items (crear, editar, eliminar)
-- Soporte para cuotas (tarjetas, préstamos)
+- [x] SQLite como base de datos local
+- [x] Formularios TUI para agregar gastos
+- [x] CRUD de items (crear, editar, eliminar)
+- [x] Editar y eliminar gastos
+- [x] Soporte para cuotas (tarjetas, préstamos)
 
 ## v3 — Búsqueda y Filtros
 

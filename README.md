@@ -4,12 +4,12 @@ App de gastos con interfaz TUI (terminal), diseñada para llevar un control pers
 
 ## Stack
 
-| Tecnología      | Uso                       |
-| --------------- | ------------------------- |
-| **Bun**         | Runtime + package manager |
-| **TypeScript**  | Lenguaje (strict mode)    |
-| **Ink + React** | Interfaz TUI              |
-| **SQLite**      | Persistencia (v2+)        |
+| Tecnología      | Uso                               |
+| --------------- | --------------------------------- |
+| **Bun**         | Runtime + package manager         |
+| **TypeScript**  | Lenguaje (strict mode)            |
+| **Ink + React** | Interfaz TUI                      |
+| **SQLite**      | Persistencia local (`bun:sqlite`) |
 
 ## Requisitos
 
@@ -29,6 +29,20 @@ bun start
 | `bun start`     | Iniciar la app TUI |
 | `bun test`      | Ejecutar tests     |
 | `bun run build` | Compilar           |
+
+## Atajos
+
+| Tecla   | Acción                                       |
+| ------- | -------------------------------------------- |
+| `↑`/`↓` | Navegar listas                               |
+| `Enter` | Seleccionar / avanzar campo en formulario    |
+| `Esc`   | Volver / salir                               |
+| `a`     | Agregar gasto                                |
+| `i`     | Agregar item                                 |
+| `e`     | Editar (item en dashboard, gasto en detalle) |
+| `d`     | Eliminar (con confirmación)                  |
+
+Los datos se guardan en `.data/expenses.db` (local, gitignored).
 
 ## Estructura del proyecto
 
