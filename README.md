@@ -34,7 +34,8 @@ bun start
 
 | Tecla   | Acción                                       |
 | ------- | -------------------------------------------- |
-| `↑`/`↓` | Navegar listas                               |
+| `↑`/`↓` | Navegar listas y campos de formulario        |
+| `←`/`→` | Cambiar opción en select de formulario       |
 | `Enter` | Seleccionar / avanzar campo en formulario    |
 | `Esc`   | Volver / salir                               |
 | `a`     | Agregar gasto                                |
