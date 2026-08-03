@@ -13,9 +13,9 @@ App de gastos con AI para análisis y categorización automática.
 
 ## Comandos
 
+- `bun start` - Iniciar app TUI
 - `bun test` - Ejecutar tests
 - `bun run build` - Compilar
-- `bun start` - Iniciar app TUI
 
 ## Convenciones
 
@@ -37,14 +37,14 @@ App de gastos con AI para análisis y categorización automática.
 
 Coordina tareas complejas delegando a sub-agentes.
 
-### coder
+### developer
 
 Escribe código siguiendo las convenciones del proyecto, dejando listo para que el agente `tester` lo valide.
 
 ### tester
 
-Revisa codigo y aplica los tests correspondiente para un correcto funcionamiento, y valida calidad contra `.harness/memory/conventions/code-style.md`
+Revisa codigo y aplica los tests correspondiente para un correcto funcionamiento, y valida calidad contra `.harness/memory/conventions/code-style.md`. Luego manda a ejecutar al agente `reviewer` para su revision.
 
 ### reviewer
 
-Revisa código buscando errores y malas prácticas, y manda a corregir al agente `coder`.
+Revisa código buscando errores y malas prácticas, y manda a corregir al agente `developer`.

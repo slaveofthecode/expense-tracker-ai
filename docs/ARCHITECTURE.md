@@ -2,12 +2,12 @@
 
 ## Stack Tecnológico
 
-| Capa        | Tecnología     |
-|-------------|----------------|
-| Runtime     | Bun            |
-| Lenguaje    | TypeScript strict |
-| TUI         | Ink + React    |
-| Persistencia | SQLite (v2+)  |
+| Capa         | Tecnología        |
+| ------------ | ----------------- |
+| Runtime      | Bun               |
+| Lenguaje     | TypeScript strict |
+| TUI          | Ink + React       |
+| Persistencia | SQLite (v2+)      |
 
 ## Decisiones Técnicas
 
@@ -33,32 +33,27 @@
 
 ```typescript
 interface Item {
-  id: string;
-  name: string;
-  type: ItemType;
+	id: string;
+	name: string;
+	type: ItemType;
 }
 
-type ItemType =
-  | "credit_card"
-  | "loan"
-  | "recurring"
-  | "insurance"
-  | "other";
+type ItemType = 'credit_card' | 'loan' | 'recurring' | 'insurance' | 'other';
 
 interface Expense {
-  id: string;
-  itemId: string;
-  description: string;
-  amount: number;
-  date: string;       // ISO 8601
-  installments?: {
-    total: number;    // cuotas totales (ej: 12)
-    current: number;  // cuota actual (ej: 3)
-  };
-  ownership: {
-    percentage: number; // 100 | 50 | otro
-    person?: string;    // nombre si es compartido
-  };
+	id: string;
+	itemId: string;
+	description: string;
+	amount: number;
+	date: string; // ISO 8601
+	installments?: {
+		total: number; // cuotas totales (ej: 12)
+		current: number; // cuota actual (ej: 3)
+	};
+	ownership: {
+		percentage: number; // 100 | 50 | otro
+		person?: string; // nombre si es compartido
+	};
 }
 ```
 
