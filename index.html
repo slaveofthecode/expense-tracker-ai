@@ -514,7 +514,9 @@
       <div class="hero-badge">AI-Powered Expense Tracking</div>
       <h1>Expense Tracker AI</h1>
       <p>
-        Terminal-based expense tracker with AI-powered analysis and automatic categorization.
+        Terminal-based expense tracker with local SQLite persistence, installments,
+        shared expenses, and full CRUD. AI-powered analysis and automatic
+        categorization coming next.
         Built with Ink + React, Bun, TypeScript, and a multi-agent AI development workflow.
       </p>
       <div class="hero-actions">
@@ -602,6 +604,15 @@
           </div>
         </div>
         <div class="card">
+          <div class="card-icon">🗄️</div>
+          <h3>SQLite</h3>
+          <p>Local persistence via Bun's native <code>bun:sqlite</code>. No server, zero setup, stored in <code>.data/expenses.db</code>.</p>
+          <div class="card-tags">
+            <span class="tag">Persistence</span>
+            <span class="tag">Local</span>
+          </div>
+        </div>
+        <div class="card">
           <div class="card-icon">🧠</div>
           <h3>AI Agents</h3>
           <p>Multi-agent system with orchestrator, developer, tester, and reviewer roles working in concert.</p>
@@ -628,7 +639,7 @@
       <h3 style="margin-bottom: 1rem; font-size: 1.125rem;">Repository Structure</h3>
       <div class="tree" style="margin-bottom: 2rem;">
         <div class="depth-1 file">├── index.html        <span class="comment"># Public website</span></div>
-        <div class="depth-1 file">├── README.md         <span class="comment"># Human docs + changelog</span></div>
+        <div class="depth-1 file">├── README.md         <span class="comment"># Human docs</span></div>
         <div class="depth-1 file">├── AGENTS.md         <span class="comment"># AI instructions</span></div>
         <div class="depth-1 file">├── opencode.json     <span class="comment"># OpenCode config</span></div>
         <div class="depth-1 dir">├── docs/</div>
@@ -637,6 +648,14 @@
         <div class="depth-1 dir">├── .harness/</div>
         <div class="depth-2 file">│   └── ...           <span class="comment"># AI agent config</span></div>
         <div class="depth-1 dir">└── src/               <span class="comment"># Application code</span></div>
+        <div class="depth-2 file">    ├── index.tsx     <span class="comment"># Entry point (DB + render)</span></div>
+        <div class="depth-2 dir">    ├── app/</div>
+        <div class="depth-3 file">    │   ├── App.tsx   <span class="comment"># Navigation + handlers</span></div>
+        <div class="depth-3 dir">    │   └── components/ <span class="comment"># Screens, forms, confirm</span></div>
+        <div class="depth-2 dir">    ├── db/            <span class="comment"># SQLite layer (bun:sqlite)</span></div>
+        <div class="depth-2 dir">    ├── data/          <span class="comment"># Seed mock data</span></div>
+        <div class="depth-2 dir">    ├── types/         <span class="comment"># Domain models</span></div>
+        <div class="depth-2 dir">    └── utils/         <span class="comment"># Formatting &amp; summaries</span></div>
       </div>
 
       <h3 style="margin-bottom: 1rem; font-size: 1.125rem;">.harness Detail</h3>

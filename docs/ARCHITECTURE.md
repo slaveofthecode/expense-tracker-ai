@@ -64,7 +64,6 @@ expense-tracker-ai/
 ├── index.html           # Website público
 ├── README.md            # Docs para humanos
 ├── AGENTS.md            # Reglas para la AI
-├── README.md            # Docs para humanos (también funge como changelog)
 ├── opencode.json        # Config OpenCode
 ├── docs/
 │   ├── ROADMAP.md       # Visión de versiones
@@ -75,10 +74,31 @@ expense-tracker-ai/
 │   ├── skills/
 │   └── memory/
 └── src/                 # Código de la app
-    ├── index.tsx
+    ├── index.tsx        # Entry point: abre DB, seed, render
     ├── app/
-    │   ├── App.tsx
+    │   ├── App.tsx      # Navegación entre pantallas + handlers
     │   └── components/
-    ├── data/
-    └── types/
+    │       ├── Dashboard.tsx
+    │       ├── ItemDetail.tsx
+    │       ├── ExpenseDetail.tsx
+    │       ├── Form.tsx        # Formulario genérico (texto/select)
+    │       ├── ItemForm.tsx    # Alta/edición de items
+    │       ├── ExpenseForm.tsx # Alta/edición de gastos
+    │       └── Confirm.tsx     # Confirmación de borrado
+    ├── db/
+    │   ├── connection.ts # Abre SQLite (.data/expenses.db)
+    │   ├── schema.ts     # Migraciones
+    │   ├── seed.ts       # Mock data en DB vacía
+    │   └── repository.ts # CRUD tipado contra los tipos de dominio
+    ├── data/             # Seed data (mock)
+    ├── types/            # Modelos de dominio
+    └── utils/            # Formato y summaries
 ```
+
+## Persistencia
+
+- Base de datos local en `.data/expenses.db` (gitignored).
+- `bun:sqlite` (módulo nativo de Bun, sin dependencias extra).
+- Las tablas `items` y `expenses` se crean con `runMigrations` al abrir la DB.
+- Si la DB está vacía, `seedIfEmpty` inserta el mock de `src/data/`.
+- Las pantallas consumen `src/db/repository.ts`; nunca SQL directo en la UI.

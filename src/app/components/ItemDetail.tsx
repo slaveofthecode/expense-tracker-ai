@@ -7,6 +7,7 @@ interface ItemDetailProps {
   item: Item;
   expenses: Expense[];
   onSelectExpense: (expenseId: string) => void;
+  onAddExpense: () => void;
   onBack: () => void;
 }
 
@@ -14,6 +15,7 @@ export function ItemDetail({
   item,
   expenses,
   onSelectExpense,
+  onAddExpense,
   onBack,
 }: ItemDetailProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -23,6 +25,7 @@ export function ItemDetail({
       onBack();
       return;
     }
+    if (expenses.length === 0) return;
     if (key.upArrow) {
       setSelectedIndex((i) => (i > 0 ? i - 1 : expenses.length - 1));
     }
@@ -31,6 +34,9 @@ export function ItemDetail({
     }
     if (key.return && expenses.length > 0) {
       onSelectExpense(expenses[selectedIndex].id);
+    }
+    if (_input.toLowerCase() === "a") {
+      onAddExpense();
     }
   });
 
@@ -100,7 +106,7 @@ export function ItemDetail({
 
       <Box>
         <Text dimColor color="#555">
-          {"  "}↑↓ Navigate · Enter Detail · Esc Back
+          {"  "}↑↓ Navigate · Enter Detail · a Add Expense · Esc Back
         </Text>
       </Box>
     </Box>

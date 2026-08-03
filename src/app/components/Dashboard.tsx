@@ -1,30 +1,44 @@
 import { Box, Text, useInput } from "ink";
 import { useState } from "react";
 import type { Item, Expense } from "../../types";
-import { formatCurrency } from "../../utils/format";
+import { formatCurrency, formatMonth } from "../../utils/format";
 import { calcMonthlySummaries } from "../../utils/summaries";
+import { Confirm } from "./Confirm";
 
 interface DashboardProps {
   items: Item[];
   expenses: Expense[];
+  month: string;
   onSelectItem: (itemId: string) => void;
+  onAddItem: () => void;
+  onEditItem: (itemId: string) => void;
+  onDeleteItem: (itemId: string) => void;
+  onAddExpense: () => void;
   onQuit: () => void;
 }
 
 export function Dashboard({
   items,
   expenses,
+  month,
   onSelectItem,
+  onAddItem,
+  onEditItem,
+  onDeleteItem,
+  onAddExpense,
   onQuit,
 }: DashboardProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const summaries = calcMonthlySummaries(items, expenses);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const summaries = calcMonthlySummaries(items, expenses, month);
 
   useInput((_input, key) => {
-    if (key.escape || (key.ctrl && _input === "c")) {
+    if (confirmingDelete) return;
+    if (key.escape || (key.ctrl && _input.toLowerCase() === "c")) {
       onQuit();
       return;
     }
+    if (items.length === 0) return;
     if (key.upArrow) {
       setSelectedIndex((i) => (i > 0 ? i - 1 : items.length - 1));
     }
@@ -34,7 +48,33 @@ export function Dashboard({
     if (key.return) {
       onSelectItem(items[selectedIndex].id);
     }
+    if (_input.toLowerCase() === "a") {
+      onAddExpense();
+    }
+    if (_input.toLowerCase() === "i") {
+      onAddItem();
+    }
+    if (_input.toLowerCase() === "e") {
+      onEditItem(items[selectedIndex].id);
+    }
+    if (_input.toLowerCase() === "d") {
+      setConfirmingDelete(true);
+    }
   });
+
+  if (confirmingDelete) {
+    const item = items[selectedIndex];
+    return (
+      <Confirm
+        message={`Delete "${item.name}"? Its expenses will also be deleted.`}
+        onConfirm={() => {
+          setConfirmingDelete(false);
+          onDeleteItem(item.id);
+        }}
+        onCancel={() => setConfirmingDelete(false)}
+      />
+    );
+  }
 
   return (
     <Box flexDirection="column" padding={1}>
@@ -42,7 +82,7 @@ export function Dashboard({
         <Text bold color="#00d4ff">
           Expense Tracker AI
         </Text>
-        <Text> — July 2026</Text>
+        <Text> — {formatMonth(month)}</Text>
       </Box>
 
       <Box flexDirection="column" marginBottom={1}>
@@ -77,11 +117,15 @@ export function Dashboard({
             </Box>
           );
         })}
+        {items.length === 0 ? (
+          <Text dimColor>No items yet. Press i to add one.</Text>
+        ) : null}
       </Box>
 
       <Box>
         <Text dimColor color="#555">
-          {"  "}↑↓ Navigate · Enter Select · Esc Quit
+          {"  "}↑↓ Navigate · Enter Select · a Add Expense · i Add Item · e
+          Edit · d Delete · Esc Quit
         </Text>
       </Box>
     </Box>

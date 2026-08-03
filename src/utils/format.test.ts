@@ -1,5 +1,12 @@
 import { describe, it, expect } from "bun:test";
-import { formatCurrency, formatDate, myShare, ownershipLabel } from "./format";
+import {
+  formatCurrency,
+  formatDate,
+  formatMonth,
+  todayISO,
+  myShare,
+  ownershipLabel,
+} from "./format";
 
 describe("formatCurrency", () => {
   it("formats whole numbers", () => {
@@ -24,6 +31,19 @@ describe("formatDate", () => {
     const result = formatDate("2026-07-05");
     expect(result).toContain("05");
     expect(result).toContain("jul");
+  });
+});
+
+describe("formatMonth", () => {
+  it("formats YYYY-MM to a readable month", () => {
+    expect(formatMonth("2026-07")).toContain("julio");
+    expect(formatMonth("2026-07")).toContain("2026");
+  });
+});
+
+describe("todayISO", () => {
+  it("formats as YYYY-MM-DD", () => {
+    expect(todayISO()).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 });
 
