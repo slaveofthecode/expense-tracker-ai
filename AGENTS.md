@@ -22,6 +22,7 @@ App de gastos con AI para análisis y categorización automática.
 - Usar TypeScript estricto
 - Los commit seran en ingles
 - Solo la documentacion en .md sera en español, todo lo demas es en ingles.
+- **NUNCA trabajar directamente sobre `main`.** Todo cambio (código, docs, config) se hace en una branch nueva creada desde `main` actualizado: primero `git pull origin main`, luego crear la branch con el formato de `.harness/memory/conventions/branch-naming.md`. Si el AI detecta que está sobre `main`, debe frenar y crear la branch antes de tocar cualquier archivo.
 - Branches: seguir la convención en `.harness/memory/conventions/branch-naming.md`
 - La AI nunca debe hacer `git add`, `git commit` ni `git push`. El único responsable de stage/commit/push es el humano.
 - [agregar más conforme aprendas]
