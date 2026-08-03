@@ -57,35 +57,28 @@ export function Form({ title, fields, submitLabel, onSubmit, onBack }: FormProps
       return;
     }
     if (key.upArrow) {
-      if (isSelect) {
-        cycleOption(-1);
-      } else {
-        setActiveIndex((i) => (i > 0 ? i - 1 : fields.length - 1));
-      }
+      setActiveIndex((i) => (i > 0 ? i - 1 : fields.length - 1));
       return;
     }
     if (key.downArrow) {
-      if (isSelect) {
-        cycleOption(1);
-      } else {
-        setActiveIndex((i) => (i < fields.length - 1 ? i + 1 : 0));
-      }
+      setActiveIndex((i) => (i < fields.length - 1 ? i + 1 : 0));
       return;
     }
-    if (key.backspace) {
+    if (key.leftArrow) {
+      if (isSelect) cycleOption(-1);
+      return;
+    }
+    if (key.rightArrow) {
+      if (isSelect) cycleOption(1);
+      return;
+    }
+    if ((key.backspace || key.delete) && !isSelect) {
       setValues((prev) =>
         prev.map((v, i) => (i === activeIndex ? v.slice(0, -1) : v)),
       );
       return;
     }
-    if (
-      key.leftArrow ||
-      key.rightArrow ||
-      key.tab ||
-      key.delete ||
-      key.pageUp ||
-      key.pageDown
-    ) {
+    if (key.tab || key.pageUp || key.pageDown) {
       return;
     }
     if (_input && !isSelect) {
@@ -123,7 +116,7 @@ export function Form({ title, fields, submitLabel, onSubmit, onBack }: FormProps
 
       <Box>
         <Text dimColor color="#555">
-          {"  "}↑↓ Navigate · Enter Next/{submitLabel} · Esc Back
+          {"  "}↑↓ Navigate · ←→ Option · Enter Next/{submitLabel} · Esc Back
         </Text>
       </Box>
     </Box>

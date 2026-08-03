@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Box, Text } from "ink";
 import { Form, type FormField } from "./Form";
-import { ITEM_TYPES } from "../../types";
+import { ITEM_TYPES, ITEM_TYPE_LABELS } from "../../types";
 import type { ItemType, NewItem } from "../../types";
 
 interface ItemFormProps {
@@ -26,7 +26,7 @@ export function ItemForm({
     {
       label: "Type",
       type: "select",
-      options: ITEM_TYPES.map((t) => ({ value: t, label: t })),
+      options: ITEM_TYPES.map((t) => ({ value: t, label: ITEM_TYPE_LABELS[t] })),
       initialValue: initialType,
     },
   ];
