@@ -61,23 +61,31 @@ export function ItemDetail({
       <Box flexDirection="column" marginBottom={1}>
         <Box>
           <Text bold>
-            {"  "}Date{" ".padEnd(8)} Description{" ".padEnd(20)} Amount{" ".padEnd(9)} My
-            Share{" ".padEnd(5)} Ownership
+            {"  "}
+            {"Date".padEnd(10)}
+            {" "}
+            {"Description".padEnd(22)}
+            {" "}
+            {"Amount".padStart(9)}
+            {"  "}
+            {"My Share".padStart(9)}
+            {"  "}
+            {"Ownership"}
           </Text>
         </Box>
         <Text color="#333" dimColor>
           {"  "}
-          {"─".repeat(66)}
+          {"─".repeat(67)}
         </Text>
         {expenses.map((e, i) => {
           const isSelected = i === selectedIndex;
           const prefix = isSelected ? "❯ " : "  ";
           const date = formatDate(e.date).padEnd(10);
           const desc = e.description.padEnd(22);
-          const amt = formatCurrency(e.amount).padStart(8);
+          const amt = formatCurrency(e.amount).padStart(9);
           const share = formatCurrency(
             (e.amount * e.ownership.percentage) / 100,
-          ).padStart(8);
+          ).padStart(9);
           const own = ownershipLabel(e.ownership.percentage, e.ownership.person);
 
           const inst = e.installments

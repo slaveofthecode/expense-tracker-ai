@@ -36,15 +36,15 @@ describe("schema", () => {
 describe("seedIfEmpty", () => {
   it("inserts mock data on an empty database", () => {
     seedIfEmpty(db);
-    expect(listItems(db)).toHaveLength(6);
-    expect(listExpenses(db)).toHaveLength(8);
+    expect(listItems(db)).toHaveLength(9);
+    expect(listExpenses(db)).toHaveLength(12);
   });
 
   it("does not duplicate data when called twice", () => {
     seedIfEmpty(db);
     seedIfEmpty(db);
-    expect(listItems(db)).toHaveLength(6);
-    expect(listExpenses(db)).toHaveLength(8);
+    expect(listItems(db)).toHaveLength(9);
+    expect(listExpenses(db)).toHaveLength(12);
   });
 });
 

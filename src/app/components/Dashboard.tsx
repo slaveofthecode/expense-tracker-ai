@@ -88,13 +88,16 @@ export function Dashboard({
       <Box flexDirection="column" marginBottom={1}>
         <Box>
           <Text bold>
-            {"  ".padEnd(2)} Item{" ".padEnd(22)} Total{" ".padEnd(11)} My
-            Share
+            {"  "}
+            {"Item".padEnd(24)}
+            {"Total".padStart(10)}
+            {"  "}
+            {"My Share".padStart(10)}
           </Text>
         </Box>
         <Text color="#333" dimColor>
           {"  "}
-          {"─".repeat(56)}
+          {"─".repeat(48)}
         </Text>
         {summaries.map((s, i) => {
           const item = items.find((it) => it.id === s.itemId);
