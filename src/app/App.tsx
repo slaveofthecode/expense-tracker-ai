@@ -16,7 +16,7 @@ import { ExpenseDetail } from "./components/ExpenseDetail";
 import { ItemForm } from "./components/ItemForm";
 import { ExpenseForm, defaultExpenseFormInitial } from "./components/ExpenseForm";
 import { todayISO } from "../utils/format";
-import { currentMonth, getLatestMonth } from "../utils/summaries";
+import { getLatestYear } from "../utils/summaries";
 import type { NewExpense, NewItem, Screen } from "../types";
 
 interface AppProps {
@@ -51,8 +51,9 @@ export function App({ db }: AppProps) {
   const [items, setItems] = useState(() => listItems(db));
   const [expenses, setExpenses] = useState(() => listExpenses(db));
   const [screen, setScreen] = useState<Screen>({ name: "dashboard" });
-
-  const month = getLatestMonth(expenses) ?? currentMonth();
+  const [year, setYear] = useState<number>(
+    () => getLatestYear(expenses) ?? new Date().getFullYear(),
+  );
 
   const refresh = () => {
     setItems(listItems(db));
@@ -112,7 +113,8 @@ export function App({ db }: AppProps) {
         <Dashboard
           items={items}
           expenses={expenses}
-          month={month}
+          year={year}
+          onYearChange={setYear}
           onSelectItem={(itemId) => setScreen({ name: "itemDetail", itemId })}
           onAddItem={() => setScreen({ name: "addItem" })}
           onEditItem={(itemId) => setScreen({ name: "editItem", itemId })}
@@ -130,6 +132,8 @@ export function App({ db }: AppProps) {
         <ItemDetail
           item={item}
           expenses={itemExpenses}
+          year={year}
+          onYearChange={setYear}
           onSelectExpense={(expenseId) =>
             setScreen({ name: "expenseDetail", expenseId, itemId: item.id })
           }
@@ -164,7 +168,7 @@ export function App({ db }: AppProps) {
     case "addItem":
       return (
         <ItemForm
-          title="Add Item"
+          title="Agregar Ítem"
           initialName=""
           initialType="other"
           onSubmit={handleAddItem}
@@ -177,7 +181,7 @@ export function App({ db }: AppProps) {
       if (!item) return null;
       return (
         <ItemForm
-          title={`Edit Item — ${item.name}`}
+          title={`Editar Ítem — ${item.name}`}
           initialName={item.name}
           initialType={item.type}
           onSubmit={(input) => handleUpdateItem(item.id, input)}
@@ -193,7 +197,7 @@ export function App({ db }: AppProps) {
       const initial = defaultExpenseFormInitial(items);
       return (
         <ExpenseForm
-          title="Add Expense"
+          title="Agregar Gasto"
           items={items}
           initial={{
             ...initial,
@@ -212,7 +216,7 @@ export function App({ db }: AppProps) {
       if (!item) return null;
       return (
         <ExpenseForm
-          title="Edit Expense"
+          title="Editar Gasto"
           items={items}
           initial={{
             itemId: expense.itemId,

@@ -116,7 +116,8 @@ export function Form({ title, fields, submitLabel, onSubmit, onBack }: FormProps
 
       <Box>
         <Text dimColor color="#555">
-          {"  "}↑↓ Navigate · ←→ Option · Enter Next/{submitLabel} · Esc Back
+          {"  "}↑↓ Navegar · ←→ Opción · Enter Siguiente/{submitLabel} · Esc
+          Volver
         </Text>
       </Box>
     </Box>

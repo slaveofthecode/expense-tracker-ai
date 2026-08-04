@@ -20,12 +20,12 @@ export function Confirm({ message, onConfirm, onCancel }: ConfirmProps) {
   return (
     <Box flexDirection="column" padding={1}>
       <Text bold color="#ffcc00">
-        Are you sure?
+        ¿Estás seguro?
       </Text>
       <Text>{message}</Text>
       <Box marginTop={1}>
         <Text dimColor color="#555">
-          {"  "}y Confirm · n Cancel · Esc Cancel
+          {"  "}y Confirmar · n Cancelar · Esc Cancelar
         </Text>
       </Box>
     </Box>

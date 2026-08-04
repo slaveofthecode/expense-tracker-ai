@@ -38,7 +38,7 @@ export function ExpenseDetail({
   if (confirmingDelete) {
     return (
       <Confirm
-        message={`Delete "${expense.description}"?`}
+        message={`¿Eliminar "${expense.description}"?`}
         onConfirm={() => {
           setConfirmingDelete(false);
           onDelete(expense.id, item.id);
@@ -54,38 +54,38 @@ export function ExpenseDetail({
     <Box flexDirection="column" padding={1}>
       <Box marginBottom={1}>
         <Text bold color="#00d4ff">
-          Expense Detail
+          Detalle del Gasto
         </Text>
       </Box>
 
       <Box flexDirection="column">
         <Box>
-          <Text bold>Item: </Text>
+          <Text bold>Ítem: </Text>
           <Text>{item.name}</Text>
         </Box>
         <Box>
-          <Text bold>Description: </Text>
+          <Text bold>Descripción: </Text>
           <Text>{expense.description}</Text>
         </Box>
         <Box>
-          <Text bold>Date: </Text>
+          <Text bold>Fecha: </Text>
           <Text>{expense.date}</Text>
         </Box>
         <Box>
-          <Text bold>Total amount: </Text>
+          <Text bold>Monto total: </Text>
           <Text>{formatCurrency(expense.amount)}</Text>
         </Box>
         <Box>
-          <Text bold>My share: </Text>
+          <Text bold>Mi parte: </Text>
           <Text>
             {formatCurrency(myAmount)} ({ownershipLabel(expense.ownership.percentage, expense.ownership.person)})
           </Text>
         </Box>
         {expense.installments && (
           <Box>
-            <Text bold>Installments: </Text>
+            <Text bold>Cuotas: </Text>
             <Text>
-              {expense.installments.current} of {expense.installments.total}
+              {expense.installments.current} de {expense.installments.total}
             </Text>
           </Box>
         )}
@@ -93,7 +93,7 @@ export function ExpenseDetail({
 
       <Box marginTop={1}>
         <Text dimColor color="#555">
-          e Edit · d Delete · Esc Back
+          e Editar · d Eliminar · Esc Volver
         </Text>
       </Box>
     </Box>

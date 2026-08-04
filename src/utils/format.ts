@@ -26,12 +26,34 @@ export function todayISO(): string {
   return `${year}-${month}-${day}`;
 }
 
+export const MONTHS_SHORT_ES = [
+  "Ene",
+  "Feb",
+  "Mar",
+  "Abr",
+  "May",
+  "Jun",
+  "Jul",
+  "Ago",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dic",
+];
+
 export function myShare(amount: number, percentage: number): number {
   return (amount * percentage) / 100;
 }
 
 export function ownershipLabel(percentage: number, person?: string): string {
-  if (percentage === 100) return "100% me";
+  if (percentage === 100) return "100% yo";
   if (person) return `${percentage}% (${person})`;
   return `${percentage}%`;
+}
+
+export function formatYearWide(year: number): string {
+  return String(year)
+    .split("")
+    .map((char) => String.fromCharCode(0xff10 + Number(char)))
+    .join("");
 }

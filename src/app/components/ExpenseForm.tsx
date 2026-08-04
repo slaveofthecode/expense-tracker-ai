@@ -49,30 +49,30 @@ export function ExpenseForm({
 
   const fields: FormField[] = [
     {
-      label: "Item",
+      label: "Ítem",
       type: "select",
       options: items.map((i) => ({ value: i.id, label: i.name })),
       initialValue: initial.itemId,
     },
-    { label: "Description", type: "text", initialValue: initial.description },
-    { label: "Amount", type: "text", initialValue: initial.amount },
-    { label: "Date", type: "text", initialValue: initial.date },
+    { label: "Descripción", type: "text", initialValue: initial.description },
+    { label: "Monto", type: "text", initialValue: initial.amount },
+    { label: "Fecha", type: "text", initialValue: initial.date },
     {
-      label: "Installments total",
+      label: "Cuotas totales",
       type: "text",
       initialValue: initial.installmentsTotal,
     },
     {
-      label: "Installments current",
+      label: "Cuota actual",
       type: "text",
       initialValue: initial.installmentsCurrent,
     },
     {
-      label: "Ownership %",
+      label: "Mi %",
       type: "text",
       initialValue: initial.ownershipPercentage,
     },
-    { label: "Owner", type: "text", initialValue: initial.ownershipPerson },
+    { label: "Titular", type: "text", initialValue: initial.ownershipPerson },
   ];
 
   const handleSubmit = (values: string[]) => {
@@ -86,19 +86,19 @@ export function ExpenseForm({
     const person = values[7].trim();
 
     if (!itemId) {
-      setError("Select an item");
+      setError("Selecciona un ítem");
       return;
     }
     if (!description) {
-      setError("Description is required");
+      setError("La descripción es obligatoria");
       return;
     }
     if (!Number.isFinite(amount) || amount <= 0) {
-      setError("Amount must be a positive number");
+      setError("El monto debe ser un número positivo");
       return;
     }
     if (!DATE_RE.test(date)) {
-      setError("Date must be YYYY-MM-DD");
+      setError("La fecha debe ser YYYY-MM-DD");
       return;
     }
 
@@ -107,7 +107,7 @@ export function ExpenseForm({
     if (installmentsTotalRaw) {
       installmentsTotal = Number(installmentsTotalRaw);
       if (!Number.isInteger(installmentsTotal) || installmentsTotal <= 0) {
-        setError("Installments total must be a positive integer");
+        setError("Las cuotas totales deben ser un entero positivo");
         return;
       }
       installmentsCurrent =
@@ -117,13 +117,13 @@ export function ExpenseForm({
         installmentsCurrent < 1 ||
         installmentsCurrent > installmentsTotal
       ) {
-        setError(`Installments current must be between 1 and ${installmentsTotal}`);
+        setError(`La cuota actual debe estar entre 1 y ${installmentsTotal}`);
         return;
       }
     }
 
     if (!Number.isFinite(percentage) || percentage < 0 || percentage > 100) {
-      setError("Ownership % must be between 0 and 100");
+      setError("El % debe estar entre 0 y 100");
       return;
     }
 
@@ -147,7 +147,7 @@ export function ExpenseForm({
       <Form
         title={title}
         fields={fields}
-        submitLabel="Save"
+        submitLabel="Guardar"
         onSubmit={handleSubmit}
         onBack={onBack}
       />

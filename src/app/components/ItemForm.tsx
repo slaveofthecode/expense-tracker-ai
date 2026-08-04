@@ -22,9 +22,9 @@ export function ItemForm({
   const [error, setError] = useState<string | undefined>();
 
   const fields: FormField[] = [
-    { label: "Name", type: "text", initialValue: initialName },
+    { label: "Nombre", type: "text", initialValue: initialName },
     {
-      label: "Type",
+      label: "Tipo",
       type: "select",
       options: ITEM_TYPES.map((t) => ({ value: t, label: ITEM_TYPE_LABELS[t] })),
       initialValue: initialType,
@@ -34,7 +34,7 @@ export function ItemForm({
   const handleSubmit = (values: string[]) => {
     const name = values[0].trim();
     if (!name) {
-      setError("Name is required");
+      setError("El nombre es obligatorio");
       return;
     }
     onSubmit({ name, type: values[1] as ItemType });
@@ -45,7 +45,7 @@ export function ItemForm({
       <Form
         title={title}
         fields={fields}
-        submitLabel="Save"
+        submitLabel="Guardar"
         onSubmit={handleSubmit}
         onBack={onBack}
       />
