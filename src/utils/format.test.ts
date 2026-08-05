@@ -66,8 +66,8 @@ describe("myShare", () => {
 });
 
 describe("ownershipLabel", () => {
-  it("returns '100% me' for full ownership", () => {
-    expect(ownershipLabel(100)).toBe("100% me");
+  it("returns '100% yo' for full ownership", () => {
+    expect(ownershipLabel(100)).toBe("100% yo");
   });
 
   it("includes person name when shared", () => {

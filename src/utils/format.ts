@@ -26,12 +26,67 @@ export function todayISO(): string {
   return `${year}-${month}-${day}`;
 }
 
+export const MONTHS_SHORT_ES = [
+  "Ene",
+  "Feb",
+  "Mar",
+  "Abr",
+  "May",
+  "Jun",
+  "Jul",
+  "Ago",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dic",
+];
+
 export function myShare(amount: number, percentage: number): number {
   return (amount * percentage) / 100;
 }
 
 export function ownershipLabel(percentage: number, person?: string): string {
-  if (percentage === 100) return "100% me";
+  if (percentage === 100) return "100% yo";
   if (person) return `${percentage}% (${person})`;
   return `${percentage}%`;
+}
+
+export function formatYearWide(year: number): string {
+  return String(year)
+    .split("")
+    .map((char) => String.fromCharCode(0xff10 + Number(char)))
+    .join("");
+}
+
+/**
+ * Parse a currency string (supports es-AR and en-US styles) into a number.
+ * Examples:
+ *  "$1.234,56" => 1234.56 (es-AR)
+ *  "1,234.56"  => 1234.56 (en-US)
+ *  "1234"      => 1234
+ */
+export function parseCurrency(input: string): number {
+  if (!input) return NaN;
+  const s = String(input).trim();
+  // remove currency symbol and spaces
+  const cleaned = s.replace(/[^0-9.,-]/g, "");
+  if (cleaned === "") return NaN;
+  const hasDot = cleaned.indexOf(".") !== -1;
+  const hasComma = cleaned.indexOf(",") !== -1;
+
+  let normalized = cleaned;
+  if (hasDot && hasComma) {
+    // assume dot is thousands separator and comma is decimal (es-AR)
+    normalized = cleaned.replace(/\./g, "").replace(/,/g, ".");
+  } else if (hasComma && !hasDot) {
+    // assume comma is decimal
+    normalized = cleaned.replace(/,/g, ".");
+  } else {
+    // only dots or only digits - treat dot as decimal
+    // remove any extra non-digit except dot
+    normalized = cleaned;
+  }
+
+  const value = Number(normalized);
+  return Number.isFinite(value) ? value : NaN;
 }
