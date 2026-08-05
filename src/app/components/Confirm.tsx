@@ -24,9 +24,7 @@ export function Confirm({ message, onConfirm, onCancel }: ConfirmProps) {
       </Text>
       <Text>{message}</Text>
       <Box marginTop={1}>
-        <Text dimColor color="#555">
-          {"  "}y Confirmar · n Cancelar · Esc Cancelar
-        </Text>
+        <Text color="#88c0d0">{"  "}y Confirmar · n Cancelar · Esc Cancelar</Text>
       </Box>
     </Box>
   );

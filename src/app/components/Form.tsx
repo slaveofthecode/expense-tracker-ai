@@ -1,5 +1,6 @@
 import { Box, Text, useInput } from "ink";
 import { useState } from "react";
+import { formatCurrency, parseCurrency } from "../../utils/format";
 
 export interface FormOption {
   value: string;
@@ -27,6 +28,10 @@ export function Form({ title, fields, submitLabel, onSubmit, onBack }: FormProps
 
   const activeField = fields[activeIndex];
   const isSelect = activeField.type === "select";
+
+  const LABEL_COLOR = "#c678dd";
+  const DATA_COLOR = "#c0caf5";
+  const ACTIVE_COLOR = "#00d4ff";
 
   const cycleOption = (direction: 1 | -1) => {
     setValues((prev) => {
@@ -99,14 +104,33 @@ export function Form({ title, fields, submitLabel, onSubmit, onBack }: FormProps
       <Box flexDirection="column" marginBottom={1}>
         {fields.map((field, i) => {
           const isActive = i === activeIndex;
-          const display =
+          let display =
             field.options?.find((o) => o.value === values[i])?.label ?? values[i];
+          // Auto-format amount field with currency while typing
+          if (field.label === "Monto") {
+            const raw = values[i] ?? "";
+            const parsed = parseCurrency(raw);
+            if (raw.trim() === "") {
+              display = "$";
+            } else if (Number.isFinite(parsed)) {
+              display = formatCurrency(parsed);
+            } else {
+              // show raw input prefixed with $ if not already
+              display = raw.startsWith("$") ? raw : `$${raw}`;
+            }
+          }
+
           const cursor = isActive && !isSelect ? "▌" : "";
           return (
             <Box key={field.label}>
-              <Text color={isActive ? "#00d4ff" : undefined}>
+              <Text color={isActive ? ACTIVE_COLOR : undefined}>
                 {isActive ? "❯ " : "  "}
-                {field.label}: {display}
+              </Text>
+              <Text color={LABEL_COLOR} bold={isActive}>
+                {field.label}: 
+              </Text>
+              <Text color={isActive ? ACTIVE_COLOR : DATA_COLOR}>
+                {display}
                 {cursor}
               </Text>
             </Box>
@@ -115,10 +139,7 @@ export function Form({ title, fields, submitLabel, onSubmit, onBack }: FormProps
       </Box>
 
       <Box>
-        <Text dimColor color="#555">
-          {"  "}↑↓ Navegar · ←→ Opción · Enter Siguiente/{submitLabel} · Esc
-          Volver
-        </Text>
+        <Text color="#88c0d0">{"  "}↑↓ Navegar · ←→ Opción · Enter Siguiente/{submitLabel} · Esc Volver</Text>
       </Box>
     </Box>
   );

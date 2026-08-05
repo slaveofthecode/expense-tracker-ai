@@ -12,10 +12,11 @@ import {
 } from "../db/repository";
 import { Dashboard } from "./components/Dashboard";
 import { ItemDetail } from "./components/ItemDetail";
+import { ItemDetailCard } from "./components/ItemDetailCard";
 import { ExpenseDetail } from "./components/ExpenseDetail";
 import { ItemForm } from "./components/ItemForm";
 import { ExpenseForm, defaultExpenseFormInitial } from "./components/ExpenseForm";
-import { todayISO } from "../utils/format";
+import { todayISO, formatCurrency } from "../utils/format";
 import { getLatestYear } from "../utils/summaries";
 import type { NewExpense, NewItem, Screen } from "../types";
 
@@ -128,6 +129,23 @@ export function App({ db }: AppProps) {
       const item = items.find((i) => i.id === screen.itemId);
       if (!item) return null;
       const itemExpenses = expenses.filter((e) => e.itemId === screen.itemId);
+      
+      if (item.type === "recurring" || item.type === "insurance" || item.type === "other") {
+        return (
+          <ItemDetailCard
+            item={item}
+            expenses={itemExpenses}
+            year={year}
+            onYearChange={setYear}
+            onSelectExpense={(expenseId) =>
+              setScreen({ name: "expenseDetail", expenseId, itemId: item.id })
+            }
+            onAddExpense={() => setScreen({ name: "addExpense", itemId: item.id })}
+            onBack={handleBack}
+          />
+        );
+      }
+
       return (
         <ItemDetail
           item={item}
@@ -221,7 +239,7 @@ export function App({ db }: AppProps) {
           initial={{
             itemId: expense.itemId,
             description: expense.description,
-            amount: String(expense.amount),
+            amount: formatCurrency(expense.amount),
             date: expense.date,
             installmentsTotal: expense.installments
               ? String(expense.installments.total)
