@@ -2,6 +2,8 @@
 
 App de gastos con interfaz TUI (terminal), diseñada para llevar un control personal de gastos recurrentes, cuotas de tarjetas, préstamos y gastos compartidos.
 
+Funcionalidades: vistas de grilla anual (12 meses por item), selector de año, soporte de cuotas con prorrateo mensual, gastos compartidos con porcentaje de propiedad, y CRUD completo de items y gastos.
+
 ## Stack
 
 | Tecnología      | Uso                               |
@@ -32,16 +34,16 @@ bun start
 
 ## Atajos
 
-| Tecla   | Acción                                       |
-| ------- | -------------------------------------------- |
-| `↑`/`↓` | Navegar listas y campos de formulario        |
-| `←`/`→` | Cambiar opción en select de formulario       |
-| `Enter` | Seleccionar / avanzar campo en formulario    |
-| `Esc`   | Volver / salir                               |
-| `a`     | Agregar gasto                                |
-| `i`     | Agregar item                                 |
-| `e`     | Editar (item en dashboard, gasto en detalle) |
-| `d`     | Eliminar (con confirmación)                  |
+| Tecla   | Acción                                                        |
+| ------- | ------------------------------------------------------------- |
+| `↑`/`↓` | Navegar listas y campos de formulario                         |
+| `←`/`→` | Cambiar opción en select de formulario / cambiar año          |
+| `Enter` | Seleccionar / avanzar campo en formulario                     |
+| `Esc`   | Volver / salir                                                |
+| `a`     | Agregar gasto                                                 |
+| `i`     | Agregar item                                                  |
+| `e`     | Editar (item en dashboard, gasto en detalle)                  |
+| `d`     | Eliminar (con confirmación)                                   |
 
 Los datos se guardan en `.data/expenses.db` (local, gitignored).
 
