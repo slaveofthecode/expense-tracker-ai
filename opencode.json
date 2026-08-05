@@ -4,5 +4,15 @@
     "AGENTS.md",
     ".harness/memory/memory.md"
   ],
-  "agent": {}
+  "agent": {},
+  "command": {
+    "test": {
+      "description": "Valida TypeScript, calidad de código contra code-style.md y ejecuta los tests",
+      "template": "Actúa como el agente tester. Ejecuta `bunx tsc --noEmit` para validar tipado estricto y `bun test` para correr todos los tests, y valida la calidad del código contra `.harness/memory/conventions/code-style.md`. Reporta fallos con archivo, línea, tipo de error y sugerencia. No hagas git add/commit/push."
+    },
+    "pr": {
+      "description": "Crea un Pull Request en GitHub con título y descripción generados",
+      "template": "Actúa como el agente orchestrator y crea un Pull Request en GitHub siguiendo `.harness/commands/pr.md`: verifica que `gh` está autenticado (`gh auth status`), confirma que NO estás en `main`, obtén el diff con `git diff main...HEAD --stat` y `git diff main...HEAD`, genera título y descripción en inglés representativos de los cambios, muestra el resumen al usuario y pedí confirmación antes de crear el PR. Si el usuario confirma, ejecuta `gh pr create --assignee \"@me\"` y devuelve la URL. Luego posicionate en `main` actualizada (`git checkout main && git pull origin main`). No hagas git add/commit/push por cuenta propia; si el PR ya existe, informalo y no lo dupliques; si el working tree tiene cambios sin commitear, avisá al humano antes del checkout."
+    }
+  }
 }

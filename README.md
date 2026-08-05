@@ -58,7 +58,11 @@ expense-tracker-ai/
 ├── docs/             # Documentación
 │   ├── ROADMAP.md    # Visión de versiones
 │   └── ARCHITECTURE.md # Decisiones técnicas
-├── .harness/         # Config de AI agents
+├── .harness/         # Fuente canónica de config AI
+├── .opencode/        # Registro nativo: opencode
+├── .claude/          # Registro nativo: Claude Code
+├── .github/          # Registro nativo: GitHub Copilot
+├── .cursor/          # Registro nativo: Cursor
 └── src/              # Código de la app
 ```
 
@@ -69,11 +73,23 @@ Configuración que guía a los agentes de IA: roles, procedimientos y memoria co
 | Componente      | Qué es                                           | Quién lo ejecuta                                                          | Cuándo                                      |
 | --------------- | ------------------------------------------------ | ------------------------------------------------------------------------- | ------------------------------------------- |
 | **AGENTS.md**   | Reglas raíz para todos los agentes               | Todos los agentes                                                         | Al iniciar cada tarea                       |
-| **Agents**      | Roles: orchestrator, developer, tester, reviewer | El rol que corresponda según la tarea                                     | Cuando la tarea requiere ese rol            |
+| **Agents**      | `orchestrator` (rol del agente principal) · `developer`/`tester`/`reviewer` (subagentes registrados con contexto aislado) | La sesión principal (orchestrator) delega a los subagentes                                             | Cuando la tarea requiere ese rol            |
 | **Skills**      | Capacidades on-demand (ej: `code-review`)        | El agente que la necesite                                                 | A demanda, cuando se requiere esa capacidad |
 | **Commands**    | Atajos ejecutables (`test`, `pr`)                | `tester` (test) · `orchestrator` (pr)                                     | Cuando el humano los invoca                 |
 | **Memory**      | Memoria de proyecto/usuario/sesión               | Todos los agentes                                                         | Se lee al empezar; se actualiza al aprender |
 | **Conventions** | Estándares (code-style, branch-naming)           | `developer` + `tester` (code-style) · quien cree branches (branch-naming) | En toda tarea de código / al crear branches |
+
+### Registro nativo por herramienta
+
+El harness se registra nativamente en cada herramienta de AI. Las copias se mantienen en sincronía manual desde `.harness/` (fuente canónica):
+
+| Artifact            | opencode            | Claude Code         | GitHub Copilot         | Cursor            |
+| ------------------- | ------------------- | ------------------- | ---------------------- | ----------------- |
+| Agents              | `.opencode/agent/`  | `.claude/agents/`   | `.github/agents/`      | `.cursor/agents/` |
+| Commands `test`/`pr`| `opencode.json` → `command` | `.claude/commands/` | `.github/prompts/` | `.cursor/commands/` |
+| Skill `code-review` | `.opencode/skill/code-review/` | `.claude/skills/code-review/` | `.github/skills/code-review/` | `.cursor/skills/code-review/` |
+
+Notas de paridad: los modelos no se pinnean por agente (cada tool usa su modelo por defecto); `reviewer` es de solo lectura en todas (en opencode/Claude vía allowlist/deny, en Cursor vía `readonly: true`).
 
 ### Skills
 
