@@ -16,6 +16,7 @@ Crea un Pull Request en GitHub usando la cuenta autenticada.
 5. Muestra al usuario el resumen y pide confirmación antes de crear el PR
 6. Si el usuario confirma, ejecuta `gh pr create --assignee "@me"` con el título y body generados
 7. Devuelve la URL del PR creado
+8. Posiciónate en `main` actualizada para la próxima tarea: `git checkout main && git pull origin main`. No es trabajo sobre `main`: solo posicionarse, sin tocar archivos.
 
 ## Formato del PR
 
@@ -28,3 +29,5 @@ Crea un Pull Request en GitHub usando la cuenta autenticada.
 - No hacer `git add`, `git commit` ni `git push` por cuenta propia — `gh pr create` lo maneja internamente
 - Si el PR ya existe para la rama actual, informarlo y no duplicarlo
 - Si hay errores de autenticación o permisos, reportarlos claramente
+- **Después de crear el PR, volver a `main` actualizada** (`git checkout main && git pull origin main`) para que la próxima tarea arranque posicionada en `main`
+- Si el working tree tiene cambios sin commitear al pedir el PR, avisarle al humano antes de hacer checkout (no perderse trabajo)
