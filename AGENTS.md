@@ -25,6 +25,7 @@ App de gastos con AI para análisis y categorización automática.
 - **NUNCA trabajar directamente sobre `main`.** Todo cambio (código, docs, config) se hace en una branch nueva creada desde `main` actualizado: primero `git pull origin main`, luego crear la branch con el formato de `.harness/memory/conventions/branch-naming.md`. Si el AI detecta que está sobre `main`, debe frenar y crear la branch antes de tocar cualquier archivo.
 - Branches: seguir la convención en `.harness/memory/conventions/branch-naming.md`
 - La AI nunca debe hacer `git add`, `git commit` ni `git push`. El único responsable de stage/commit/push es el humano.
+- **Después de crear un PR, mover a `main` actualizada** (`git checkout main && git pull origin main`) para quedar posicionado en la próxima tarea. Es solo posicionarse: nunca hacer cambios directamente desde `main`.
 - [agregar más conforme aprendas]
 
 ## Referencias

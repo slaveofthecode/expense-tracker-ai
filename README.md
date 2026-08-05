@@ -90,6 +90,7 @@ Configuración que guía a los agentes de IA: roles, procedimientos y memoria co
 - **`pr`** (`.harness/commands/pr.md`): genera título y descripción del diff y crea un Pull Request en GitHub (`gh pr create --assignee "@me"`).
   - **Quién:** el agente `orchestrator`.
   - **Cuándo:** cuando el humano lo invoca desde una branch de trabajo (nunca desde `main`). Requiere `gh` autenticado y confirmación del humano antes de crear el PR.
+  - **Qué pasa después:** el AI vuelve a `main` actualizada (`git checkout main && git pull origin main`) para quedar posicionado en la próxima tarea.
 
 ### Memory (`.harness/memory/memory.md`)
 
