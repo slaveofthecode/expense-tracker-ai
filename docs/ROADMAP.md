@@ -28,16 +28,20 @@ TUI funcional con datos hardcodeados que muestra items de gastos con sus totales
 
 ## v3 — Búsqueda y Filtros
 
-**Objetivo:** acotar qué gastos se ven en las pantallas existentes (Dashboard, ItemDetail).
+**Objetivo:** encontrar gastos rápido desde cualquier pantalla y navegar directo al detalle.
 
-- [ ] Filtrar por item o categoría (tipo: `credit_card`, `loan`, `recurring`, `insurance`, `other`)
-- [ ] Filtrar por persona (gastos compartidos según `ownership.person`)
-- [ ] Búsqueda textual clásica por descripción e item (filtro en código/DB, sin IA)
+- [x] Filtro por tipo en Dashboard (tecla `t`, cicla `credit_card`, `loan`, `recurring`, `insurance`, `other`)
+- [x] Búsqueda global con resultados en vivo: `SearchPalette` al presionar `/` (directo, sin pasar por lista de comandos)
+- [x] Resultados por gasto: cada fila muestra item, tipo, persona, monto y fecha; si un item matchea sin gastos, se muestra como fila extra
+- [x] Enter sobre un resultado navega al detalle del item posicionando la fila del gasto que matcheó (ajustando el año)
+- [x] Filtro por persona (gastos compartidos según `ownership.person`) a través de la búsqueda
+- [x] Estilo visual unificado en las grillas (Dashboard, ItemDetail, ItemDetailCard): celdas grises, header del mes actual blanco bold, compartidos amarillos, fila seleccionada solo en bold sin cambio de color
 
 **Cómo implementar:**
-- Filtros y búsqueda como filtros en memoria sobre los datos ya cargados por `listItems`/`listExpenses` (`src/db/repository.ts`), o con `LIKE` en SQL si hace falta.
-- La búsqueda se reutiliza después en la tool `search_expenses` de v5.
-- Fuera de alcance: filtrar por mes (la grilla anual ya muestra los 12 meses) y búsqueda semántica con IA (se evalúa como mejora post-v5).
+- `src/utils/filters.ts`: `searchResults` devuelve filas por gasto (item, tipo, persona, monto, fecha) y filas de item sin gastos; reutiliza `normalize` (case/accent-insensitive). La misma lógica se reutiliza después en la tool `search_expenses` de v5.
+- `src/app/components/SearchPalette.tsx`: input con resultados en vivo (↑↓ para navegar, Enter abre el item, Esc cierra), reemplaza a `CommandPalette`.
+- El screen `itemDetail` lleva `focusExpenseId` opcional para posicionar el cursor en la fila del gasto origen; `App` ajusta el año antes de navegar.
+- Fuera de alcance: búsqueda semántica con IA (se evalúa como mejora post-v5). El filtro por tipo sigue funcionando pero ya no se muestra en el footer.
 
 **Cuándo:** primera entrega analítica; habilita reportes útiles (v4).
 
