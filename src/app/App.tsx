@@ -11,6 +11,7 @@ import {
   deleteExpense,
 } from "../db/repository";
 import { Dashboard } from "./components/Dashboard";
+import { Charts } from "./components/Charts";
 import { ItemDetail } from "./components/ItemDetail";
 import { ItemDetailCard } from "./components/ItemDetailCard";
 import { ExpenseDetail } from "./components/ExpenseDetail";
@@ -28,6 +29,8 @@ interface AppProps {
 function getBackScreen(current: Screen): Screen {
   switch (current.name) {
     case "itemDetail":
+      return { name: "dashboard" };
+    case "charts":
       return { name: "dashboard" };
     case "expenseDetail":
       return { name: "itemDetail", itemId: current.itemId };
@@ -138,7 +141,19 @@ export function App({ db }: AppProps) {
           onEditItem={(itemId) => setScreen({ name: "editItem", itemId })}
           onDeleteItem={handleDeleteItem}
           onAddExpense={() => setScreen({ name: "addExpense" })}
+          onOpenCharts={() => setScreen({ name: "charts" })}
           onQuit={handleQuit}
+        />
+      );
+
+    case "charts":
+      return (
+        <Charts
+          items={items}
+          expenses={expenses}
+          year={year}
+          onYearChange={setYear}
+          onBack={handleBack}
         />
       );
 

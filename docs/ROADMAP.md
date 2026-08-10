@@ -47,15 +47,20 @@ TUI funcional con datos hardcodeados que muestra items de gastos con sus totales
 
 ## v4 — Reportes
 
-**Objetivo:** consolidar los datos en resúmenes y salidas portables.
+**Objetivo:** consolidar los datos en gráficos dentro de la terminal.
 
-- [ ] Resumen mensual por item (base ya existe en `calcMonthlySummaries`)
-- [ ] Gráficos en terminal (barras, torta) con caracteres Unicode en Ink
-- [ ] Exportación a CSV/JSON (código plano + `fs`, sin dependencias externas)
+- [ ] Pantalla `Charts` (tecla `g` en Dashboard, hint en el footer) con 4 gráficos seleccionables con `1`/`2`/`3`/`4`:
+  - Gasto mensual del año (12 barras; tu parte en amarillo sobre el total)
+  - Gasto por tipo de ítem (barras por `ItemType`, ordenadas desc, con % del total)
+  - Top ítems del año (top 5 con monto y %)
+  - Distribución por tipo (barra única segmentada por tipo con leyenda)
+- [ ] Año navegable con `←`/`→`; `Esc` vuelve al Dashboard
+- [ ] Barras adaptativas al ancho del terminal y colores de la paleta existente
 
 **Cómo implementar:**
-- El cálculo vive en `src/utils/summaries.ts`; los gráficos se renderizan con `Text` de Ink (ej: barras con `█`).
-- La exportación lee del repository y escribe con `fs` (ej: `.data/export/`). **No usar MCP**: MCP es un protocolo para que agentes AI accedan a datos, no un mecanismo de exportación.
+- `src/utils/charts.ts`: `computeCharts` arma `ChartsData` (mensual, por tipo, top) a partir de `calcYearlySummaries`; helpers puros de barras (`scaleBlocksMin`, `distributeSegments` con mínimo 1 bloque por valor > 0, `barString`, `annotation`). Todo testeable sin Ink.
+- `src/app/components/Charts.tsx`: render con `Text` de Ink (barras con `█`/`░`), pantalla nueva `{ name: "charts" }` en `App.tsx`.
+- Fuera de alcance de v4 (se evalúa en el futuro): exportación a CSV/JSON y resumen mensual por ítem en pantalla (la base de cálculo ya existe en `calcMonthlySummaries`).
 
 **Cuándo:** después de v3 (los reportes se filtran), antes de v5 (la IA necesita datos consolidados).
 
