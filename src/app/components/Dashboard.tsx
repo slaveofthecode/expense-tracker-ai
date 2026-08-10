@@ -1,29 +1,28 @@
-import { Box, Newline, Text, useInput } from 'ink';
+import { Box, Text, useInput } from 'ink';
 import { useState } from 'react';
-import type { Item, Expense } from '../../types';
+import type { Item, Expense, ItemType } from '../../types';
+import { ITEM_TYPES } from '../../types';
 import {
 	formatCurrency,
 	formatYearWide,
 	MONTHS_SHORT_ES,
 } from '../../utils/format';
 import { calcYearlySummaries, currentMonth } from '../../utils/summaries';
+import type { SearchResult } from '../../utils/filters';
 import { Confirm } from './Confirm';
+import { SearchPalette } from './SearchPalette';
 
 const NOT_MINE_COLOR = '#e0af68';
 const YEAR_COLOR = '#ffd700';
-const MONTH_HEADER_COLOR = '#7aa2f7';
+const MONTH_HEADER_COLOR = '#ffffff';
 const ITEM_HEADER_COLOR = '#c678dd';
 const ITEM_NAME_COLOR = '#c0caf5';
-// color for selected row (similar family to ITEM_NAME_COLOR but distinct)
-const SELECT_ROW_COLOR = '#89b4fa';
-const SELECT_ITEM_COLOR = '#7fb9ff'; // item slightly brighter than row
+const MONTH_CELL_COLOR = '#9e9e9e';
 const ITEM_WIDTH = 24;
 const MONTH_WIDTH = 15;
 // toggle inverted background selection preview (true = inverted background, false = colored text)
 const USE_INVERTED_SELECTION = false;
-// Make current month white; other months white@75% approximated as #bfbfbf
-const MONTH_CURRENT_HIGHLIGHT = '#ffffff';
-const MONTH_DEFAULT_FAINT = '#bfbfbf';
+const TYPE_FILTERS: (ItemType | 'all')[] = ['all', ...ITEM_TYPES];
 
 interface DashboardProps {
 	items: Item[];
@@ -31,6 +30,7 @@ interface DashboardProps {
 	year: number;
 	onYearChange: (year: number) => void;
 	onSelectItem: (itemId: string) => void;
+	onSearchResult: (result: SearchResult) => void;
 	onAddItem: () => void;
 	onEditItem: (itemId: string) => void;
 	onDeleteItem: (itemId: string) => void;
@@ -44,6 +44,7 @@ export function Dashboard({
 	year,
 	onYearChange,
 	onSelectItem,
+	onSearchResult,
 	onAddItem,
 	onEditItem,
 	onDeleteItem,
@@ -52,13 +53,23 @@ export function Dashboard({
 }: DashboardProps) {
 	const [selectedIndex, setSelectedIndex] = useState(0);
 	const [confirmingDelete, setConfirmingDelete] = useState(false);
-	const summaries = calcYearlySummaries(items, expenses, year);
+	const [searchOpen, setSearchOpen] = useState(false);
+	const [typeFilter, setTypeFilter] = useState<ItemType | 'all'>('all');
+	const visibleItems =
+		typeFilter === 'all'
+			? items
+			: items.filter((item) => item.type === typeFilter);
+	const currentIndex = Math.min(
+		selectedIndex,
+		Math.max(visibleItems.length - 1, 0)
+	);
+	const summaries = calcYearlySummaries(visibleItems, expenses, year);
 	const now = currentMonth();
 	const currentYear = Number(now.slice(0, 4));
 	const currentMonthIndex = Number(now.slice(5, 7)) - 1;
 
 	useInput((_input, key) => {
-		if (confirmingDelete) return;
+		if (searchOpen || confirmingDelete) return;
 		if (key.escape || (key.ctrl && _input.toLowerCase() === 'c')) {
 			onQuit();
 			return;
@@ -71,24 +82,37 @@ export function Dashboard({
 			onYearChange(year + 1);
 			return;
 		}
-		if (items.length === 0) return;
-		if (key.upArrow) {
-			setSelectedIndex((i) => (i > 0 ? i - 1 : items.length - 1));
+		if (_input.toLowerCase() === '/') {
+			setSearchOpen(true);
+			return;
 		}
-		if (key.downArrow) {
-			setSelectedIndex((i) => (i < items.length - 1 ? i + 1 : 0));
-		}
-		if (key.return) {
-			onSelectItem(items[selectedIndex].id);
+		if (_input.toLowerCase() === 't') {
+			setTypeFilter((prev) => {
+				const idx = TYPE_FILTERS.indexOf(prev);
+				return TYPE_FILTERS[(idx + 1) % TYPE_FILTERS.length];
+			});
+			return;
 		}
 		if (_input.toLowerCase() === 'a') {
 			onAddExpense();
+			return;
 		}
 		if (_input.toLowerCase() === 'i') {
 			onAddItem();
+			return;
+		}
+		if (visibleItems.length === 0) return;
+		if (key.upArrow) {
+			setSelectedIndex((i) => (i > 0 ? i - 1 : visibleItems.length - 1));
+		}
+		if (key.downArrow) {
+			setSelectedIndex((i) => (i < visibleItems.length - 1 ? i + 1 : 0));
+		}
+		if (key.return) {
+			onSelectItem(visibleItems[currentIndex].id);
 		}
 		if (_input.toLowerCase() === 'e') {
-			onEditItem(items[selectedIndex].id);
+			onEditItem(visibleItems[currentIndex].id);
 		}
 		if (_input.toLowerCase() === 'd') {
 			setConfirmingDelete(true);
@@ -96,7 +120,7 @@ export function Dashboard({
 	});
 
 	if (confirmingDelete) {
-		const item = items[selectedIndex];
+		const item = visibleItems[currentIndex];
 		return (
 			<Confirm
 				message={`¿Eliminar "${item.name}"? Sus gastos también se eliminarán.`}
@@ -122,6 +146,15 @@ export function Dashboard({
 				<Text color={'gray'}>{' ] '}</Text>
 			</Box>
 
+			{searchOpen ? (
+				<SearchPalette
+					items={items}
+					expenses={expenses}
+					onSelect={onSearchResult}
+					onClose={() => setSearchOpen(false)}
+				/>
+			) : null}
+
 			<Box flexDirection="column" marginBottom={1}>
 				<Box>
 					<Text bold color={ITEM_HEADER_COLOR}>
@@ -130,12 +163,11 @@ export function Dashboard({
 					</Text>
 					{MONTHS_SHORT_ES.map((month, mi) => {
 						const isCurrent = year === currentYear && mi === currentMonthIndex;
-						const headerColor = isCurrent ? MONTH_CURRENT_HIGHLIGHT : MONTH_DEFAULT_FAINT;
 						return (
 							<Text
 								key={`header-${mi}`}
-								bold
-								color={headerColor}
+								bold={isCurrent}
+								color={MONTH_HEADER_COLOR}
 								dimColor={false}
 							>
 								{month.padStart(MONTH_WIDTH)}
@@ -148,9 +180,9 @@ export function Dashboard({
 					{'─'.repeat(ITEM_WIDTH + MONTH_WIDTH * 12)}
 				</Text>
 				{summaries.map((s, i) => {
-					const item = items.find((it) => it.id === s.itemId);
+					const item = visibleItems.find((it) => it.id === s.itemId);
 					if (!item) return null;
-					const isSelected = i === selectedIndex;
+					const isSelected = i === currentIndex;
 					const prefix = isSelected ? '❯ ' : '  ';
 
 					// Determine whether this item should be treated as an aggregator
@@ -160,7 +192,7 @@ export function Dashboard({
 					return (
 						<Box key={item.id}>
 							<Text
-								color={isSelected ? SELECT_ITEM_COLOR : ITEM_NAME_COLOR}
+								color={ITEM_NAME_COLOR}
 								bold={isSelected}
 								inverse={USE_INVERTED_SELECTION && isSelected}
 							>
@@ -169,21 +201,10 @@ export function Dashboard({
 							</Text>
 							{s.months.map((m, mi) => {
 								const isShared = m.total > 0 && m.myShare < m.total;
-								const isCurrentMonth =
-									year === currentYear && mi === currentMonthIndex;
-								// month cell color priority: NOT_MINE_COLOR only for non-aggregators (unique items) > current month highlight > selection color
-								let monthColor: string | undefined = undefined;
-								if (!isAggregator && isShared) {
-									// only show shared indicator for items that don't act as aggregators
-									monthColor = NOT_MINE_COLOR;
-								} else if (isCurrentMonth) {
-									monthColor = MONTH_CURRENT_HIGHLIGHT;
-								} else if (isSelected) {
-									monthColor = SELECT_ROW_COLOR;
-								} else {
-									monthColor = MONTH_DEFAULT_FAINT;
-								}
-								// do not dim month cells to keep them visible; special colors take precedence
+								const monthColor =
+									!isAggregator && isShared
+										? NOT_MINE_COLOR
+										: MONTH_CELL_COLOR;
 								return (
 									<Text
 										key={`month-${item.id}-${mi}`}
@@ -205,6 +226,8 @@ export function Dashboard({
 					<Text dimColor>
 						No hay ítems todavía. Presiona "i" para agregar uno.
 					</Text>
+				) : visibleItems.length === 0 ? (
+					<Text dimColor>No hay ítems que coincidan con la búsqueda.</Text>
 				) : null}
 			</Box>
 
@@ -213,9 +236,9 @@ export function Dashboard({
 					{'  '}↑↓ Navegar · Enter Seleccionar · ←→ Año ·{' '}
 				</Text>
 				<Text color="#88c0d0">
-					<Text bold>a</Text> Agregar Gasto · <Text bold>i</Text> Agregar Ítem ·{' '}
-					<Text bold>e</Text> Editar · <Text bold>d</Text> Eliminar ·{' '}
-					<Text bold>Esc</Text> Salir
+					<Text bold>/</Text> Buscar · <Text bold>a</Text> Agregar Gasto ·{' '}
+					<Text bold>i</Text> Agregar Ítem · <Text bold>e</Text> Editar ·{' '}
+					<Text bold>d</Text> Eliminar · <Text bold>Esc</Text> Salir
 				</Text>
 			</Box>
 

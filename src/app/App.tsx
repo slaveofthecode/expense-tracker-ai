@@ -19,6 +19,7 @@ import { ExpenseForm, defaultExpenseFormInitial } from "./components/ExpenseForm
 import { todayISO, formatCurrency } from "../utils/format";
 import { getLatestYear } from "../utils/summaries";
 import type { NewExpense, NewItem, Screen } from "../types";
+import type { SearchResult } from "../utils/filters";
 
 interface AppProps {
   db: Database;
@@ -108,6 +109,21 @@ export function App({ db }: AppProps) {
     setScreen((current) => getBackScreen(current));
   };
 
+  const handleSearchResult = (result: SearchResult) => {
+    const item = items.find((i) => i.id === result.itemId);
+    if (!item) return;
+    if (result.kind === "expense") {
+      setYear(Number(result.date.slice(0, 4)));
+      setScreen({
+        name: "itemDetail",
+        itemId: item.id,
+        focusExpenseId: result.expenseId,
+      });
+    } else {
+      setScreen({ name: "itemDetail", itemId: item.id });
+    }
+  };
+
   switch (screen.name) {
     case "dashboard":
       return (
@@ -117,6 +133,7 @@ export function App({ db }: AppProps) {
           year={year}
           onYearChange={setYear}
           onSelectItem={(itemId) => setScreen({ name: "itemDetail", itemId })}
+          onSearchResult={handleSearchResult}
           onAddItem={() => setScreen({ name: "addItem" })}
           onEditItem={(itemId) => setScreen({ name: "editItem", itemId })}
           onDeleteItem={handleDeleteItem}
@@ -135,11 +152,15 @@ export function App({ db }: AppProps) {
           <ItemDetailCard
             item={item}
             expenses={itemExpenses}
+            allItems={items}
+            allExpenses={expenses}
             year={year}
             onYearChange={setYear}
             onSelectExpense={(expenseId) =>
               setScreen({ name: "expenseDetail", expenseId, itemId: item.id })
             }
+            onSearchResult={handleSearchResult}
+            initialExpenseId={screen.focusExpenseId}
             onAddExpense={() => setScreen({ name: "addExpense", itemId: item.id })}
             onBack={handleBack}
           />
@@ -150,11 +171,15 @@ export function App({ db }: AppProps) {
         <ItemDetail
           item={item}
           expenses={itemExpenses}
+          allItems={items}
+          allExpenses={expenses}
           year={year}
           onYearChange={setYear}
           onSelectExpense={(expenseId) =>
             setScreen({ name: "expenseDetail", expenseId, itemId: item.id })
           }
+          onSearchResult={handleSearchResult}
+          initialExpenseId={screen.focusExpenseId}
           onAddExpense={() => setScreen({ name: "addExpense", itemId: item.id })}
           onBack={handleBack}
         />

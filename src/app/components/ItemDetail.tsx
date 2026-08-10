@@ -1,5 +1,5 @@
 import { Box, Text, useInput } from 'ink';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Item, Expense } from '../../types';
 import {
 	formatCurrency,
@@ -7,26 +7,30 @@ import {
 	formatYearWide,
 } from '../../utils/format';
 import { currentMonth, monthOf } from '../../utils/summaries';
+import type { SearchResult } from '../../utils/filters';
+import { SearchPalette } from './SearchPalette';
 
 const NOT_MINE_COLOR = '#e0af68';
 const YEAR_COLOR = '#ffd700';
-const MONTH_HEADER_COLOR = '#7aa2f7';
+const MONTH_HEADER_COLOR = '#ffffff';
 const ITEM_HEADER_COLOR = '#c678dd';
 const ROW_COLOR = '#c0caf5';
+const MONTH_CELL_COLOR = '#9e9e9e';
 const FIRST_INSTALLMENT_COLOR = '#9ece6a';
 const DESC_WIDTH = 28;
 const MONTH_WIDTH = 15;
-const SELECT_ROW_COLOR = '#89b4fa';
-const SELECT_ITEM_COLOR = '#7fb9ff';
 const USE_INVERTED_SELECTION = false;
-const MONTH_CURRENT_HIGHLIGHT = '#ffd75f';
 
 interface ItemDetailProps {
 	item: Item;
 	expenses: Expense[];
+	allItems: Item[];
+	allExpenses: Expense[];
 	year: number;
 	onYearChange: (year: number) => void;
 	onSelectExpense: (expenseId: string) => void;
+	onSearchResult: (result: SearchResult) => void;
+	initialExpenseId?: string;
 	onAddExpense: () => void;
 	onBack: () => void;
 }
@@ -34,13 +38,18 @@ interface ItemDetailProps {
 export function ItemDetail({
 	item,
 	expenses,
+	allItems,
+	allExpenses,
 	year,
 	onYearChange,
 	onSelectExpense,
+	onSearchResult,
+	initialExpenseId,
 	onAddExpense,
 	onBack,
 }: ItemDetailProps) {
 	const [selectedIndex, setSelectedIndex] = useState(0);
+	const [searchOpen, setSearchOpen] = useState(false);
 	const yearExpenses = expenses.filter((e) => {
 		const startYear = Number(monthOf(e.date).slice(0, 4));
 		const startMonth = Number(monthOf(e.date).slice(5, 7)) - 1;
@@ -57,7 +66,18 @@ export function ItemDetail({
 	const currentYear = Number(now.slice(0, 4));
 	const currentMonthIndex = Number(now.slice(5, 7)) - 1;
 
+	useEffect(() => {
+		if (!initialExpenseId) {
+			setSelectedIndex(0);
+			return;
+		}
+		const idx = yearExpenses.findIndex((e) => e.id === initialExpenseId);
+		setSelectedIndex(idx >= 0 ? idx : 0);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [item.id, initialExpenseId]);
+
 	useInput((_input, key) => {
+		if (searchOpen) return;
 		if (key.escape) {
 			onBack();
 			return;
@@ -68,6 +88,10 @@ export function ItemDetail({
 		}
 		if (key.rightArrow) {
 			onYearChange(year + 1);
+			return;
+		}
+		if (_input.toLowerCase() === '/') {
+			setSearchOpen(true);
 			return;
 		}
 		if (yearExpenses.length === 0) return;
@@ -98,6 +122,15 @@ export function ItemDetail({
 				<Text color={'gray'}>{' ] '}</Text>
 			</Box>
 
+			{searchOpen ? (
+				<SearchPalette
+					items={allItems}
+					expenses={allExpenses}
+					onSelect={onSearchResult}
+					onClose={() => setSearchOpen(false)}
+				/>
+			) : null}
+
 			<Box flexDirection="column" marginBottom={1}>
 				<Box>
 					<Text bold color={ITEM_HEADER_COLOR}>
@@ -106,11 +139,13 @@ export function ItemDetail({
 					</Text>
 					{MONTHS_SHORT_ES.map((month, mi) => {
 						const isCurrent = year === currentYear && mi === currentMonthIndex;
-						const headerColor = isCurrent
-							? MONTH_CURRENT_HIGHLIGHT
-							: MONTH_HEADER_COLOR;
 						return (
-							<Text key={month} bold color={headerColor} dimColor={false}>
+							<Text
+								key={month}
+								bold={isCurrent}
+								color={MONTH_HEADER_COLOR}
+								dimColor={false}
+							>
 								{month.padStart(MONTH_WIDTH)}
 							</Text>
 						);
@@ -134,7 +169,6 @@ export function ItemDetail({
 						if (startYear + Math.floor(absolute / 12) !== year) continue;
 						covered.add(absolute % 12);
 					}
-					const notMine = e.ownership.percentage === 0;
 					const isShared = e.ownership.percentage < 100;
 					const firstCuotaMonth =
 						window > 1 && startYear === year ? startMonth : -1;
@@ -147,7 +181,7 @@ export function ItemDetail({
 					return (
 						<Box key={e.id}>
 							<Text
-								color={isSelected ? SELECT_ITEM_COLOR : ROW_COLOR}
+								color={ROW_COLOR}
 								bold={isSelected}
 								inverse={USE_INVERTED_SELECTION && isSelected}
 							>
@@ -155,28 +189,19 @@ export function ItemDetail({
 								{description}
 							</Text>
 							{MONTHS_SHORT_ES.map((_, mi) => {
-								const isCurrentMonth =
-									year === currentYear && mi === currentMonthIndex;
 								const showAmount = covered.has(mi);
-								// If the row is selected, highlight entire row (but keep first-installment color)
 								const monthIsFirst = firstCuotaMonth === mi;
-								// month cell color priority: FIRST_INSTALLMENT_COLOR > NOT_MINE_COLOR > current month highlight > selection color
-								let monthColor: string | undefined = undefined;
-								if (showAmount && monthIsFirst) {
-									monthColor = FIRST_INSTALLMENT_COLOR;
-								} else if (showAmount && isShared) {
-									monthColor = NOT_MINE_COLOR;
-								} else if (isCurrentMonth) {
-									monthColor = MONTH_CURRENT_HIGHLIGHT;
-								} else if (isSelected && showAmount) {
-									monthColor = SELECT_ROW_COLOR;
-								}
-								// keep month cells visible; special colors override selection
+								const monthColor =
+									showAmount && monthIsFirst
+										? FIRST_INSTALLMENT_COLOR
+										: showAmount && isShared
+											? NOT_MINE_COLOR
+											: MONTH_CELL_COLOR;
 								return (
 									<Text
 										key={mi}
 										color={monthColor}
-										bold={isSelected && monthColor !== FIRST_INSTALLMENT_COLOR}
+										bold={isSelected}
 										inverse={USE_INVERTED_SELECTION && isSelected}
 										dimColor={false}
 									>
@@ -199,7 +224,8 @@ export function ItemDetail({
 					{'  '}↑↓ Navegar · Enter Detalle · ←→ Año ·{' '}
 				</Text>
 				<Text color="#88c0d0">
-					<Text bold>a</Text> Agregar Gasto · <Text bold>Esc</Text> Volver
+					<Text bold>/</Text> Buscar · <Text bold>a</Text> Agregar Gasto ·{' '}
+					<Text bold>Esc</Text> Volver
 				</Text>
 			</Box>
 
