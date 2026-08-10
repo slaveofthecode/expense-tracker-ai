@@ -1,25 +1,28 @@
 import { Box, Text, useInput } from 'ink';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Item, Expense } from '../../types';
 import { formatCurrency, formatYearWide } from '../../utils/format';
 import { currentMonth, monthOf } from '../../utils/summaries';
+import type { SearchResult } from '../../utils/filters';
+import { SearchPalette } from './SearchPalette';
 
 const SHARED_COLOR = '#e0af68';
 const YEAR_COLOR = '#ffd700';
 const ITEM_HEADER_COLOR = '#c678dd';
 const ROW_COLOR = '#c0caf5';
 const FIRST_INSTALLMENT_COLOR = '#9ece6a';
-const SELECT_ROW_COLOR = '#89b4fa';
-const SELECT_ITEM_COLOR = '#7fb9ff';
 const USE_INVERTED_SELECTION = false;
-const MONTH_CURRENT_HIGHLIGHT = '#ffd75f';
 
 interface ItemDetailCardProps {
 	item: Item;
 	expenses: Expense[];
+	allItems: Item[];
+	allExpenses: Expense[];
 	year: number;
 	onYearChange: (year: number) => void;
 	onSelectExpense: (expenseId: string) => void;
+	onSearchResult: (result: SearchResult) => void;
+	initialExpenseId?: string;
 	onAddExpense: () => void;
 	onBack: () => void;
 }
@@ -27,13 +30,18 @@ interface ItemDetailCardProps {
 export function ItemDetailCard({
 	item,
 	expenses,
+	allItems,
+	allExpenses,
 	year,
 	onYearChange,
 	onSelectExpense,
+	onSearchResult,
+	initialExpenseId,
 	onAddExpense,
 	onBack,
 }: ItemDetailCardProps) {
 	const [selectedIndex, setSelectedIndex] = useState(0);
+	const [searchOpen, setSearchOpen] = useState(false);
 	const yearExpenses = expenses.filter((e) => {
 		const startYear = Number(monthOf(e.date).slice(0, 4));
 		const startMonth = Number(monthOf(e.date).slice(5, 7)) - 1;
@@ -50,7 +58,18 @@ export function ItemDetailCard({
 	const currentYear = Number(now.slice(0, 4));
 	const currentMonthIndex = Number(now.slice(5, 7)) - 1;
 
+	useEffect(() => {
+		if (!initialExpenseId) {
+			setSelectedIndex(0);
+			return;
+		}
+		const idx = yearExpenses.findIndex((e) => e.id === initialExpenseId);
+		setSelectedIndex(idx >= 0 ? idx : 0);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [item.id, initialExpenseId]);
+
 	useInput((_input, key) => {
+		if (searchOpen) return;
 		if (key.escape) {
 			onBack();
 			return;
@@ -61,6 +80,10 @@ export function ItemDetailCard({
 		}
 		if (key.rightArrow) {
 			onYearChange(year + 1);
+			return;
+		}
+		if (_input.toLowerCase() === '/') {
+			setSearchOpen(true);
 			return;
 		}
 		if (yearExpenses.length === 0) return;
@@ -91,6 +114,15 @@ export function ItemDetailCard({
 				<Text color={'gray'}>{' ] '}</Text>
 			</Box>
 
+			{searchOpen ? (
+				<SearchPalette
+					items={allItems}
+					expenses={allExpenses}
+					onSelect={onSearchResult}
+					onClose={() => setSearchOpen(false)}
+				/>
+			) : null}
+
 			{yearExpenses.length === 0 ? (
 				<Box marginBottom={1}>
 					<Text dimColor>No hay gastos en {year}.</Text>
@@ -116,11 +148,9 @@ export function ItemDetailCard({
 						const description = `${e.description}${badge}`;
 						const textColor = isFirstInstallment
 							? FIRST_INSTALLMENT_COLOR
-							: isSelected
-								? SELECT_ITEM_COLOR
-								: isShared
-									? SHARED_COLOR
-									: ROW_COLOR;
+							: isShared
+								? SHARED_COLOR
+								: ROW_COLOR;
 
 						return (
 							<Box key={e.id} marginBottom={1} flexDirection="column">
