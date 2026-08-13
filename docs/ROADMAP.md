@@ -49,13 +49,13 @@ TUI funcional con datos hardcodeados que muestra items de gastos con sus totales
 
 **Objetivo:** consolidar los datos en gráficos dentro de la terminal.
 
-- [ ] Pantalla `Charts` (tecla `g` en Dashboard, hint en el footer) con 4 gráficos seleccionables con `1`/`2`/`3`/`4`:
+- [x] Pantalla `Charts` (tecla `g` en Dashboard, hint en el footer) con 4 gráficos seleccionables con `1`/`2`/`3`/`4`:
   - Gasto mensual del año (12 barras; tu parte en amarillo sobre el total)
   - Gasto por tipo de ítem (barras por `ItemType`, ordenadas desc, con % del total)
   - Top ítems del año (top 5 con monto y %)
   - Distribución por tipo (barra única segmentada por tipo con leyenda)
-- [ ] Año navegable con `←`/`→`; `Esc` vuelve al Dashboard
-- [ ] Barras adaptativas al ancho del terminal y colores de la paleta existente
+- [x] Año navegable con `←`/`→`; `Esc` vuelve al Dashboard
+- [x] Barras adaptativas al ancho del terminal y colores de la paleta existente
 
 **Cómo implementar:**
 - `src/utils/charts.ts`: `computeCharts` arma `ChartsData` (mensual, por tipo, top) a partir de `calcYearlySummaries`; helpers puros de barras (`scaleBlocksMin`, `distributeSegments` con mínimo 1 bloque por valor > 0, `barString`, `annotation`). Todo testeable sin Ink.
@@ -70,7 +70,7 @@ TUI funcional con datos hardcodeados que muestra items de gastos con sus totales
 
 - [ ] Módulo `src/ai/` con interfaz de proveedor intercambiable (Ollama local por defecto; cloud OpenAI/Anthropic/Gemini opcional por env var)
 - [ ] Chat AI en la TUI: consultas en lenguaje natural (ej: "¿cuánto gasté en marzo?") con respuestas basadas en datos reales
-- [ ] Tools de consulta (solo lectura): `list_items`, `list_expenses`, `get_monthly_summary`, `get_yearly_summary`, `search_expenses`
+- [x] Tools de consulta (solo lectura): `list_items`, `list_expenses`, `get_monthly_summary`, `get_yearly_summary`, `search_expenses`
 - [ ] Categorización automática por sugerencia al ingresar (la IA propone el item y el humano confirma)
 - [ ] Detección de patrones de gasto (cálculo numérico en `summaries.ts` + insights en lenguaje natural por LLM)
 - [ ] Recomendaciones (reglas determinísticas + redacción y jerarquía por LLM)
