@@ -273,6 +273,8 @@ export function App({ db }: AppProps) {
         <ExpenseForm
           title="Agregar Gasto"
           items={items}
+          expenses={expenses}
+          agent={agent}
           initial={{
             ...initial,
             itemId: preselected?.id ?? initial.itemId,
@@ -292,6 +294,8 @@ export function App({ db }: AppProps) {
         <ExpenseForm
           title="Editar Gasto"
           items={items}
+          expenses={expenses}
+          agent={agent}
           initial={{
             itemId: expense.itemId,
             description: expense.description,

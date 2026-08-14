@@ -10,7 +10,7 @@ export interface ExpenseFilters {
   person?: string;
 }
 
-function normalize(text: string): string {
+export function normalize(text: string): string {
   return text
     .toLowerCase()
     .normalize("NFD")

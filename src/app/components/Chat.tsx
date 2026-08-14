@@ -1,6 +1,7 @@
 import { Box, Text, useInput } from 'ink';
 import { useState } from 'react';
 import type { Agent } from '../../ai/agent';
+import { answerDateQuestion } from '../../utils/dateIntent';
 
 const ACCENT_COLOR = '#00d4ff';
 const TEXT_COLOR = '#c0caf5';
@@ -29,6 +30,11 @@ export function Chat({ agent, onBack }: ChatProps) {
 
 	const send = (question: string) => {
 		setMessages((prev) => [...prev, { role: 'user', content: question }]);
+		const direct = answerDateQuestion(question);
+		if (direct !== null) {
+			setMessages((prev) => [...prev, { role: 'assistant', content: direct }]);
+			return;
+		}
 		setThinking(true);
 		agent
 			.ask(question)
