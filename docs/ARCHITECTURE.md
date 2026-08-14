@@ -73,6 +73,7 @@ interface Expense {
 ```
 expense-tracker-ai/
 ├── index.html           # Website público
+├── ollama-test.html     # Playground web para testear la API local de Ollama
 ├── README.md            # Docs para humanos
 ├── AGENTS.md            # Reglas para la AI
 ├── opencode.json        # Config OpenCode

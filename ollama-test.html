@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Interactive guide to test your local Ollama server: endpoints, curl commands, chat, and tool calling." />
+  <meta name="theme-color" content="#0d0d0d" />
+  <title>Ollama Test — Expense Tracker AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    /* ============================================
+       Reset & Base (same design language as index.html)
+       ============================================ */
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background-color: #0d0d0d;
+      color: #e5e5e5;
+      line-height: 1.6;
+    }
+
+    h1, h2, h3, h4 {
+      font-weight: 700;
+      line-height: 1.2;
+      color: #ffffff;
+    }
+
+    h1 { font-size: clamp(2rem, 5vw, 3.25rem); }
+    h2 { font-size: clamp(1.5rem, 3vw, 2.125rem); }
+    h3 { font-size: clamp(1.125rem, 2vw, 1.375rem); }
+    h4 { font-size: 1rem; }
+
+    p { margin-bottom: 1rem; }
+    a { color: #00d4ff; text-decoration: none; transition: color 0.2s; }
+    a:hover { color: #66e5ff; }
+
+    code {
+      font-family: 'SF Mono', 'Fira Code', 'Fira Mono', Menlo, Consolas, monospace;
+      background: rgba(255, 255, 255, 0.06);
+      padding: 0.2em 0.4em;
+      border-radius: 4px;
+      font-size: 0.875em;
+      color: #00d4ff;
+    }
+
+    pre {
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      overflow-x: auto;
+      font-family: 'SF Mono', 'Fira Code', 'Fira Mono', Menlo, Consolas, monospace;
+      font-size: 0.8125rem;
+      color: #c5c5c5;
+      margin: 1rem 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    pre code {
+      background: none;
+      padding: 0;
+      border-radius: 0;
+      font-size: inherit;
+      color: inherit;
+    }
+
+    /* ============================================
+       Layout
+       ============================================ */
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+
+    section {
+      padding: 4rem 0;
+      border-bottom: 1px solid #1a1a1a;
+    }
+
+    section:last-of-type {
+      border-bottom: none;
+    }
+
+    /* ============================================
+       Navigation
+       ============================================ */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      background: rgba(13, 13, 13, 0.88);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid #1a1a1a;
+    }
+
+    nav .container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 56px;
+    }
+
+    .nav-brand {
+      font-weight: 700;
+      font-size: 0.875rem;
+      color: #ffffff;
+      letter-spacing: -0.02em;
+    }
+
+    .nav-brand span {
+      color: #00d4ff;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 1.25rem;
+      list-style: none;
+      flex-wrap: wrap;
+    }
+
+    .nav-links a {
+      color: #888;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover {
+      color: #e5e5e5;
+    }
+
+    .nav-links .back {
+      color: #00d4ff;
+    }
+
+    /* ============================================
+       Hero
+       ============================================ */
+    #hero {
+      padding-top: 8rem;
+      padding-bottom: 4rem;
+      text-align: center;
+      border-bottom: 1px solid #1a1a1a;
+    }
+
+    .hero-badge {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #00d4ff;
+      background: rgba(0, 212, 255, 0.08);
+      border: 1px solid rgba(0, 212, 255, 0.15);
+      padding: 0.35rem 1rem;
+      border-radius: 100px;
+      margin-bottom: 1.5rem;
+    }
+
+    #hero p {
+      color: #888;
+      font-size: 1.0625rem;
+      max-width: 640px;
+      margin: 0 auto 1.25rem;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.65rem 1.5rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      transition: all 0.2s;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: #00d4ff;
+      color: #0d0d0d;
+    }
+
+    .btn-primary:hover {
+      background: #33ddff;
+      color: #0d0d0d;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: #e5e5e5;
+      border: 1px solid #333;
+    }
+
+    .btn-secondary:hover {
+      border-color: #555;
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* ============================================
+       Cards
+       ============================================ */
+    .card {
+      background: #141414;
+      border: 1px solid #222;
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .card h3 {
+      font-size: 1rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .card-warn {
+      border-color: rgba(255, 165, 0, 0.35);
+      background: rgba(255, 165, 0, 0.04);
+    }
+
+    .card-warn h3 { color: #ffb340; }
+
+    .section-header {
+      margin-bottom: 2.5rem;
+    }
+
+    .section-header h2 {
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .section-header p {
+      color: #888;
+      font-size: 0.9375rem;
+      max-width: 600px;
+    }
+
+    .section-divider {
+      width: 32px;
+      height: 3px;
+      background: #00d4ff;
+      border-radius: 2px;
+      margin-top: 0.75rem;
+    }
+
+    /* ============================================
+       Tables
+       ============================================ */
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+
+    thead th {
+      text-align: left;
+      padding: 0.75rem 1rem;
+      font-weight: 600;
+      color: #888;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid #222;
+    }
+
+    tbody td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid #1a1a1a;
+      color: #c5c5c5;
+      vertical-align: top;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    tbody tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    td code {
+      white-space: nowrap;
+    }
+
+    /* ============================================
+       Test panel
+       ============================================ */
+    .test-panel {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    .test-panel .card {
+      margin-bottom: 0;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.75rem;
+    }
+
+    .host-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .host-row label {
+      font-size: 0.875rem;
+      color: #888;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      min-width: 220px;
+      background: #0d0d0d;
+      border: 1px solid #333;
+      border-radius: 6px;
+      color: #e5e5e5;
+      padding: 0.5rem 0.75rem;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.8125rem;
+    }
+
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #00d4ff;
+    }
+
+    .status-badge {
+      display: inline-block;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+      margin-bottom: 0.5rem;
+      letter-spacing: 0.04em;
+    }
+
+    .status-ok { background: rgba(0, 200, 83, 0.12); border: 1px solid rgba(0, 200, 83, 0.3); color: #4caf50; }
+    .status-err { background: rgba(255, 85, 85, 0.12); border: 1px solid rgba(255, 85, 85, 0.3); color: #ff5555; }
+    .status-info { background: rgba(0, 212, 255, 0.08); border: 1px solid rgba(0, 212, 255, 0.2); color: #00d4ff; }
+
+    .result-box {
+      position: relative;
+      margin: 0.5rem 0 0;
+    }
+
+    .result-box pre {
+      margin: 0.25rem 0 0;
+      max-height: 320px;
+      overflow-y: auto;
+    }
+
+    .result-placeholder {
+      color: #555;
+      font-style: italic;
+      font-size: 0.8125rem;
+      padding: 0.75rem;
+      border: 1px dashed #2a2a2a;
+      border-radius: 8px;
+    }
+
+    .chat-form {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .chat-form textarea {
+      background: #0d0d0d;
+      border: 1px solid #333;
+      border-radius: 6px;
+      color: #e5e5e5;
+      padding: 0.75rem;
+      font-family: inherit;
+      font-size: 0.875rem;
+      resize: vertical;
+      min-height: 64px;
+    }
+
+    .chat-form textarea:focus {
+      outline: none;
+      border-color: #00d4ff;
+    }
+
+    .form-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.25rem;
+      display: block;
+    }
+
+    /* ============================================
+       Tags
+       ============================================ */
+    .method {
+      display: inline-block;
+      font-size: 0.6875rem;
+      font-weight: 700;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      letter-spacing: 0.05em;
+    }
+
+    .method-get { background: rgba(0, 212, 255, 0.12); color: #00d4ff; }
+    .method-post { background: rgba(0, 200, 83, 0.12); color: #4caf50; }
+
+    .steps {
+      list-style: none;
+      counter-reset: step;
+    }
+
+    .steps li {
+      counter-increment: step;
+      position: relative;
+      padding-left: 2.25rem;
+      margin-bottom: 1rem;
+      color: #c5c5c5;
+      font-size: 0.9375rem;
+    }
+
+    .steps li::before {
+      content: counter(step);
+      position: absolute;
+      left: 0;
+      top: 0.15rem;
+      width: 1.5rem;
+      height: 1.5rem;
+      border-radius: 50%;
+      background: rgba(0, 212, 255, 0.1);
+      border: 1px solid rgba(0, 212, 255, 0.25);
+      color: #00d4ff;
+      font-weight: 700;
+      font-size: 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .steps code {
+      white-space: nowrap;
+    }
+
+    /* ============================================
+       Footer
+       ============================================ */
+    footer {
+      padding: 2.5rem 0;
+      text-align: center;
+      border-top: 1px solid #1a1a1a;
+    }
+
+    footer p {
+      font-size: 0.8125rem;
+      color: #555;
+      margin-bottom: 0.25rem;
+    }
+
+    /* ============================================
+       Responsive
+       ============================================ */
+    @media (max-width: 820px) {
+      .nav-links { display: none; }
+      .test-panel { grid-template-columns: 1fr; }
+      #hero { padding-top: 6rem; }
+      section { padding: 3rem 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==========================================
+       Navigation
+       ========================================== -->
+  <nav>
+    <div class="container">
+      <a href="index.html" class="nav-brand">Expense<span>Tracker</span>AI</a>
+      <ul class="nav-links">
+        <li><a class="back" href="index.html">&larr; Home</a></li>
+        <li><a href="#setup">Setup</a></li>
+        <li><a href="#endpoints">Endpoints</a></li>
+        <li><a href="#status">Server Test</a></li>
+        <li><a href="#chat">Chat Test</a></li>
+        <li><a href="#tools">Tool Calling</a></li>
+        <li><a href="#fields">Fields</a></li>
+        <li><a href="#troubleshooting">Troubleshooting</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- ==========================================
+       Hero
+       ========================================== -->
+  <section id="hero">
+    <div class="container">
+      <div class="hero-badge">Local LLM Testing Playground</div>
+      <h1>Testing Ollama</h1>
+      <p>
+        The AI chat in the app (<code>c</code>) talks to a local LLM through Ollama's HTTP API
+        at <code>http://localhost:11434</code>. This page explains how that API works and lets
+        you poke it directly from your browser.
+      </p>
+      <div class="hero-actions">
+        <a href="#status" class="btn btn-primary">Test my server</a>
+        <a href="index.html" class="btn btn-secondary">Back to the project</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       Setup
+       ========================================== -->
+  <section id="setup">
+    <div class="container">
+      <div class="section-header">
+        <h2>Setup</h2>
+        <div class="section-divider"></div>
+        <p>Three steps before anything works.</p>
+      </div>
+
+      <div class="card card-warn">
+        <h3>Open this page over HTTP, not as a file</h3>
+        <p>
+          The interactive tests below use <code>fetch()</code> to call your local Ollama.
+          If you open this page as <code>file://...</code> your browser sends
+          <code>Origin: null</code> and Ollama answers <strong>403 Forbidden</strong>.
+          Serve it locally instead:
+        </p>
+        <pre><code>bunx serve .          # or: python3 -m http.server</code></pre>
+        <p style="margin-bottom: 0;">
+          Then open <code>http://localhost:3000/ollama-test.html</code>. This also mirrors how
+          the page behaves when published on GitHub Pages.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>The three checks</h3>
+        <ol class="steps">
+          <li>
+            <strong>Install &amp; run Ollama.</strong> Download from
+            <a href="https://ollama.com" target="_blank" rel="noopener">ollama.com</a>, then start the
+            server with <code>ollama serve</code> (or leave the desktop app running).
+          </li>
+          <li>
+            <strong>Pull the model the app uses.</strong>
+            <code>ollama pull llama3.2</code> — the same value as <code>AI_MODEL</code> in the
+            project's <code>.env</code>.
+          </li>
+          <li>
+            <strong>Verify.</strong> The tests in the next section should all pass.
+          </li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       Endpoints
+       ========================================== -->
+  <section id="endpoints">
+    <div class="container">
+      <div class="section-header">
+        <h2>API Endpoints</h2>
+        <div class="section-divider"></div>
+        <p>
+          Ollama exposes a plain HTTP API (no HTML UI). GET endpoints return server metadata;
+          only the POST ones run the model — that's why they need a JSON body and return
+          <code>405 Method Not Allowed</code> if you hit them with GET in a browser tab.
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Method</th><th>Path</th><th>What it does</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="method method-get">GET</span></td>
+                <td><code>/</code></td>
+                <td>Is the server up? Returns the plain text <code>Ollama is running</code>.</td>
+              </tr>
+              <tr>
+                <td><span class="method method-get">GET</span></td>
+                <td><code>/api/version</code></td>
+                <td>Server version, e.g. <code>{"version":"0.32.9"}</code>.</td>
+              </tr>
+              <tr>
+                <td><span class="method method-get">GET</span></td>
+                <td><code>/api/tags</code></td>
+                <td>List of downloaded models. Each model shows its size and
+                  <code>capabilities</code> (e.g. <code>["completion","tools"]</code>).</td>
+              </tr>
+              <tr>
+                <td><span class="method method-post">POST</span></td>
+                <td><code>/api/chat</code></td>
+                <td>Runs the model with a conversation. Supports OpenAI-style
+                  <code>tools</code> (function calling). This is what the app uses.</td>
+              </tr>
+              <tr>
+                <td><span class="method method-post">POST</span></td>
+                <td><code>/api/generate</code></td>
+                <td>Runs the model with a single prompt (no chat history, no tools).</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Same tests with curl</h3>
+        <p>These work from any terminal and are the canonical way to check connectivity:</p>
+        <pre><code>curl http://localhost:11434/                 # → Ollama is running
+curl http://localhost:11434/api/version     # → {"version":"..."}
+curl http://localhost:11434/api/tags        # → {"models":[...]}</code></pre>
+        <p style="margin-bottom: 0;">
+          The server only listens on <code>localhost</code> by default, so it's safe to hit it
+          from a browser on the same machine.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       Server status test
+       ========================================== -->
+  <section id="status">
+    <div class="container">
+      <div class="section-header">
+        <h2>Server Test</h2>
+        <div class="section-divider"></div>
+        <p>
+          Three GET requests to confirm the server is up, report its version, and list the
+          installed models. If "Models" shows <code>llama3.2</code> with
+          <code>"tools"</code> capability, the app's chat is ready to use.
+        </p>
+      </div>
+
+      <div class="test-panel">
+        <div class="card">
+          <h3>Run the checks</h3>
+          <div class="host-row">
+            <label for="host">Host</label>
+            <input type="text" id="host" value="http://localhost:11434" spellcheck="false" />
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-secondary" id="btn-root" onclick="runTest('root')">GET /</button>
+            <button class="btn btn-secondary" id="btn-version" onclick="runTest('version')">GET /api/version</button>
+            <button class="btn btn-secondary" id="btn-tags" onclick="runTest('tags')">GET /api/tags</button>
+          </div>
+          <p style="font-size: 0.8125rem; color: #888; margin-bottom: 0;">
+            <code>GET /api/tags</code> is the most useful: it proves the model you want is
+            downloaded. If <code>llama3.2</code> is missing, run <code>ollama pull llama3.2</code>.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3>Result</h3>
+          <div id="result-root">
+            <div class="result-placeholder">Click a button to run a GET request.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       Chat test
+       ========================================== -->
+  <section id="chat">
+    <div class="container">
+      <div class="section-header">
+        <h2>Chat Test</h2>
+        <div class="section-divider"></div>
+        <p>
+          A <code>POST /api/chat</code> with a conversation. This is exactly what the app sends
+          when you ask something in the chat screen (<code>c</code>). You can see the request
+          body on the left and the response on the right.
+        </p>
+      </div>
+
+      <div class="test-panel">
+        <div class="card">
+          <h3>Request</h3>
+          <div class="chat-form">
+            <div>
+              <label class="form-label" for="chat-model">Model</label>
+              <input type="text" id="chat-model" value="llama3.2" spellcheck="false" />
+            </div>
+            <div>
+              <label class="form-label" for="chat-message">Message</label>
+              <textarea id="chat-message">What is the capital of France?</textarea>
+            </div>
+            <button class="btn btn-primary" id="btn-chat" onclick="runChat()">Send</button>
+          </div>
+          <div style="margin-top: 1rem;">
+            <label class="form-label">Request body (what gets POSTed)</label>
+            <pre id="chat-request-body" style="margin-top: 0.25rem;">—</pre>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Response</h3>
+          <div>
+            <label class="form-label">Answer (<code>message.content</code>)</label>
+            <pre id="chat-answer" style="margin-top: 0.25rem;">—</pre>
+          </div>
+          <div style="margin-top: 1rem;">
+            <label class="form-label">Raw JSON</label>
+            <pre id="chat-raw" style="margin-top: 0.25rem;">—</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       Tool calling test
+       ========================================== -->
+  <section id="tools">
+    <div class="container">
+      <div class="section-header">
+        <h2>Tool Calling</h2>
+        <div class="section-divider"></div>
+        <p>
+          The real power: send <code>tools</code> along with the conversation so the model can
+          decide to <em>call a function</em> instead of guessing. This mirrors the app's
+          read-only tools (<code>src/ai/tools.ts</code>). The model returns
+          <code>message.tool_calls</code>; the app executes the SQL query and sends the result
+          back to the model (that loop lives in <code>src/ai/agent.ts</code>).
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>Tools this app exposes to the model</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Parameters</th><th>Purpose</th></tr></thead>
+            <tbody id="tools-list"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="test-panel">
+        <div class="card">
+          <h3>Ask it something</h3>
+          <div class="chat-form">
+            <div>
+              <label class="form-label" for="tools-message">Question</label>
+              <textarea id="tools-message">¿Cuánto gasté en marzo?</textarea>
+            </div>
+            <button class="btn btn-primary" id="btn-tools" onclick="runToolsDemo()">Send with tools</button>
+          </div>
+          <p style="font-size: 0.8125rem; color: #888; margin-bottom: 0; margin-top: 0.75rem;">
+            The demo POSTs the question together with the 5 tool definitions. If the model needs
+            data, it answers with <code>tool_calls</code> instead of a plain text answer.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3>Response</h3>
+          <div>
+            <label class="form-label">Raw JSON (look for <code>tool_calls</code>)</label>
+            <pre id="tools-raw" style="margin-top: 0.25rem;">—</pre>
+          </div>
+          <p id="tools-note" style="font-size: 0.8125rem; color: #888; margin-top: 0.75rem; margin-bottom: 0;"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       Fields reference
+       ========================================== -->
+  <section id="fields">
+    <div class="container">
+      <div class="section-header">
+        <h2>Request &amp; Response Fields</h2>
+        <div class="section-divider"></div>
+        <p>What each part of the body and the response means.</p>
+      </div>
+
+      <div class="card">
+        <h3>POST /api/chat — request body</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Field</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>model</code></td><td>Which downloaded model to use. Must exist in <code>/api/tags</code>.</td></tr>
+              <tr><td><code>messages</code></td><td>The conversation, an array of turns in order.</td></tr>
+              <tr><td><code>messages[].role</code></td><td>Who speaks: <code>system</code> (instructions), <code>user</code>, <code>assistant</code>, or <code>tool</code> (results of tool calls).</td></tr>
+              <tr><td><code>messages[].content</code></td><td>The text of that turn.</td></tr>
+              <tr><td><code>tools</code></td><td>Optional. Function definitions the model may call (OpenAI-style). Omitted in a plain chat.</td></tr>
+              <tr><td><code>stream</code></td><td><code>false</code> → full answer at once. <code>true</code> → answer arrives token-by-token as a stream.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Response</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Field</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>message.content</code></td><td>The model's answer — the only field the app uses.</td></tr>
+              <tr><td><code>message.tool_calls</code></td><td>Only present when you sent <code>tools</code> and the model decided to call one. Contains the function name and arguments.</td></tr>
+              <tr><td><code>done</code></td><td><code>true</code> when generation finished.</td></tr>
+              <tr><td><code>total_duration</code>, <code>eval_count</code>, ...</td><td>Performance metrics (nanoseconds, token counts). Safe to ignore.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       Troubleshooting
+       ========================================== -->
+  <section id="troubleshooting">
+    <div class="container">
+      <div class="section-header">
+        <h2>Troubleshooting</h2>
+        <div class="section-divider"></div>
+        <p>Common issues and how to fix them.</p>
+      </div>
+
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Error</th><th>Cause</th><th>Fix</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><code>405 Method Not Allowed</code></td>
+                <td>Hitting <code>/api/chat</code> with GET in the browser. It's a POST-only endpoint.</td>
+                <td>Use the chat tester above, <code>curl</code>, or Postman with method POST + JSON body.</td>
+              </tr>
+              <tr>
+                <td><code>403 Forbidden</code> in the browser tests</td>
+                <td>The page was opened as <code>file://</code> (Origin: <code>null</code>).</td>
+                <td>Serve the folder over HTTP: <code>bunx serve .</code> or <code>python3 -m http.server</code>.</td>
+              </tr>
+              <tr>
+                <td><code>Failed to fetch</code> / connection refused</td>
+                <td>Ollama isn't running, or the host/port is wrong.</td>
+                <td>Run <code>ollama serve</code> and check the host field (default <code>http://localhost:11434</code>).</td>
+              </tr>
+              <tr>
+                <td><code>model 'llama3.2' not found</code></td>
+                <td>The model isn't downloaded.</td>
+                <td>Run <code>ollama pull llama3.2</code> (or whatever <code>AI_MODEL</code> says).</td>
+              </tr>
+              <tr>
+                <td>First answer is slow</td>
+                <td>The model is being loaded into RAM for the first time.</td>
+                <td>Normal. Subsequent requests are faster. Bigger models need more RAM.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       Footer
+       ========================================== -->
+  <footer>
+    <div class="container">
+      <p>&copy; 2026 Expense Tracker AI.</p>
+      <p><a href="index.html">&larr; Back to the project site</a></p>
+    </div>
+  </footer>
+
+  <script>
+    // ============================================
+    // The 5 read-only tools from src/ai/tools.ts
+    // ============================================
+    const READ_TOOLS = [
+      {
+        name: 'list_items',
+        description: 'Lists all expense items (credit cards, loans, recurring, insurance, other). Useful to know existing items and their ids. Optionally filters by type.',
+        parameters: [
+          { name: 'type', type: 'string', description: 'Filter items by type.', enum: ['credit_card', 'loan', 'recurring', 'insurance', 'other'] }
+        ]
+      },
+      {
+        name: 'list_expenses',
+        description: 'Lists registered expenses sorted by date. Optionally filters by year or item (itemId). Each expense includes description, amount, date, installments and ownership.',
+        parameters: [
+          { name: 'itemId', type: 'string', description: 'Filter expenses of a specific item.' },
+          { name: 'year', type: 'number', description: 'Filter expenses that fall in a specific year.' }
+        ]
+      },
+      {
+        name: 'get_monthly_summary',
+        description: 'Monthly expense summary (format YYYY-MM, e.g. 2026-03). Returns per item the month total and the own share (myShare). Uses the current month if not provided.',
+        parameters: [
+          { name: 'month', type: 'string', description: 'Month in YYYY-MM format.', required: true }
+        ]
+      },
+      {
+        name: 'get_yearly_summary',
+        description: 'Yearly expense summary: per item returns the total of each of the 12 months (total and myShare), prorating installments. Uses the latest year with expenses if not provided.',
+        parameters: [
+          { name: 'year', type: 'number', description: 'Year to summarize.', required: true }
+        ]
+      },
+      {
+        name: 'search_expenses',
+        description: 'Searches expenses by text in the description, item name or person. Returns one row per matching expense and, if an item matches without expenses, an extra item row.',
+        parameters: [
+          { name: 'query', type: 'string', description: 'Text to search.', required: true }
+        ]
+      }
+    ];
+
+    const toolDefs = READ_TOOLS.map((t) => ({
+      type: 'function',
+      function: {
+        name: t.name,
+        description: t.description,
+        parameters: {
+          type: 'object',
+          properties: Object.fromEntries(
+            t.parameters.map((p) => [p.name, { type: p.type, description: p.description, ...(p.enum ? { enum: p.enum } : {}) }])
+          ),
+          required: t.parameters.filter((p) => p.required).map((p) => p.name)
+        }
+      }
+    }));
+
+    function currentHost() {
+      return document.getElementById('host').value.trim().replace(/\/+$/, '');
+    }
+
+    function format(value) {
+      if (typeof value === 'string') return value;
+      return JSON.stringify(value, null, 2);
+    }
+
+    async function request(host, method, path, body) {
+      const opts = { method, headers: {} };
+      if (body) {
+        opts.headers['Content-Type'] = 'application/json';
+        opts.body = JSON.stringify(body);
+      }
+      const res = await fetch(host + path, opts);
+      const text = await res.text();
+      let data;
+      try { data = JSON.parse(text); } catch { data = text; }
+      return { status: res.status, ok: res.ok, data, text };
+    }
+
+    function setResult(id, { ok, status, data }) {
+      const el = document.getElementById('result-' + id);
+      const badge = ok ? 'status-ok' : 'status-err';
+      const label = ok ? 'OK' : 'ERROR';
+      const shown = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+      el.innerHTML =
+        '<span class="status-badge ' + badge + '">' + label + ' · HTTP ' + status + '</span>' +
+        '<pre>' + escapeHtml(shown) + '</pre>';
+    }
+
+    function setPre(id, text, ok) {
+      const el = document.getElementById(id);
+      const badge = '<span class="status-badge ' + (ok ? 'status-ok' : 'status-err') + '">' +
+        (ok ? 'OK · HTTP ' + text.status : 'ERROR · HTTP ' + text.status) + '</span>';
+      const shown = typeof text.data === 'string' ? text.data : JSON.stringify(text.data, null, 2);
+      el.innerHTML = badge + '<pre>' + escapeHtml(shown) + '</pre>';
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, (c) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[c]));
+    }
+
+    // -------------------------------------------------
+    // Server status tests
+    // -------------------------------------------------
+    async function runTest(kind) {
+      const host = currentHost();
+      const map = {
+        root: { method: 'GET', path: '/', btn: 'btn-root' },
+        version: { method: 'GET', path: '/api/version', btn: 'btn-version' },
+        tags: { method: 'GET', path: '/api/tags', btn: 'btn-tags' }
+      };
+      const t = map[kind];
+      const btn = document.getElementById(t.btn);
+      btn.disabled = true;
+      btn.textContent = '…';
+      try {
+        const result = await request(host, t.method, t.path);
+        setResult(kind, result);
+      } catch (err) {
+        document.getElementById('result-' + kind).innerHTML =
+          '<span class="status-badge status-err">ERROR</span><pre>' + escapeHtml(err.message) + '</pre>' +
+          '<p style="font-size: 0.8125rem; color: #888;">Is Ollama running? Is the host correct? ' +
+          'If this page is opened from <code>file://</code>, serve it over HTTP (see Setup).</p>';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = t.method + ' ' + t.path;
+      }
+    }
+
+    // -------------------------------------------------
+    // Chat test
+    // -------------------------------------------------
+    function renderChatRequest() {
+      const model = document.getElementById('chat-model').value.trim() || 'llama3.2';
+      const content = document.getElementById('chat-message').value;
+      const body = { model, stream: false, messages: [{ role: 'user', content }] };
+      document.getElementById('chat-request-body').textContent = JSON.stringify(body, null, 2);
+      return body;
+    }
+
+    async function runChat() {
+      const body = renderChatRequest();
+      const host = currentHost();
+      const btn = document.getElementById('btn-chat');
+      btn.disabled = true;
+      btn.textContent = 'Thinking…';
+      document.getElementById('chat-answer').textContent = '—';
+      document.getElementById('chat-raw').textContent = '—';
+      try {
+        const result = await request(host, 'POST', '/api/chat', body);
+        if (!result.ok) throw new Error(result.text || ('HTTP ' + result.status));
+        const content = result.data && result.data.message && result.data.message.content;
+        document.getElementById('chat-answer').textContent = content ? content : '(empty answer)';
+        document.getElementById('chat-raw').textContent = JSON.stringify(result.data, null, 2);
+      } catch (err) {
+        document.getElementById('chat-answer').textContent = 'Request failed: ' + err.message;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Send';
+      }
+    }
+
+    // -------------------------------------------------
+    // Tool calling demo
+    // -------------------------------------------------
+    async function runToolsDemo() {
+      const question = document.getElementById('tools-message').value;
+      const host = currentHost();
+      const btn = document.getElementById('btn-tools');
+      btn.disabled = true;
+      btn.textContent = 'Thinking…';
+      document.getElementById('tools-raw').textContent = '—';
+      document.getElementById('tools-note').textContent = '';
+      const body = {
+        model: 'llama3.2',
+        stream: false,
+        messages: [{ role: 'user', content: question }],
+        tools: toolDefs
+      };
+      try {
+        const result = await request(host, 'POST', '/api/chat', body);
+        if (!result.ok) throw new Error(result.text || ('HTTP ' + result.status));
+        document.getElementById('tools-raw').textContent = JSON.stringify(result.data, null, 2);
+        const calls = result.data && result.data.message && result.data.message.tool_calls;
+        const note = document.getElementById('tools-note');
+        if (calls && calls.length) {
+          const names = calls.map((c) => c.function.name).join(', ');
+          note.textContent = 'The model called: ' + names + '. In the app, the agent would now execute these tools against SQLite and send the results back to the model to write the final answer.';
+        } else {
+          note.textContent = 'The model answered directly (no tool_calls). Try a data question such as "¿Cuánto gasté en marzo?" to force a tool call.';
+        }
+      } catch (err) {
+        document.getElementById('tools-raw').textContent = 'Request failed: ' + err.message;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Send with tools';
+      }
+    }
+
+    // -------------------------------------------------
+    // Init
+    // -------------------------------------------------
+    document.getElementById('tools-list').innerHTML = READ_TOOLS.map((t) => {
+      const params = t.parameters.length
+        ? t.parameters.map((p) => p.name + (p.required ? '*' : '') + ' (' + p.type + ')').join(', ')
+        : '—';
+      return '<tr><td><code>' + t.name + '</code></td><td>' + params + '</td><td>' + t.description + '</td></tr>';
+    }).join('');
+
+    document.getElementById('chat-message').addEventListener('input', renderChatRequest);
+    renderChatRequest();
+  </script>
+</body>
+</html>
