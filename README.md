@@ -16,6 +16,7 @@ Funcionalidades: vistas de grilla anual (12 meses por item), selector de año, s
 ## Requisitos
 
 - [Bun](https://bun.sh) >= 1.0
+- [Ollama](https://ollama.com) _(opcional)_ — solo para el análisis con IA del chat (v5)
 
 ## Cómo empezar
 
@@ -23,6 +24,37 @@ Funcionalidades: vistas de grilla anual (12 meses por item), selector de año, s
 bun install
 bun start
 ```
+
+## Análisis con IA (opcional)
+
+La app puede analizar tus gastos con un modelo de IA que corre **localmente** vía [Ollama](https://ollama.com): tus datos nunca salen de tu máquina. Esta función se activa con el chat de la v5 (próximamente); el resto de la app funciona sin instalar nada de esto.
+
+1. **Instalar Ollama**
+
+   ```bash
+   # macOS (Homebrew)
+   brew install ollama
+   ```
+
+   O descargar el instalador desde https://ollama.com (en macOS queda corriendo como servicio en segundo plano).
+
+2. **Descargar el modelo**
+
+   ```bash
+   ollama pull llama3.2
+   ```
+
+   Puede usarse otro modelo cambiando `AI_MODEL` en `.env`.
+
+3. **(Opcional) Configurar `.env`**
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   El default `OLLAMA_HOST=http://localhost:11434` funciona sin cambios.
+
+Verificación: `curl http://localhost:11434/api/version` debería responder con la versión de Ollama.
 
 ## Comandos
 
@@ -34,16 +66,16 @@ bun start
 
 ## Atajos
 
-| Tecla   | Acción                                                        |
-| ------- | ------------------------------------------------------------- |
-| `↑`/`↓` | Navegar listas y campos de formulario                         |
-| `←`/`→` | Cambiar opción en select de formulario / cambiar año          |
-| `Enter` | Seleccionar / avanzar campo en formulario                     |
-| `Esc`   | Volver / salir                                                |
-| `a`     | Agregar gasto                                                 |
-| `i`     | Agregar item                                                  |
-| `e`     | Editar (item en dashboard, gasto en detalle)                  |
-| `d`     | Eliminar (con confirmación)                                   |
+| Tecla   | Acción                                               |
+| ------- | ---------------------------------------------------- |
+| `↑`/`↓` | Navegar listas y campos de formulario                |
+| `←`/`→` | Cambiar opción en select de formulario / cambiar año |
+| `Enter` | Seleccionar / avanzar campo en formulario            |
+| `Esc`   | Volver / salir                                       |
+| `a`     | Agregar gasto                                        |
+| `i`     | Agregar item                                         |
+| `e`     | Editar (item en dashboard, gasto en detalle)         |
+| `d`     | Eliminar (con confirmación)                          |
 
 Los datos se guardan en `.data/expenses.db` (local, gitignored).
 
@@ -54,6 +86,7 @@ expense-tracker-ai/
 ├── index.html        # Website público
 ├── README.md         # Este archivo
 ├── AGENTS.md         # Reglas para AI agents
+├── .env.example      # Env vars documentadas (OLLAMA_HOST, AI_MODEL)
 
 ├── docs/             # Documentación
 │   ├── ROADMAP.md    # Visión de versiones
@@ -70,24 +103,24 @@ expense-tracker-ai/
 
 Configuración que guía a los agentes de IA: roles, procedimientos y memoria compartida.
 
-| Componente      | Qué es                                           | Quién lo ejecuta                                                          | Cuándo                                      |
-| --------------- | ------------------------------------------------ | ------------------------------------------------------------------------- | ------------------------------------------- |
-| **AGENTS.md**   | Reglas raíz para todos los agentes               | Todos los agentes                                                         | Al iniciar cada tarea                       |
-| **Agents**      | `orchestrator` (rol del agente principal) · `developer`/`tester`/`reviewer` (subagentes registrados con contexto aislado) | La sesión principal (orchestrator) delega a los subagentes                                             | Cuando la tarea requiere ese rol            |
-| **Skills**      | Capacidades on-demand (ej: `code-review`)        | El agente que la necesite                                                 | A demanda, cuando se requiere esa capacidad |
-| **Commands**    | Atajos ejecutables (`test`, `pr`)                | `tester` (test) · `orchestrator` (pr)                                     | Cuando el humano los invoca                 |
-| **Memory**      | Memoria de proyecto/usuario/sesión               | Todos los agentes                                                         | Se lee al empezar; se actualiza al aprender |
-| **Conventions** | Estándares (code-style, branch-naming)           | `developer` + `tester` (code-style) · quien cree branches (branch-naming) | En toda tarea de código / al crear branches |
+| Componente      | Qué es                                                                                                                    | Quién lo ejecuta                                                          | Cuándo                                      |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------- |
+| **AGENTS.md**   | Reglas raíz para todos los agentes                                                                                        | Todos los agentes                                                         | Al iniciar cada tarea                       |
+| **Agents**      | `orchestrator` (rol del agente principal) · `developer`/`tester`/`reviewer` (subagentes registrados con contexto aislado) | La sesión principal (orchestrator) delega a los subagentes                | Cuando la tarea requiere ese rol            |
+| **Skills**      | Capacidades on-demand (ej: `code-review`)                                                                                 | El agente que la necesite                                                 | A demanda, cuando se requiere esa capacidad |
+| **Commands**    | Atajos ejecutables (`test`, `pr`)                                                                                         | `tester` (test) · `orchestrator` (pr)                                     | Cuando el humano los invoca                 |
+| **Memory**      | Memoria de proyecto/usuario/sesión                                                                                        | Todos los agentes                                                         | Se lee al empezar; se actualiza al aprender |
+| **Conventions** | Estándares (code-style, branch-naming)                                                                                    | `developer` + `tester` (code-style) · quien cree branches (branch-naming) | En toda tarea de código / al crear branches |
 
 ### Registro nativo por herramienta
 
 El harness se registra nativamente en cada herramienta de AI. Las copias se mantienen en sincronía manual desde `.harness/` (fuente canónica):
 
-| Artifact            | opencode            | Claude Code         | GitHub Copilot         | Cursor            |
-| ------------------- | ------------------- | ------------------- | ---------------------- | ----------------- |
-| Agents              | `.opencode/agent/`  | `.claude/agents/`   | `.github/agents/`      | `.cursor/agents/` |
-| Commands `test`/`pr`| `opencode.json` → `command` | `.claude/commands/` | `.github/prompts/` | `.cursor/commands/` |
-| Skill `code-review` | `.opencode/skill/code-review/` | `.claude/skills/code-review/` | `.github/skills/code-review/` | `.cursor/skills/code-review/` |
+| Artifact             | opencode                       | Claude Code                   | GitHub Copilot                | Cursor                        |
+| -------------------- | ------------------------------ | ----------------------------- | ----------------------------- | ----------------------------- |
+| Agents               | `.opencode/agent/`             | `.claude/agents/`             | `.github/agents/`             | `.cursor/agents/`             |
+| Commands `test`/`pr` | `opencode.json` → `command`    | `.claude/commands/`           | `.github/prompts/`            | `.cursor/commands/`           |
+| Skill `code-review`  | `.opencode/skill/code-review/` | `.claude/skills/code-review/` | `.github/skills/code-review/` | `.cursor/skills/code-review/` |
 
 Notas de paridad: los modelos no se pinnean por agente (cada tool usa su modelo por defecto); `reviewer` es de solo lectura en todas (en opencode/Claude vía allowlist/deny, en Cursor vía `readonly: true`).
 

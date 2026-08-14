@@ -68,7 +68,7 @@ TUI funcional con datos hardcodeados que muestra items de gastos con sus totales
 
 **Objetivo:** análisis de gastos en lenguaje natural con asistencia de IA. La app consulta un LLM con tools (function calling): la IA decide qué consultar, la app ejecuta contra SQLite y la IA explica los resultados. La DB local es siempre la fuente de verdad; el LLM solo ve resultados de tools, nunca la DB directa.
 
-- [ ] Módulo `src/ai/` con interfaz de proveedor intercambiable (Ollama local por defecto; cloud OpenAI/Anthropic/Gemini opcional por env var)
+- [x] Módulo `src/ai/` con interfaz de proveedor intercambiable (Ollama local por defecto; cloud OpenAI/Anthropic/Gemini opcional por env var)
 - [ ] Chat AI en la TUI: consultas en lenguaje natural (ej: "¿cuánto gasté en marzo?") con respuestas basadas en datos reales
 - [x] Tools de consulta (solo lectura): `list_items`, `list_expenses`, `get_monthly_summary`, `get_yearly_summary`, `search_expenses`
 - [ ] Categorización automática por sugerencia al ingresar (la IA propone el item y el humano confirma)

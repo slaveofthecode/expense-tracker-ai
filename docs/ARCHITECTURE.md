@@ -29,6 +29,17 @@
 - Suficiente para una app personal de gastos
 - Fácil de respaldar y portar
 
+## Configuración por Entorno
+
+La app se configura con variables de entorno. Bun carga `.env` automáticamente; el archivo `.env.example` documenta las disponibles (copiar a `.env` y ajustar).
+
+| Variable      | Default                  | Descripción                                                 |
+| ------------- | ------------------------ | ----------------------------------------------------------- |
+| `OLLAMA_HOST` | `http://localhost:11434` | URL base del servidor Ollama (API en `/api/chat`)           |
+| `AI_MODEL`    | `llama3.2`               | Modelo local usado para el análisis (debe estar descargado) |
+
+Los defaults viven en `src/ai/provider.ts` (`DEFAULT_OLLAMA_HOST` / `DEFAULT_AI_MODEL`) y solo aplican si la env var correspondiente no está definida: la prioridad es `env var > default`. `.env` está gitignored; los secretos nunca se commitean.
+
 ## Modelo de Datos
 
 ```typescript
@@ -65,6 +76,7 @@ expense-tracker-ai/
 ├── README.md            # Docs para humanos
 ├── AGENTS.md            # Reglas para la AI
 ├── opencode.json        # Config OpenCode
+├── .env.example         # Env vars documentadas (OLLAMA_HOST, AI_MODEL)
 ├── docs/
 │   ├── ROADMAP.md       # Visión de versiones
 │   └── ARCHITECTURE.md  # Este archivo
@@ -75,6 +87,9 @@ expense-tracker-ai/
 │   └── memory/
 └── src/                 # Código de la app
     ├── index.tsx        # Entry point: abre DB, seed, render
+    ├── ai/              # Capa de IA: tools de lectura + proveedor LLM
+    │   ├── tools.ts     # Registry de tools de solo lectura
+    │   └── provider.ts  # Interfaz LLMProvider + implementación Ollama
     ├── app/
     │   ├── App.tsx      # Navegación entre pantallas + handlers
     │   └── components/
