@@ -191,7 +191,7 @@ function toOllamaMessage(message: ChatMessage): OllamaMessage {
   const base: OllamaMessage = { role: message.role, content: message.content };
   if (message.role === "assistant" && message.toolCalls?.length) {
     base.tool_calls = message.toolCalls.map((call) => ({
-      function: { name: call.name, arguments: JSON.stringify(call.arguments) },
+      function: { name: call.name, arguments: call.arguments },
     }));
   }
   if (message.role === "tool" && message.name) {

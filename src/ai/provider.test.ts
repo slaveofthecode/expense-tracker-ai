@@ -253,7 +253,7 @@ describe("chat", () => {
           {
             function: {
               name: "get_monthly_summary",
-              arguments: '{"month":"2026-03"}',
+              arguments: { month: "2026-03" },
             },
           },
         ],

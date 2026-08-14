@@ -95,6 +95,8 @@ expense-tracker-ai/
     │   ├── App.tsx      # Navegación entre pantallas + handlers
     │   └── components/
     │       ├── Dashboard.tsx
+    │       ├── Charts.tsx
+    │       ├── Chat.tsx        # Chat con IA (consulta en lenguaje natural)
     │       ├── ItemDetail.tsx
     │       ├── ExpenseDetail.tsx
     │       ├── Form.tsx        # Formulario genérico (texto/select)
