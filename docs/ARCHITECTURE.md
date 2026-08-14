@@ -87,9 +87,10 @@ expense-tracker-ai/
 │   └── memory/
 └── src/                 # Código de la app
     ├── index.tsx        # Entry point: abre DB, seed, render
-    ├── ai/              # Capa de IA: tools de lectura + proveedor LLM
+    ├── ai/              # Capa de IA: tools de lectura + proveedor LLM + agente
     │   ├── tools.ts     # Registry de tools de solo lectura
-    │   └── provider.ts  # Interfaz LLMProvider + implementación Ollama
+    │   ├── provider.ts  # Interfaz LLMProvider + implementación Ollama
+    │   └── agent.ts     # Loop de tool-calling con system prompt de dominio
     ├── app/
     │   ├── App.tsx      # Navegación entre pantallas + handlers
     │   └── components/
