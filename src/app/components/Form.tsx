@@ -1,5 +1,5 @@
 import { Box, Text, useInput } from "ink";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { formatCurrency, parseCurrency } from "../../utils/format";
 
 export interface FormOption {
@@ -14,15 +14,33 @@ export interface FormField {
   initialValue: string;
 }
 
+export interface FormSetValue {
+  fieldIndex: number;
+  value: string;
+  nonce: number;
+}
+
 interface FormProps {
   title: string;
   fields: FormField[];
   submitLabel: string;
   onSubmit: (values: string[]) => void;
   onBack: () => void;
+  onValuesChange?: (values: string[]) => void;
+  onAsk?: (fieldIndex: number) => void;
+  setValue?: FormSetValue;
 }
 
-export function Form({ title, fields, submitLabel, onSubmit, onBack }: FormProps) {
+export function Form({
+  title,
+  fields,
+  submitLabel,
+  onSubmit,
+  onBack,
+  onValuesChange,
+  onAsk,
+  setValue,
+}: FormProps) {
   const [values, setValues] = useState(() => fields.map((f) => f.initialValue));
   const [activeIndex, setActiveIndex] = useState(0);
 
@@ -33,15 +51,26 @@ export function Form({ title, fields, submitLabel, onSubmit, onBack }: FormProps
   const DATA_COLOR = "#c0caf5";
   const ACTIVE_COLOR = "#00d4ff";
 
+  const commit = (next: string[]) => {
+    setValues(next);
+    onValuesChange?.(next);
+  };
+
+  useEffect(() => {
+    if (!setValue) return;
+    commit(
+      values.map((v, i) => (i === setValue.fieldIndex ? setValue.value : v)),
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [setValue?.nonce]);
+
   const cycleOption = (direction: 1 | -1) => {
-    setValues((prev) => {
-      const options = fields[activeIndex].options ?? [];
-      if (options.length === 0) return prev;
-      const currentIndex = options.findIndex((o) => o.value === prev[activeIndex]);
-      const base = currentIndex === -1 ? 0 : currentIndex;
-      const next = (base + direction + options.length) % options.length;
-      return prev.map((v, i) => (i === activeIndex ? options[next].value : v));
-    });
+    const options = fields[activeIndex].options ?? [];
+    if (options.length === 0) return;
+    const currentIndex = options.findIndex((o) => o.value === values[activeIndex]);
+    const base = currentIndex === -1 ? 0 : currentIndex;
+    const next = (base + direction + options.length) % options.length;
+    commit(values.map((v, i) => (i === activeIndex ? options[next].value : v)));
   };
 
   useInput((_input, key) => {
@@ -78,18 +107,18 @@ export function Form({ title, fields, submitLabel, onSubmit, onBack }: FormProps
       return;
     }
     if ((key.backspace || key.delete) && !isSelect) {
-      setValues((prev) =>
-        prev.map((v, i) => (i === activeIndex ? v.slice(0, -1) : v)),
-      );
+      commit(values.map((v, i) => (i === activeIndex ? v.slice(0, -1) : v)));
       return;
     }
     if (key.tab || key.pageUp || key.pageDown) {
       return;
     }
     if (_input && !isSelect) {
-      setValues((prev) =>
-        prev.map((v, i) => (i === activeIndex ? v + _input : v)),
-      );
+      if (_input === "?" && onAsk) {
+        onAsk(activeIndex);
+        return;
+      }
+      commit(values.map((v, i) => (i === activeIndex ? v + _input : v)));
     }
   });
 

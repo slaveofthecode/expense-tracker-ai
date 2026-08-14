@@ -91,7 +91,8 @@ expense-tracker-ai/
     ├── ai/              # Capa de IA: tools de lectura + proveedor LLM + agente
     │   ├── tools.ts     # Registry de tools de solo lectura
     │   ├── provider.ts  # Interfaz LLMProvider + implementación Ollama
-    │   └── agent.ts     # Loop de tool-calling con system prompt de dominio
+    │   ├── agent.ts     # Loop de tool-calling con system prompt de dominio
+    │   └── suggest.ts   # Sugerencia de ítem por IA (fallback del matching local)
     ├── app/
     │   ├── App.tsx      # Navegación entre pantallas + handlers
     │   └── components/
@@ -102,7 +103,7 @@ expense-tracker-ai/
     │       ├── ExpenseDetail.tsx
     │       ├── Form.tsx        # Formulario genérico (texto/select)
     │       ├── ItemForm.tsx    # Alta/edición de items
-    │       ├── ExpenseForm.tsx # Alta/edición de gastos
+    │       ├── ExpenseForm.tsx # Alta/edición de gastos (sugerencia de ítem en vivo)
     │       └── Confirm.tsx     # Confirmación de borrado
     ├── db/
     │   ├── connection.ts # Abre SQLite (.data/expenses.db)
@@ -111,7 +112,8 @@ expense-tracker-ai/
     │   └── repository.ts # CRUD tipado contra los tipos de dominio
     ├── data/             # Seed data (mock)
     ├── types/            # Modelos de dominio
-    └── utils/            # Formato y summaries
+    └── utils/            # Formato, summaries, filtros, charts y sugerencia de ítem
+        └── suggestItem.ts # Matching determinístico (name + historial) para sugerir ítem
 ```
 
 ## Persistencia

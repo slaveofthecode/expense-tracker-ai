@@ -71,7 +71,7 @@ TUI funcional con datos hardcodeados que muestra items de gastos con sus totales
 - [x] Módulo `src/ai/` con interfaz de proveedor intercambiable (Ollama local por defecto; cloud OpenAI/Anthropic/Gemini opcional por env var)
 - [x] Chat AI en la TUI: consultas en lenguaje natural (ej: "¿cuánto gasté en marzo?") con respuestas basadas en datos reales
 - [x] Tools de consulta (solo lectura): `list_items`, `list_expenses`, `get_monthly_summary`, `get_yearly_summary`, `search_expenses`
-- [ ] Categorización automática por sugerencia al ingresar (la IA propone el item y el humano confirma)
+- [x] Categorización automática por sugerencia al ingresar (la IA propone el item y el humano confirma)
 - [ ] Detección de patrones de gasto (cálculo numérico en `summaries.ts` + insights en lenguaje natural por LLM)
 - [ ] Recomendaciones (reglas determinísticas + redacción y jerarquía por LLM)
 - [ ] MCP server (`src/mcp/`) exponiendo las tools de lectura para cualquier agente externo (opencode, Claude Desktop, etc.)
@@ -91,3 +91,24 @@ TUI funcional con datos hardcodeados que muestra items de gastos con sus totales
 - Categorización por **sugerencia** (el humano confirma), no automática.
 
 **Cuándo:** después de v4. Orden interno de v5: chat → categorización → patrones → recomendaciones → MCP server.
+
+## v6 — Ingreso de gastos por chat (NO planificada)
+
+> ⚠️ **Idea a futuro, no se va a implementar.** Queda documentada como visión para no perder el contexto si algún día se evalúa. No hay branch ni trabajo asociado.
+
+**Objetivo:** que el chat pueda crear gastos hablando: el usuario describe la compra en lenguaje natural ("cama sommier $600000 en 6 cuotas"), el modelo aclara lo que falte (medio de pago, tarjeta, persona), el humano confirma y el gasto se guarda y aparece en el Dashboard.
+
+- [ ] Tool de escritura `create_expense` en el registry de tools (hoy todas son `readonly`)
+- [ ] Flujo de diálogo guiado: el LLM pide los datos faltantes antes de guardar
+- [ ] Confirmación explícita del humano antes de escribir en la DB
+- [ ] Refresco del Dashboard/App al crear el gasto desde el chat
+
+**Cómo implementar:**
+- Ampliar `src/ai/tools.ts` con herramientas WRITE (ej: `create_expense`) manteniendo la clasificación READ/WRITE.
+- Distinguir en el agente cuándo una tool es de escritura y requerir confirmación (revertir la decisión de "chat solo lectura").
+- Separar también qué tools ve el MCP server: probablemente se mantienen solo lectura para agentes externos.
+
+**Decisiones pendientes:**
+- ¿El chat de la TUI permite escritura pero el MCP queda solo lectura, o ambos? Hoy el roadmap dice que ambos son solo lectura.
+
+**Cuándo:** después de v5, solo si se re-evalúa la decisión de seguridad de "chat solo lectura". Es una candidata a v6, no un compromiso.

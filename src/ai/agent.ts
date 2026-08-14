@@ -26,6 +26,15 @@ Para responder, elegí la tool adecuada:
 
 Respondé de forma clara y concisa.`.trim();
 
+export function buildSystemPrompt(now: Date = new Date()): string {
+  const iso = now.toISOString().slice(0, 10);
+  const year = now.getFullYear();
+  return (
+    DOMAIN_SYSTEM_PROMPT +
+    `\n\nFecha de hoy: ${iso} (año ${year}). Para responder sobre la fecha, el año o el mes actual, usá este dato directamente, sin consultar tools.`
+  );
+}
+
 export interface AgentResult {
   answer: string;
   toolCallCount: number;
@@ -45,7 +54,7 @@ export interface AgentOptions {
 }
 
 export function createAgent(options: AgentOptions): Agent {
-  const systemPrompt = options.systemPrompt ?? DOMAIN_SYSTEM_PROMPT;
+  const systemPrompt = options.systemPrompt ?? buildSystemPrompt();
   const maxIterations = options.maxIterations ?? DEFAULT_MAX_ITERATIONS;
   const toolDefinitions = options.tools.map(toToolDefinition);
 

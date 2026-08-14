@@ -3,6 +3,7 @@ import type { Expense, Item } from "../types";
 import { buildTools } from "./tools";
 import {
   createAgent,
+  buildSystemPrompt,
   DOMAIN_SYSTEM_PROMPT,
   DEFAULT_MAX_ITERATIONS,
   type AgentResult,
@@ -100,7 +101,8 @@ describe("createAgent", () => {
     expect(provider.chatCalls).toHaveLength(1);
     const first = provider.chatCalls[0]?.messages;
     expect(first?.[0]?.role).toBe("system");
-    expect(first?.[0]?.content).toBe(DOMAIN_SYSTEM_PROMPT);
+    expect(first?.[0]?.content).toBe(buildSystemPrompt());
+    expect(first?.[0]?.content?.startsWith(DOMAIN_SYSTEM_PROMPT)).toBe(true);
     expect(first?.[1]).toEqual({ role: "user", content: "¿hay gastos?" });
     expect(provider.chatCalls[0]?.tools).toHaveLength(tools.length);
   });
