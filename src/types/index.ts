@@ -66,6 +66,7 @@ export interface MonthlySummary {
 export type Screen =
   | { name: "dashboard" }
   | { name: "charts" }
+  | { name: "chat" }
   | { name: "itemDetail"; itemId: string; focusExpenseId?: string }
   | { name: "expenseDetail"; expenseId: string; itemId: string }
   | { name: "addItem" }

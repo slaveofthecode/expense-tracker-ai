@@ -36,6 +36,7 @@ interface DashboardProps {
 	onDeleteItem: (itemId: string) => void;
 	onAddExpense: () => void;
 	onOpenCharts: () => void;
+	onOpenChat: () => void;
 	onQuit: () => void;
 }
 
@@ -51,6 +52,7 @@ export function Dashboard({
 	onDeleteItem,
 	onAddExpense,
 	onOpenCharts,
+	onOpenChat,
 	onQuit,
 }: DashboardProps) {
 	const [selectedIndex, setSelectedIndex] = useState(0);
@@ -105,6 +107,10 @@ export function Dashboard({
 		}
 		if (_input.toLowerCase() === 'g') {
 			onOpenCharts();
+			return;
+		}
+		if (_input.toLowerCase() === 'c') {
+			onOpenChat();
 			return;
 		}
 		if (visibleItems.length === 0) return;
@@ -245,7 +251,7 @@ export function Dashboard({
 					<Text bold>/</Text> Buscar · <Text bold>a</Text> Agregar Gasto ·{' '}
 					<Text bold>i</Text> Agregar Ítem · <Text bold>e</Text> Editar ·{' '}
 					<Text bold>d</Text> Eliminar · <Text bold>g</Text> Gráficos ·{' '}
-					<Text bold>Esc</Text> Salir
+					<Text bold>c</Text> Chat · <Text bold>Esc</Text> Salir
 				</Text>
 			</Box>
 

@@ -503,6 +503,7 @@
         <li><a href="#tech">Stack</a></li>
         <li><a href="#harness">Harness</a></li>
         <li><a href="#branching">Branching</a></li>
+        <li><a href="ollama-test.html">Ollama Test</a></li>
       </ul>
     </div>
   </nav>
@@ -523,6 +524,7 @@
       <div class="hero-actions">
         <a href="https://github.com/slaveofthecode/expense-tracker-ai" class="btn btn-primary" target="_blank" rel="noopener">View on GitHub</a>
         <a href="#run" class="btn btn-secondary">Run It Live</a>
+        <a href="ollama-test.html" class="btn btn-secondary">Test Ollama</a>
       </div>
     </div>
   </section>
@@ -583,6 +585,17 @@
           <a href="https://bun.sh" target="_blank" rel="noopener">Bun</a> >= 1.0.
           The TUI needs a real terminal (raw mode is not supported on piped stdin).
         </p>
+        <p>
+          The AI chat (<code>c</code>) uses a local LLM via
+          <a href="https://ollama.com" target="_blank" rel="noopener">Ollama</a>
+          (default model <code>llama3.2</code>, run <code>ollama pull llama3.2</code>).
+          Everything else works without it.
+        </p>
+        <p>
+          Want to verify the connection from your browser? Open the
+          <a href="ollama-test.html">Ollama test page</a> — an interactive playground with
+          curl examples, a chat tester, and a tool-calling demo.
+        </p>
       </div>
 
       <div class="card" style="margin-bottom: 1.5rem;">
@@ -618,6 +631,7 @@ bun start</code></pre>
               <tr><td><code>e</code></td><td>Edit (item on dashboard, expense in detail)</td></tr>
               <tr><td><code>d</code></td><td>Delete (with confirmation)</td></tr>
               <tr><td><code>g</code></td><td>Open terminal charts (4 chart types, 1-4 to switch)</td></tr>
+              <tr><td><code>c</code></td><td>Open the AI chat (natural-language questions about your expenses)</td></tr>
             </tbody>
           </table>
         </div>

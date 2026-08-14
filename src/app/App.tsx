@@ -10,8 +10,12 @@ import {
   updateExpense,
   deleteExpense,
 } from "../db/repository";
+import { createAgent } from "../ai/agent";
+import { createOllamaProvider } from "../ai/provider";
+import { createReadTools } from "../ai/tools";
 import { Dashboard } from "./components/Dashboard";
 import { Charts } from "./components/Charts";
+import { Chat } from "./components/Chat";
 import { ItemDetail } from "./components/ItemDetail";
 import { ItemDetailCard } from "./components/ItemDetailCard";
 import { ExpenseDetail } from "./components/ExpenseDetail";
@@ -31,6 +35,8 @@ function getBackScreen(current: Screen): Screen {
     case "itemDetail":
       return { name: "dashboard" };
     case "charts":
+      return { name: "dashboard" };
+    case "chat":
       return { name: "dashboard" };
     case "expenseDetail":
       return { name: "itemDetail", itemId: current.itemId };
@@ -58,6 +64,12 @@ export function App({ db }: AppProps) {
   const [screen, setScreen] = useState<Screen>({ name: "dashboard" });
   const [year, setYear] = useState<number>(
     () => getLatestYear(expenses) ?? new Date().getFullYear(),
+  );
+  const [agent] = useState(() =>
+    createAgent({
+      provider: createOllamaProvider(),
+      tools: createReadTools(db),
+    }),
   );
 
   const refresh = () => {
@@ -142,6 +154,7 @@ export function App({ db }: AppProps) {
           onDeleteItem={handleDeleteItem}
           onAddExpense={() => setScreen({ name: "addExpense" })}
           onOpenCharts={() => setScreen({ name: "charts" })}
+          onOpenChat={() => setScreen({ name: "chat" })}
           onQuit={handleQuit}
         />
       );
@@ -156,6 +169,9 @@ export function App({ db }: AppProps) {
           onBack={handleBack}
         />
       );
+
+    case "chat":
+      return <Chat agent={agent} onBack={handleBack} />;
 
     case "itemDetail": {
       const item = items.find((i) => i.id === screen.itemId);

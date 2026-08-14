@@ -73,6 +73,7 @@ interface Expense {
 ```
 expense-tracker-ai/
 ├── index.html           # Website público
+├── ollama-test.html     # Playground web para testear la API local de Ollama
 ├── README.md            # Docs para humanos
 ├── AGENTS.md            # Reglas para la AI
 ├── opencode.json        # Config OpenCode
@@ -95,6 +96,8 @@ expense-tracker-ai/
     │   ├── App.tsx      # Navegación entre pantallas + handlers
     │   └── components/
     │       ├── Dashboard.tsx
+    │       ├── Charts.tsx
+    │       ├── Chat.tsx        # Chat con IA (consulta en lenguaje natural)
     │       ├── ItemDetail.tsx
     │       ├── ExpenseDetail.tsx
     │       ├── Form.tsx        # Formulario genérico (texto/select)
