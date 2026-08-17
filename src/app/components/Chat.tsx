@@ -20,10 +20,11 @@ interface ChatMessage {
 
 interface ChatProps {
 	agent: Agent;
+	hasData: boolean;
 	onBack: () => void;
 }
 
-export function Chat({ agent, onBack }: ChatProps) {
+export function Chat({ agent, hasData, onBack }: ChatProps) {
 	const [messages, setMessages] = useState<ChatMessage[]>([]);
 	const [input, setInput] = useState('');
 	const [thinking, setThinking] = useState(false);
@@ -33,6 +34,13 @@ export function Chat({ agent, onBack }: ChatProps) {
 		const direct = answerDateQuestion(question);
 		if (direct !== null) {
 			setMessages((prev) => [...prev, { role: 'assistant', content: direct }]);
+			return;
+		}
+		if (!hasData) {
+			setMessages((prev) => [
+				...prev,
+				{ role: 'assistant', content: 'No hay datos cargados. Creá ítems y gastos desde el Dashboard para que pueda ayudarte.' },
+			]);
 			return;
 		}
 		setThinking(true);

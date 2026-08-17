@@ -142,6 +142,11 @@ function MonthlyChart({ data, width, year, currentYear, currentMonthIndex }: Cha
 	const labelWidth = 4;
 	const barWidth = Math.max(10, width - labelWidth - 30);
 	const max = Math.max(...data.monthly.map((m) => m.total), 1);
+	const hasData = data.monthly.some((m) => m.total > 0);
+
+	if (!hasData) {
+		return <Text dimColor>Sin datos para este año.</Text>;
+	}
 
 	return (
 		<Box flexDirection="column">

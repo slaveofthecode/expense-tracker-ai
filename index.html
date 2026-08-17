@@ -610,7 +610,7 @@ cd expense-tracker-ai
 bun install
 bun start</code></pre>
         <p style="margin-top: 1rem; margin-bottom: 0;">
-          The first run seeds sample data into a local database. From then on, everything you add,
+          On first run, the app starts with an empty database. Everything you add,
           edit, or delete persists in <code>.data/expenses.db</code> (gitignored).
         </p>
       </div>
@@ -733,7 +733,6 @@ bun start</code></pre>
         <div class="depth-3 file">    │   ├── App.tsx   <span class="comment"># Navigation + handlers</span></div>
         <div class="depth-3 dir">    │   └── components/ <span class="comment"># Screens, forms, search palette, grids</span></div>
         <div class="depth-2 dir">    ├── db/            <span class="comment"># SQLite layer (bun:sqlite)</span></div>
-        <div class="depth-2 dir">    ├── data/          <span class="comment"># Seed mock data</span></div>
         <div class="depth-2 dir">    ├── types/         <span class="comment"># Domain models</span></div>
         <div class="depth-2 dir">    └── utils/         <span class="comment"># Formatting, summaries &amp; charts</span></div>
       </div>

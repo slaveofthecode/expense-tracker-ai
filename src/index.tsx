@@ -2,7 +2,6 @@
 import { render } from "ink";
 import { App } from "./app/App";
 import { openDb } from "./db/connection";
-import { seedIfEmpty } from "./db/seed";
 
 if (!process.stdin.ref) {
   process.stdin.ref = () => process.stdin;
@@ -10,6 +9,5 @@ if (!process.stdin.ref) {
 }
 
 const db = openDb();
-seedIfEmpty(db);
 
 render(<App db={db} />);

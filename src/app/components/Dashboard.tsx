@@ -243,17 +243,22 @@ export function Dashboard({
 				) : null}
 			</Box>
 
-			<Box marginBottom={1}>
-				<Text color="#88c0d0">
-					{'  '}↑↓ Navegar · Enter Seleccionar · ←→ Año ·{' '}
-				</Text>
-				<Text color="#88c0d0">
-					<Text bold>/</Text> Buscar · <Text bold>a</Text> Agregar Gasto ·{' '}
-					<Text bold>i</Text> Agregar Ítem · <Text bold>e</Text> Editar ·{' '}
-					<Text bold>d</Text> Eliminar · <Text bold>g</Text> Gráficos ·{' '}
-					<Text bold>c</Text> Chat · <Text bold>Esc</Text> Salir
-				</Text>
-			</Box>
+		<Box marginBottom={1}>
+			<Text color="#88c0d0">
+				{'  '}↑↓ Navegar · Enter Seleccionar · ←→ Año ·{' '}
+			</Text>
+			<Text color="#88c0d0">
+				<Text bold>/</Text> Buscar · <Text bold>i</Text> Agregar Ítem
+				{items.length > 0 ? (
+					<>
+						{' · '}<Text bold>a</Text> Agregar Gasto ·{' '}
+						<Text bold>e</Text> Editar · <Text bold>d</Text> Eliminar
+					</>
+				) : null}
+				{' · '}<Text bold>g</Text> Gráficos ·{' '}
+				<Text bold>c</Text> Chat · <Text bold>Esc</Text> Salir
+			</Text>
+		</Box>
 
 			<Box>
 				<Text color={NOT_MINE_COLOR}>{'  '}■ </Text>
