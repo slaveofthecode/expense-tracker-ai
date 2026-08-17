@@ -1,9 +1,6 @@
 import { describe, it, expect, beforeEach } from "bun:test";
 import { Database } from "bun:sqlite";
 import { runMigrations } from "./schema";
-import { seedIfEmpty } from "./seed";
-import { items as seedItems } from "../data/items";
-import { expenses as seedExpenses } from "../data/expenses";
 import {
   listItems,
   listExpenses,
@@ -32,21 +29,6 @@ describe("schema", () => {
       )
       .all();
     expect(tables).toHaveLength(2);
-  });
-});
-
-describe("seedIfEmpty", () => {
-  it("inserts mock data on an empty database", () => {
-    seedIfEmpty(db);
-    expect(listItems(db)).toHaveLength(seedItems.length);
-    expect(listExpenses(db)).toHaveLength(seedExpenses.length);
-  });
-
-  it("does not duplicate data when called twice", () => {
-    seedIfEmpty(db);
-    seedIfEmpty(db);
-    expect(listItems(db)).toHaveLength(seedItems.length);
-    expect(listExpenses(db)).toHaveLength(seedExpenses.length);
   });
 });
 

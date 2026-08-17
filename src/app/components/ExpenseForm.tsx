@@ -237,6 +237,13 @@ export function ExpenseForm({
 
 	return (
 		<Box flexDirection="column" padding={1}>
+			{items.length === 0 ? (
+				<Box marginBottom={1}>
+					<Text color={ERROR_COLOR}>
+						{'  '}No hay ítems creados. Creá uno primero con "i" desde el Dashboard.
+					</Text>
+				</Box>
+			) : null}
 			<Box marginBottom={1} flexDirection="row" gap={2} marginLeft={2}>
 				<Form
 					title={title}

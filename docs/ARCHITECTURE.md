@@ -87,7 +87,7 @@ expense-tracker-ai/
 │   ├── skills/
 │   └── memory/
 └── src/                 # Código de la app
-    ├── index.tsx        # Entry point: abre DB, seed, render
+    ├── index.tsx        # Entry point: abre DB, render
     ├── ai/              # Capa de IA: tools de lectura + proveedor LLM + agente
     │   ├── tools.ts     # Registry de tools de solo lectura
     │   ├── provider.ts  # Interfaz LLMProvider + implementación Ollama
@@ -108,9 +108,7 @@ expense-tracker-ai/
     ├── db/
     │   ├── connection.ts # Abre SQLite (.data/expenses.db)
     │   ├── schema.ts     # Migraciones
-    │   ├── seed.ts       # Mock data en DB vacía
     │   └── repository.ts # CRUD tipado contra los tipos de dominio
-    ├── data/             # Seed data (mock)
     ├── types/            # Modelos de dominio
     └── utils/            # Formato, summaries, filtros, charts y sugerencia de ítem
         └── suggestItem.ts # Matching determinístico (name + historial) para sugerir ítem
@@ -121,5 +119,4 @@ expense-tracker-ai/
 - Base de datos local en `.data/expenses.db` (gitignored).
 - `bun:sqlite` (módulo nativo de Bun, sin dependencias extra).
 - Las tablas `items` y `expenses` se crean con `runMigrations` al abrir la DB.
-- Si la DB está vacía, `seedIfEmpty` inserta el mock de `src/data/`.
 - Las pantallas consumen `src/db/repository.ts`; nunca SQL directo en la UI.

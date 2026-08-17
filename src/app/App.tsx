@@ -171,7 +171,7 @@ export function App({ db }: AppProps) {
       );
 
     case "chat":
-      return <Chat agent={agent} onBack={handleBack} />;
+      return <Chat agent={agent} hasData={items.length > 0} onBack={handleBack} />;
 
     case "itemDetail": {
       const item = items.find((i) => i.id === screen.itemId);
