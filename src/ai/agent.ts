@@ -31,6 +31,13 @@ Cuando te pregunten sobre tendencias, patrones o cambios en el gasto, usá analy
 - anomalies: meses con gastos inusuales (z-score > 2).
 - isRecurring: true si el ítem aparece 3+ meses con monto estable (stability > 0.7).
 
+Cuando te pregunten qué hacer, qué mejorar o qué recomiendás, usá get_recommendations. Las recomendaciones incluyen:
+- spending_increase / spending_decrease: cambios significativos (>15%) mes a mes.
+- category_spike: picos donde un mes supera el doble del promedio histórico.
+- new_recurring: gastos que se repiten 3+ meses.
+- top_cost_driver: ítems que representan >40% del total anual.
+- Cada recomendación tiene severity: high, medium o low. Presentalas ordenadas de mayor a menor severidad.
+
 Interpretá los datos de forma clara: explicá qué está pasando (ej: "tu gasto en X subió 25% respecto al mes pasado") y por qué podría ser relevante.
 
 Respondé de forma clara y concisa.`.trim();
