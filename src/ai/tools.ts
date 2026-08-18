@@ -16,6 +16,7 @@ import {
   type SearchResult,
 } from "../utils/filters";
 import { buildPatternData, type PatternData } from "../utils/patterns";
+import { generateRecommendations, type Recommendation } from "../utils/recommendations";
 
 export interface ToolParameter {
   name: string;
@@ -197,6 +198,32 @@ export function buildTools(ctx: ReadToolsContext): AiTool[] {
         const year = asNumber(args.year) ?? getLatestYear(expenses) ?? new Date().getFullYear();
         const itemId = asString(args.itemId);
         return buildPatternData(ctx.listItems(), expenses, year, itemId);
+      },
+    },
+    {
+      name: "get_recommendations",
+      description:
+        "Genera recomendaciones basadas en patrones de gasto detectados. Analiza aumentos " +
+        "significativos, picos por categoría, gastos recurrentes y el principal motor de gasto. " +
+        "Devuelve una lista ordenada por severidad (high > medium > low).",
+      parameters: [
+        {
+          name: "year",
+          type: "number",
+          description: "Año a analizar. Si no se indica, usa el último año con datos.",
+        },
+        {
+          name: "itemId",
+          type: "string",
+          description: "Genera recomendaciones para un ítem específico.",
+        },
+      ],
+      readonly: true,
+      execute: (args): Recommendation[] => {
+        const expenses = ctx.listExpenses();
+        const year = asNumber(args.year) ?? getLatestYear(expenses) ?? new Date().getFullYear();
+        const itemId = asString(args.itemId);
+        return generateRecommendations(ctx.listItems(), expenses, year, itemId);
       },
     },
   ];
