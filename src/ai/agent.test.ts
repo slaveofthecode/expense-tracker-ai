@@ -81,6 +81,7 @@ describe("createAgent", () => {
       "get_monthly_summary",
       "get_yearly_summary",
       "search_expenses",
+      "analyze_patterns",
     ]);
     expect(agent.toolDefinitions[0]).toEqual({
       name: tools[0].name,
