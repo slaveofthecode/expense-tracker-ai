@@ -641,6 +641,19 @@ bun start</code></pre>
           </table>
         </div>
       </div>
+
+      <div class="card" style="margin-top: 1.5rem;">
+        <h3>MCP Server</h3>
+        <p>
+          The app includes an <a href="https://modelcontextprotocol.io" target="_blank" rel="noopener">MCP</a> server that
+          exposes expense analysis tools for any compatible client (opencode, Claude Desktop, Cursor, etc.).
+        </p>
+        <p style="margin-bottom: 0;">
+          Tools available: <code>list_items</code>, <code>list_expenses</code>, <code>get_monthly_summary</code>,
+          <code>get_yearly_summary</code>, <code>search_expenses</code>, <code>analyze_patterns</code>,
+          <code>get_recommendations</code>.
+        </p>
+      </div>
     </div>
   </section>
 
@@ -733,8 +746,9 @@ bun start</code></pre>
         <div class="depth-3 file">    │   ├── App.tsx   <span class="comment"># Navigation + handlers</span></div>
         <div class="depth-3 dir">    │   └── components/ <span class="comment"># Screens, forms, search palette, grids</span></div>
         <div class="depth-2 dir">    ├── db/            <span class="comment"># SQLite layer (bun:sqlite)</span></div>
+        <div class="depth-2 dir">    ├── mcp/           <span class="comment"># MCP server (tool access for AI clients)</span></div>
         <div class="depth-2 dir">    ├── types/         <span class="comment"># Domain models</span></div>
-        <div class="depth-2 dir">    └── utils/         <span class="comment"># Formatting, summaries &amp; charts</span></div>
+        <div class="depth-2 dir">    └── utils/         <span class="comment"># Formatting, summaries, charts &amp; patterns</span></div>
       </div>
 
       <h3 style="margin-bottom: 1rem; font-size: 1.125rem;">.harness Detail</h3>
