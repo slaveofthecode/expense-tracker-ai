@@ -51,7 +51,7 @@ function run<T = unknown>(toolName: string, args: Record<string, unknown> = {}):
 }
 
 describe("registry", () => {
-  it("exposes the five read-only tools", () => {
+  it("exposes the six read-only tools", () => {
     const tools = buildTools(context());
     expect(tools.map((t) => t.name)).toEqual([
       "list_items",
@@ -59,6 +59,7 @@ describe("registry", () => {
       "get_monthly_summary",
       "get_yearly_summary",
       "search_expenses",
+      "analyze_patterns",
     ]);
   });
 

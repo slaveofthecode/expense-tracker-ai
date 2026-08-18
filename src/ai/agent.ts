@@ -23,6 +23,15 @@ Para responder, elegí la tool adecuada:
 - get_monthly_summary: totales por ítem de un mes (formato YYYY-MM).
 - get_yearly_summary: totales por ítem de los 12 meses de un año.
 - search_expenses: buscar por texto (descripción, ítem o persona).
+- analyze_patterns: detectar tendencias, anomalías y patrones recurrentes. Devuelve por cada ítem: cambios mes a mes (delta y porcentaje), dirección de tendencia (up/down/stable), anomalías (valores inusuales) e identificación de gastos recurrentes.
+
+Cuando te pregunten sobre tendencias, patrones o cambios en el gasto, usá analyze_patterns como herramienta principal. Los datos incluyen:
+- monthChanges: comparación mes a mes con delta y porcentaje de cambio.
+- trend.direction: "up" (creciente), "down" (decreciente) o "stable".
+- anomalies: meses con gastos inusuales (z-score > 2).
+- isRecurring: true si el ítem aparece 3+ meses con monto estable (stability > 0.7).
+
+Interpretá los datos de forma clara: explicá qué está pasando (ej: "tu gasto en X subió 25% respecto al mes pasado") y por qué podría ser relevante.
 
 Respondé de forma clara y concisa.`.trim();
 

@@ -15,6 +15,7 @@ import {
   searchResults,
   type SearchResult,
 } from "../utils/filters";
+import { buildPatternData, type PatternData } from "../utils/patterns";
 
 export interface ToolParameter {
   name: string;
@@ -170,6 +171,32 @@ export function buildTools(ctx: ReadToolsContext): AiTool[] {
         const query = asString(args.query);
         if (!query) throw new Error('Missing required argument "query"');
         return searchResults(ctx.listItems(), ctx.listExpenses(), query);
+      },
+    },
+    {
+      name: "analyze_patterns",
+      description:
+        "Analiza patrones de gasto: cambios mes a mes, tendencias (subida/bajada/estable), " +
+        "anomalías (gastos inusuales) e ítems recurrentes. Devuelve datos pre-calculados por " +
+        "ítem para que puedas interpretar tendencias sin hacer cálculos manuales.",
+      parameters: [
+        {
+          name: "year",
+          type: "number",
+          description: "Año a analizar. Si no se indica, usa el último año con datos.",
+        },
+        {
+          name: "itemId",
+          type: "string",
+          description: "Analiza un ítem específico. Si se omite, analiza todos los ítems.",
+        },
+      ],
+      readonly: true,
+      execute: (args): PatternData[] => {
+        const expenses = ctx.listExpenses();
+        const year = asNumber(args.year) ?? getLatestYear(expenses) ?? new Date().getFullYear();
+        const itemId = asString(args.itemId);
+        return buildPatternData(ctx.listItems(), expenses, year, itemId);
       },
     },
   ];
