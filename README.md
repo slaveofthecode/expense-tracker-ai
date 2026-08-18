@@ -56,6 +56,50 @@ La app puede analizar tus gastos con un modelo de IA que corre **localmente** v�
 
 Verificación: `curl http://localhost:11434/api/version` debería responder con la versión de Ollama.
 
+## MCP Server
+
+El proyecto incluye un servidor [MCP](https://modelcontextprotocol.io) que expone las herramientas de análisis de gastos para ser consumidas por cualquier cliente MCP compatible (opencode, Claude Desktop, Cursor, etc.).
+
+### Herramientas disponibles
+
+| Tool                | Descripción                                                  |
+| ------------------- | ------------------------------------------------------------ |
+| `list_items`        | Lista ítems de gasto (filtrable por tipo)                   |
+| `list_expenses`     | Lista gastos (filtrable por año o ítem)                     |
+| `get_monthly_summary` | Resumen de gastos de un mes                               |
+| `get_yearly_summary`  | Resumen anual con prorrateo de cuotas                     |
+| `search_expenses`   | Búsqueda por descripción, ítem o persona                    |
+| `analyze_patterns`  | Detecta tendencias, anomalías y gastos recurrentes          |
+| `get_recommendations` | Genera recomendaciones basadas en patrones de gasto       |
+
+### Uso con opencode
+
+La configuración ya está en `opencode.json`. Solo necesitás tener la DB generada (correr `bun start` al menos una vez):
+
+```bash
+# La DB se crea en .data/expenses.db al iniciar la app
+bun start
+```
+
+### Uso con Claude Desktop / Cursor
+
+Agregá esta configuración en tu archivo de config del cliente MCP:
+
+```json
+{
+  "mcpServers": {
+    "expense-tracker": {
+      "command": "bunx",
+      "args": ["tsx", "src/mcp/server.ts"],
+      "cwd": "/ruta/a/expense-tracker-ai",
+      "env": {
+        "DB_PATH": ".data/expenses.db"
+      }
+    }
+  }
+}
+```
+
 ## Comandos
 
 | Comando         | Descripción        |
