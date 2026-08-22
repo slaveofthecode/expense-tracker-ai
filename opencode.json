@@ -17,10 +17,14 @@
   },
   "mcp": {
     "expense-tracker": {
-      "type": "stdio",
-      "command": "bunx",
-      "args": ["tsx", "src/mcp/server.ts"],
-      "env": {
+      "type": "local",
+      "command": [
+        "bunx",
+        "tsx",
+        "src/mcp/server.ts"
+      ],
+      "enabled": true,
+      "environment": {
         "DB_PATH": "expense-tracker.db"
       }
     }
