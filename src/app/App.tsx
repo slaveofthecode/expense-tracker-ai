@@ -23,7 +23,7 @@ import { ItemForm } from "./components/ItemForm";
 import { ExpenseForm, defaultExpenseFormInitial } from "./components/ExpenseForm";
 import { formatCurrency } from "../utils/format";
 import { currentMonth, monthOf } from "../utils/summaries";
-import type { NewExpense, NewItem, Screen } from "../types";
+import type { Item, NewExpense, NewItem, Screen } from "../types";
 import type { SearchResult } from "../utils/filters";
 
 interface AppProps {
@@ -68,9 +68,10 @@ export function App({ db }: AppProps) {
   const handleYearChange = (nextYear: number) => {
     setMonth(`${nextYear}-${month.slice(5, 7)}`);
   };
+  const [provider] = useState(() => createOllamaProvider());
   const [agent] = useState(() =>
     createAgent({
-      provider: createOllamaProvider(),
+      provider,
       tools: createReadTools(db),
     }),
   );
@@ -109,6 +110,17 @@ export function App({ db }: AppProps) {
         ? { name: "itemDetail", itemId: input.itemId }
         : { name: "dashboard" },
     );
+  };
+
+  const handleChatCreateItem = (input: NewItem): Item => {
+    const item = createItem(db, input);
+    refresh();
+    return item;
+  };
+
+  const handleChatCreateExpense = (input: NewExpense) => {
+    createExpense(db, input);
+    refresh();
   };
 
   const handleUpdateExpense = (expenseId: string, input: NewExpense) => {
@@ -174,7 +186,17 @@ export function App({ db }: AppProps) {
       );
 
     case "chat":
-      return <Chat agent={agent} hasData={items.length > 0} onBack={handleBack} />;
+      return (
+        <Chat
+          agent={agent}
+          provider={provider}
+          items={items}
+          hasData={items.length > 0}
+          onCreateItem={handleChatCreateItem}
+          onCreateExpense={handleChatCreateExpense}
+          onBack={handleBack}
+        />
+      );
 
     case "itemDetail": {
       const item = items.find((i) => i.id === screen.itemId);
