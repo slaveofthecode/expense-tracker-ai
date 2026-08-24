@@ -115,6 +115,7 @@ expense-tracker-ai/
     │   └── repository.ts # CRUD tipado contra los tipos de dominio
     ├── types/            # Modelos de dominio
     └── utils/            # Formato, summaries, filtros, charts y sugerencia de ítem
+        ├── autoGroup.ts   # Grupo automático: inferencia de tipo por keywords + resolución concepto→grupo
         ├── fixedMonths.ts # Expansión de vigencia mensual: N registros idénticos en meses consecutivos
         └── suggestItem.ts # Matching determinístico (name + historial) para sugerir grupo
 ```

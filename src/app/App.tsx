@@ -23,6 +23,7 @@ import { ItemForm } from "./components/ItemForm";
 import { ExpenseForm, defaultExpenseFormInitial } from "./components/ExpenseForm";
 import { formatCurrency } from "../utils/format";
 import { currentMonth, monthOf } from "../utils/summaries";
+import { resolveAutoGroup } from "../utils/autoGroup";
 import type { Item, NewExpense, NewItem, Screen } from "../types";
 import type { SearchResult } from "../utils/filters";
 
@@ -103,14 +104,24 @@ export function App({ db }: AppProps) {
   };
 
   const handleAddExpense = (inputs: NewExpense[]) => {
+    const first = inputs[0];
+    let groupId = first?.itemId ?? "";
+    if (!groupId && first) {
+      const resolution = resolveAutoGroup(first.description, items);
+      groupId =
+        resolution.matched?.id ??
+        createItem(db, {
+          name: resolution.newName || "Otros",
+          type: resolution.newType,
+        }).id;
+    }
     for (const input of inputs) {
-      createExpense(db, input);
+      createExpense(db, { ...input, itemId: input.itemId || groupId });
     }
     refresh();
-    const first = inputs[0];
     setScreen(
-      first?.itemId
-        ? { name: "itemDetail", itemId: first.itemId }
+      groupId
+        ? { name: "itemDetail", itemId: groupId }
         : { name: "dashboard" },
     );
   };
@@ -305,9 +316,10 @@ export function App({ db }: AppProps) {
           agent={agent}
           initial={{
             ...initial,
-            itemId: preselected?.id ?? initial.itemId,
+            itemId: preselected?.id ?? "",
           }}
           allowFixedMonths
+          allowAutoGroup
           onSubmit={handleAddExpense}
           onBack={handleBack}
         />
