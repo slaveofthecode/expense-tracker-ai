@@ -70,8 +70,8 @@ export function Chat({
 				? draft.amount / draft.installmentsTotal
 				: undefined;
 		const itemLine = matchedItem
-			? `Ítem existente: ${matchedItem.name}`
-			: `Ítem nuevo: "${toTitleCaseEs(draft.itemName)}" (${
+			? `Grupo existente: ${matchedItem.name}`
+			: `Grupo nuevo: "${toTitleCaseEs(draft.itemName)}" (${
 					ITEM_TYPE_LABELS[draft.itemType ?? 'other']
 				})`;
 		appendAssistant(
@@ -135,7 +135,7 @@ export function Chat({
 				}
 				if (!hasData) {
 					appendAssistant(
-						'No hay datos cargados. Creá ítems y gastos desde el Dashboard para que pueda ayudarte.',
+						'No hay datos cargados. Creá grupos y gastos desde el Dashboard para que pueda ayudarte.',
 					);
 					return undefined;
 				}

@@ -265,11 +265,11 @@ export function Dashboard({
 				</Box>
 			) : items.length === 0 ? (
 				<Text dimColor>
-					{'  '}No hay ítems todavía. Presiona "i" para agregar uno.
+					{'  '}No hay grupos todavía. Presiona "i" para agregar uno.
 				</Text>
 			) : visibleItems.length === 0 ? (
 				<Text dimColor>
-					{'  '}No hay ítems que coincidan con el filtro de tipo.
+					{'  '}No hay grupos que coincidan con el filtro de tipo.
 				</Text>
 			) : (
 				<Box flexDirection="column" gap={1}>
@@ -287,11 +287,11 @@ export function Dashboard({
 				{'  '}↑↓ Navegar · Enter Seleccionar · ←→ Mes ·{' '}
 			</Text>
 			<Text color="#88c0d0">
-				<Text bold>/</Text> Buscar · <Text bold>i</Text> Agregar Ítem
-				{items.length > 0 ? (
+				<Text bold>/</Text> Buscar · <Text bold>i</Text> Agregar Grupo
+				{' · '}<Text bold>a</Text> Agregar Gasto
+				{rows.length > 0 ? (
 					<>
-						{' · '}<Text bold>a</Text> Agregar Gasto ·{' '}
-						<Text bold>e</Text> Editar · <Text bold>d</Text> Eliminar
+						{' · '}<Text bold>e</Text> Editar · <Text bold>d</Text> Eliminar
 					</>
 				) : null}
 				{' · '}<Text bold>g</Text> Gráficos ·{' '}

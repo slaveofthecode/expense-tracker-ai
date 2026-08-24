@@ -18,7 +18,7 @@ export type ExpenseIntent =
 export const EXPENSE_INTENT_SYSTEM_PROMPT = `Sos un extractor de intenciones para una app de gastos personales. Analizás el mensaje del usuario y respondés SOLO con JSON válido, sin explicaciones ni markdown ni bloques de código.
 
 Si el mensaje pide registrar, crear o agregar un gasto, respondé con este formato:
-{"intent":"create_expense","itemName":"<ítem o concepto tal como lo nombra el usuario>","itemType":"credit_card|kids|car|home|other|null","description":"<descripción corta del gasto>","amount":<monto total en ARS como número>,"installmentsTotal":<cantidad de cuotas>}
+{"intent":"create_expense","itemName":"<grupo o concepto tal como lo nombra el usuario>","itemType":"credit_card|kids|car|home|other|null","description":"<descripción corta del gasto>","amount":<monto total en ARS como número>,"installmentsTotal":<cantidad de cuotas>}
 
 Reglas:
 - amount es el MONTO TOTAL del gasto en pesos argentinos (con cuotas, la suma de todas).

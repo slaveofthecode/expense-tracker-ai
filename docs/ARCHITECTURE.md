@@ -42,6 +42,8 @@ Los defaults viven en `src/ai/provider.ts` (`DEFAULT_OLLAMA_HOST` / `DEFAULT_AI_
 
 ## Modelo de Datos
 
+> **Terminología:** en la UI y los prompts de IA el concepto se llama **"Grupo"** (ej: "Tarjeta Naranja", "Depto-Casa", "Alquiler"). Internamente el código, la DB (`items`, `item_id`) y las tools (`list_items`) siguen llamándose `Item`/`itemId` — es solo un detalle de implementación.
+
 ```typescript
 interface Item {
 	id: string;
@@ -104,7 +106,7 @@ expense-tracker-ai/
     │       ├── ItemDetail.tsx
     │       ├── ExpenseDetail.tsx
     │       ├── Form.tsx        # Formulario genérico (texto/select)
-    │       ├── ItemForm.tsx    # Alta/edición de items
+    │       ├── ItemForm.tsx    # Alta/edición de grupos (internamente Item)
     │       ├── ExpenseForm.tsx # Alta/edición de gastos (sugerencia de ítem en vivo)
     │       └── Confirm.tsx     # Confirmación de borrado
     ├── db/
@@ -114,7 +116,7 @@ expense-tracker-ai/
     ├── types/            # Modelos de dominio
     └── utils/            # Formato, summaries, filtros, charts y sugerencia de ítem
         ├── fixedMonths.ts # Expansión de vigencia mensual: N registros idénticos en meses consecutivos
-        └── suggestItem.ts # Matching determinístico (name + historial) para sugerir ítem
+        └── suggestItem.ts # Matching determinístico (name + historial) para sugerir grupo
 ```
 
 ## Persistencia

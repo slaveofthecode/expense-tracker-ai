@@ -116,12 +116,12 @@ describe("parseSuggestionAnswer", () => {
   });
 
   it("parses ignoring accents", () => {
-    const suggestion = parseSuggestionAnswer("Te sugiero el ítem Cafe", items);
+    const suggestion = parseSuggestionAnswer("Te sugiero el grupo Cafe", items);
     expect(suggestion?.itemId).toBe("cafe");
   });
 
   it("returns undefined when no item name appears", () => {
-    expect(parseSuggestionAnswer("No sé a qué ítem va", items)).toBeUndefined();
+    expect(parseSuggestionAnswer("No sé a qué grupo va", items)).toBeUndefined();
   });
 
   it("returns undefined for an empty answer", () => {
