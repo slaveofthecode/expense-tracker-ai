@@ -113,6 +113,7 @@ expense-tracker-ai/
     │   └── repository.ts # CRUD tipado contra los tipos de dominio
     ├── types/            # Modelos de dominio
     └── utils/            # Formato, summaries, filtros, charts y sugerencia de ítem
+        ├── fixedMonths.ts # Expansión de vigencia mensual: N registros idénticos en meses consecutivos
         └── suggestItem.ts # Matching determinístico (name + historial) para sugerir ítem
 ```
 

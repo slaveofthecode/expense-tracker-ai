@@ -102,12 +102,15 @@ export function App({ db }: AppProps) {
     refresh();
   };
 
-  const handleAddExpense = (input: NewExpense) => {
-    createExpense(db, input);
+  const handleAddExpense = (inputs: NewExpense[]) => {
+    for (const input of inputs) {
+      createExpense(db, input);
+    }
     refresh();
+    const first = inputs[0];
     setScreen(
-      input.itemId
-        ? { name: "itemDetail", itemId: input.itemId }
+      first?.itemId
+        ? { name: "itemDetail", itemId: first.itemId }
         : { name: "dashboard" },
     );
   };
@@ -304,6 +307,7 @@ export function App({ db }: AppProps) {
             ...initial,
             itemId: preselected?.id ?? initial.itemId,
           }}
+          allowFixedMonths
           onSubmit={handleAddExpense}
           onBack={handleBack}
         />
@@ -326,6 +330,7 @@ export function App({ db }: AppProps) {
             description: expense.description,
             amount: formatCurrency(expense.amount),
             date: expense.date,
+            fixedMonths: "",
             installmentsTotal: expense.installments
               ? String(expense.installments.total)
               : "",
@@ -335,7 +340,7 @@ export function App({ db }: AppProps) {
             ownershipPercentage: String(expense.ownership.percentage),
             ownershipPerson: expense.ownership.person ?? "",
           }}
-          onSubmit={(input) => handleUpdateExpense(expense.id, input)}
+          onSubmit={(inputs) => handleUpdateExpense(expense.id, inputs[0])}
           onBack={handleBack}
         />
       );

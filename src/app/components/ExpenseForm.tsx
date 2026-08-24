@@ -2,6 +2,11 @@ import { useRef, useState } from 'react';
 import { Box, Text } from 'ink';
 import { Form, type FormField, type FormSetValue } from './Form';
 import { todayISO, parseCurrency } from '../../utils/format';
+import {
+	expandFixedMonths,
+	fixedMonthsPreview,
+	MAX_FIXED_MONTHS,
+} from '../../utils/fixedMonths';
 import { suggestItem, type ItemSuggestion } from '../../utils/suggestItem';
 import { suggestItemWithAgent } from '../../ai/suggest';
 import type { Agent } from '../../ai/agent';
@@ -13,6 +18,7 @@ export interface ExpenseFormInitial {
 	description: string;
 	amount: string;
 	date: string;
+	fixedMonths: string;
 	installmentsTotal: string;
 	installmentsCurrent: string;
 	ownershipPercentage: string;
@@ -25,6 +31,7 @@ export function defaultExpenseFormInitial(items: Item[]): ExpenseFormInitial {
 		description: '',
 		amount: '',
 		date: todayISO(),
+		fixedMonths: '',
 		installmentsTotal: '',
 		installmentsCurrent: '',
 		ownershipPercentage: '100',
@@ -38,16 +45,17 @@ interface ExpenseFormProps {
 	expenses?: Expense[];
 	agent?: Agent;
 	initial: ExpenseFormInitial;
-	onSubmit: (input: NewExpense) => void;
+	/** Enables the "Vigencia (meses)" field to create one record per month. */
+	allowFixedMonths?: boolean;
+	onSubmit: (expenses: NewExpense[]) => void;
 	onBack: () => void;
 }
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-const DESCRIPTION_INDEX = 0;
-const ITEM_INDEX = 1;
 const SUGGESTION_COLOR = '#88c0d0';
 const MUTED_COLOR = '#9e9e9e';
 const ERROR_COLOR = '#ff5555';
+const PREVIEW_COLOR = '#a6e3a1';
 
 export function ExpenseForm({
 	title,
@@ -55,6 +63,7 @@ export function ExpenseForm({
 	expenses = [],
 	agent,
 	initial,
+	allowFixedMonths = false,
 	onSubmit,
 	onBack,
 }: ExpenseFormProps) {
@@ -69,6 +78,7 @@ export function ExpenseForm({
 	const pushedNonce = useRef(0);
 	const pushedItemId = useRef<string | undefined>();
 	const valuesRef = useRef<string[]>([]);
+	const [liveValues, setLiveValues] = useState<string[]>([]);
 	const initialItemValue = initial.itemId || items[0]?.id || '';
 
 	const fields: FormField[] = [
@@ -81,6 +91,15 @@ export function ExpenseForm({
 		},
 		{ label: 'Monto', type: 'text', initialValue: initial.amount },
 		{ label: 'Fecha', type: 'text', initialValue: initial.date },
+		...(allowFixedMonths
+			? [
+					{
+						label: 'Vigencia (meses)',
+						type: 'text' as const,
+						initialValue: initial.fixedMonths,
+					},
+				]
+			: []),
 		{
 			label: 'Cuotas totales',
 			type: 'text',
@@ -99,18 +118,31 @@ export function ExpenseForm({
 		{ label: 'Titular', type: 'text', initialValue: initial.ownershipPerson },
 	];
 
+	const idx = {
+		description: 0,
+		item: 1,
+		amount: 2,
+		date: 3,
+		fixedMonths: allowFixedMonths ? 4 : -1,
+		installmentsTotal: allowFixedMonths ? 5 : 4,
+		installmentsCurrent: allowFixedMonths ? 6 : 5,
+		percentage: allowFixedMonths ? 7 : 6,
+		person: allowFixedMonths ? 8 : 7,
+	};
+
 	const applySuggestion = (s: ItemSuggestion) => {
 		if (itemTouched.current) return;
-		if (valuesRef.current[ITEM_INDEX] === s.itemId) return;
+		if (valuesRef.current[idx.item] === s.itemId) return;
 		pushedNonce.current += 1;
 		pushedItemId.current = s.itemId;
-		setPushedValue({ fieldIndex: ITEM_INDEX, value: s.itemId, nonce: pushedNonce.current });
+		setPushedValue({ fieldIndex: idx.item, value: s.itemId, nonce: pushedNonce.current });
 	};
 
 	const handleValuesChange = (values: string[]) => {
 		valuesRef.current = values;
-		const description = values[DESCRIPTION_INDEX];
-		const itemId = values[ITEM_INDEX];
+		setLiveValues(values);
+		const description = values[idx.description];
+		const itemId = values[idx.item];
 
 		if (lastDescription.current !== description) {
 			lastDescription.current = description;
@@ -135,7 +167,7 @@ export function ExpenseForm({
 	};
 
 	const handleAsk = async () => {
-		const description = valuesRef.current[DESCRIPTION_INDEX] ?? '';
+		const description = valuesRef.current[idx.description] ?? '';
 		if (description.trim() === '') return;
 		if (!agent) {
 			setSuggestError('No hay un proveedor de IA configurado.');
@@ -162,14 +194,17 @@ export function ExpenseForm({
 	};
 
 	const handleSubmit = (values: string[]) => {
-		const description = values[DESCRIPTION_INDEX].trim();
-		const itemId = values[ITEM_INDEX];
-		const amount = parseCurrency(values[2]);
-		const date = values[3].trim();
-		const installmentsTotalRaw = values[4].trim();
-		const installmentsCurrentRaw = values[5].trim();
-		const percentage = Number(values[6]);
-		const person = values[7].trim();
+		const description = values[idx.description].trim();
+		const itemId = values[idx.item];
+		const amount = parseCurrency(values[idx.amount]);
+		const date = values[idx.date].trim();
+		const fixedMonthsRaw = allowFixedMonths
+			? values[idx.fixedMonths].trim()
+			: '';
+		const installmentsTotalRaw = values[idx.installmentsTotal].trim();
+		const installmentsCurrentRaw = values[idx.installmentsCurrent].trim();
+		const percentage = Number(values[idx.percentage]);
+		const person = values[idx.person].trim();
 
 		if (!itemId) {
 			setError('Selecciona un ítem');
@@ -186,6 +221,25 @@ export function ExpenseForm({
 		if (!DATE_RE.test(date)) {
 			setError('La fecha debe ser YYYY-MM-DD');
 			return;
+		}
+
+		let fixedMonths: number | undefined;
+		if (fixedMonthsRaw !== '') {
+			fixedMonths = Number(fixedMonthsRaw);
+			if (
+				!Number.isInteger(fixedMonths) ||
+				fixedMonths < 1 ||
+				fixedMonths > MAX_FIXED_MONTHS
+			) {
+				setError(
+					`La vigencia debe ser un entero entre 1 y ${MAX_FIXED_MONTHS}`,
+				);
+				return;
+			}
+			if (installmentsTotalRaw !== '') {
+				setError('Usá cuotas o vigencia, no ambos');
+				return;
+			}
 		}
 
 		let installmentsTotal: number | undefined;
@@ -213,7 +267,7 @@ export function ExpenseForm({
 			return;
 		}
 
-		onSubmit({
+		const expense: NewExpense = {
 			itemId,
 			description,
 			amount,
@@ -225,7 +279,12 @@ export function ExpenseForm({
 				percentage,
 				person: percentage === 100 ? undefined : person || undefined,
 			},
-		});
+		};
+		onSubmit(
+			fixedMonths !== undefined && fixedMonths > 1
+				? expandFixedMonths(expense, fixedMonths)
+				: [expense],
+		);
 	};
 
 	const suggestionItem = suggestion
@@ -234,6 +293,24 @@ export function ExpenseForm({
 	const suggestionLabel = suggestionItem
 		? `${ITEM_TYPE_LABELS[suggestionItem.type]} — ${suggestionItem.name}`
 		: '';
+
+	const fixedRaw =
+		allowFixedMonths ? (liveValues[idx.fixedMonths] ?? '').trim() : '';
+	const installmentsConflict =
+		fixedRaw !== '' &&
+		(liveValues[idx.installmentsTotal] ?? '').trim() !== '';
+	const fixedParsed = Number(fixedRaw);
+	const preview =
+		fixedRaw !== '' && !installmentsConflict &&
+		Number.isInteger(fixedParsed) &&
+		fixedParsed >= 2 &&
+		fixedParsed <= MAX_FIXED_MONTHS &&
+		DATE_RE.test((liveValues[idx.date] ?? '').trim())
+			? fixedMonthsPreview(
+					(liveValues[idx.date] ?? '').trim(),
+					fixedParsed,
+				)
+			: undefined;
 
 	return (
 		<Box flexDirection="column" padding={1}>
@@ -275,10 +352,13 @@ export function ExpenseForm({
 							{'  '}
 							{suggestError}
 						</Text>
-					) : (valuesRef.current[DESCRIPTION_INDEX] ?? '').trim() !== '' ? (
+					) : (liveValues[idx.description] ?? '').trim() !== '' ? (
 						<Text color={MUTED_COLOR}>
 							{'  '}Sin coincidencia: presioná ? para pedirle a la IA
 						</Text>
+					) : null}
+					{preview ? (
+						<Text color={PREVIEW_COLOR}>{`  ${preview}`}</Text>
 					) : null}
 				</Box>
 			</Box>

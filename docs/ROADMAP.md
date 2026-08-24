@@ -25,6 +25,7 @@ TUI funcional con datos hardcodeados que muestra items de gastos con sus totales
 - [x] CRUD de items (crear, editar, eliminar)
 - [x] Editar y eliminar gastos
 - [x] Soporte para cuotas (tarjetas, préstamos)
+- [x] Vigencia mensual al crear gastos: "Alquiler $560.000 durante 4 meses" genera N registros idénticos en meses consecutivos (mismo día, con clamp a fin de mes), excluyente con cuotas y disponible solo en alta (ver `src/utils/fixedMonths.ts`)
 
 ## v3 — Búsqueda y Filtros
 
