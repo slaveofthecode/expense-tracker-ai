@@ -26,6 +26,7 @@ TUI funcional con datos hardcodeados que muestra grupos de gastos con sus totale
 - [x] Editar y eliminar gastos
 - [x] Soporte para cuotas (tarjetas, préstamos)
 - [x] Vigencia mensual al crear gastos: "Alquiler $560.000 durante 4 meses" genera N registros idénticos en meses consecutivos (mismo día, con clamp a fin de mes), excluyente con cuotas y disponible solo en alta (ver `src/utils/fixedMonths.ts`)
+- [x] Grupo automático al crear gastos desde el Dashboard: el campo Grupo acepta "— crear grupo nuevo —"; al guardar se matchea la descripción contra grupos existentes (`findItemForConcept`) o se crea el grupo solo (nombre en Title Case + tipo inferido por palabras clave, ver `src/utils/autoGroup.ts`), con preview antes de confirmar. La edición nunca auto-crea grupos
 
 ## v3 — Búsqueda y Filtros
 

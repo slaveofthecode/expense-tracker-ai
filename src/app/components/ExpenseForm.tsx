@@ -8,6 +8,9 @@ import {
 	MAX_FIXED_MONTHS,
 } from '../../utils/fixedMonths';
 import { suggestItem, type ItemSuggestion } from '../../utils/suggestItem';
+import {
+	resolveAutoGroup,
+} from '../../utils/autoGroup';
 import { suggestItemWithAgent } from '../../ai/suggest';
 import type { Agent } from '../../ai/agent';
 import { ITEM_TYPE_LABELS } from '../../types';
@@ -47,6 +50,8 @@ interface ExpenseFormProps {
 	initial: ExpenseFormInitial;
 	/** Enables the "Vigencia (meses)" field to create one record per month. */
 	allowFixedMonths?: boolean;
+	/** Adds the "— crear grupo nuevo —" option and resolves/creates the group on save. */
+	allowAutoGroup?: boolean;
 	onSubmit: (expenses: NewExpense[]) => void;
 	onBack: () => void;
 }
@@ -64,6 +69,7 @@ export function ExpenseForm({
 	agent,
 	initial,
 	allowFixedMonths = false,
+	allowAutoGroup = false,
 	onSubmit,
 	onBack,
 }: ExpenseFormProps) {
@@ -79,14 +85,23 @@ export function ExpenseForm({
 	const pushedItemId = useRef<string | undefined>();
 	const valuesRef = useRef<string[]>([]);
 	const [liveValues, setLiveValues] = useState<string[]>([]);
-	const initialItemValue = initial.itemId || items[0]?.id || '';
+	const initialItemValue = allowAutoGroup
+		? initial.itemId
+		: initial.itemId || items[0]?.id || '';
+
+	const groupOptions = allowAutoGroup
+		? [
+				{ value: '', label: '— crear grupo nuevo —' },
+				...items.map((i) => ({ value: i.id, label: i.name })),
+			]
+		: items.map((i) => ({ value: i.id, label: i.name }));
 
 	const fields: FormField[] = [
 		{ label: 'Descripción', type: 'text', initialValue: initial.description },
 		{
 			label: 'Grupo',
 			type: 'select',
-			options: items.map((i) => ({ value: i.id, label: i.name })),
+			options: groupOptions,
 			initialValue: initialItemValue,
 		},
 		{ label: 'Monto', type: 'text', initialValue: initial.amount },
@@ -206,7 +221,7 @@ export function ExpenseForm({
 		const percentage = Number(values[idx.percentage]);
 		const person = values[idx.person].trim();
 
-		if (!itemId) {
+		if (!itemId && !(allowAutoGroup && description)) {
 			setError('Selecciona un grupo');
 			return;
 		}
@@ -312,6 +327,18 @@ export function ExpenseForm({
 				)
 			: undefined;
 
+	const autoGroupPreview = (() => {
+		if (!allowAutoGroup || (liveValues[idx.item] ?? '') !== '') return undefined;
+		const description = (liveValues[idx.description] ?? '').trim();
+		if (description === '') return undefined;
+		const resolution = resolveAutoGroup(description, items);
+		return resolution.matched
+			? `🤖 Grupo: ${resolution.matched.name}`
+			: `🤖 Se creará el grupo '${resolution.newName}' (${
+					ITEM_TYPE_LABELS[resolution.newType]
+				})`;
+	})();
+
 	return (
 		<Box flexDirection="column" padding={1}>
 			{items.length === 0 ? (
@@ -356,6 +383,9 @@ export function ExpenseForm({
 						<Text color={MUTED_COLOR}>
 							{'  '}Sin coincidencia: presioná ? para pedirle a la IA
 						</Text>
+					) : null}
+					{autoGroupPreview ? (
+						<Text color={SUGGESTION_COLOR}>{`  ${autoGroupPreview}`}</Text>
 					) : null}
 					{preview ? (
 						<Text color={PREVIEW_COLOR}>{`  ${preview}`}</Text>
