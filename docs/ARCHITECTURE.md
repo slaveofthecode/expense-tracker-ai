@@ -93,13 +93,14 @@ expense-tracker-ai/
     │   ├── tools.ts     # Registry de tools de solo lectura
     │   ├── provider.ts  # Interfaz LLMProvider + implementación Ollama
     │   ├── agent.ts     # Loop de tool-calling con system prompt de dominio
+    │   ├── expenseIntent.ts # Extracción de intención de gasto + matching de concepto (creación por chat)
     │   └── suggest.ts   # Sugerencia de ítem por IA (fallback del matching local)
     ├── app/
     │   ├── App.tsx      # Navegación entre pantallas + handlers
     │   └── components/
     │       ├── Dashboard.tsx
     │       ├── Charts.tsx
-    │       ├── Chat.tsx        # Chat con IA (consulta en lenguaje natural)
+    │       ├── Chat.tsx        # Chat con IA (consultas + creación de gastos con confirmación s/n)
     │       ├── ItemDetail.tsx
     │       ├── ExpenseDetail.tsx
     │       ├── Form.tsx        # Formulario genérico (texto/select)

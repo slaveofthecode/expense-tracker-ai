@@ -1,7 +1,17 @@
 import { Box, Text, useInput } from 'ink';
 import { useState } from 'react';
 import type { Agent } from '../../ai/agent';
+import type { LLMProvider } from '../../ai/provider';
+import {
+	extractExpenseIntent,
+	findItemForConcept,
+	toTitleCaseEs,
+	type ExpenseDraft,
+} from '../../ai/expenseIntent';
+import { ITEM_TYPE_LABELS } from '../../types';
+import type { Item, NewExpense, NewItem } from '../../types';
 import { answerDateQuestion } from '../../utils/dateIntent';
+import { formatCurrency, todayISO } from '../../utils/format';
 
 const ACCENT_COLOR = '#00d4ff';
 const TEXT_COLOR = '#c0caf5';
@@ -10,6 +20,7 @@ const HINT_COLOR = '#88c0d0';
 const USER_COLOR = '#fff1a8';
 const ASSISTANT_COLOR = '#9ece6a';
 const ERROR_COLOR = '#ff5555';
+const SUCCESS_COLOR = '#a6e3a1';
 const MAX_VISIBLE_MESSAGES = 20;
 
 interface ChatMessage {
@@ -18,56 +29,150 @@ interface ChatMessage {
 	toolCallCount?: number;
 }
 
-interface ChatProps {
-	agent: Agent;
-	hasData: boolean;
-	onBack: () => void;
+interface PendingCreation {
+	draft: ExpenseDraft;
+	matchedItem?: Item;
 }
 
-export function Chat({ agent, hasData, onBack }: ChatProps) {
+interface ChatProps {
+	agent: Agent;
+	provider: LLMProvider;
+	items: Item[];
+	hasData: boolean;
+	onBack: () => void;
+	onCreateItem: (input: NewItem) => Item;
+	onCreateExpense: (input: NewExpense) => void;
+}
+
+export function Chat({
+	agent,
+	provider,
+	items,
+	hasData,
+	onBack,
+	onCreateItem,
+	onCreateExpense,
+}: ChatProps) {
 	const [messages, setMessages] = useState<ChatMessage[]>([]);
 	const [input, setInput] = useState('');
 	const [thinking, setThinking] = useState(false);
+	const [pending, setPending] = useState<PendingCreation | null>(null);
+
+	const appendAssistant = (content: string) => {
+		setMessages((prev) => [...prev, { role: 'assistant', content }]);
+	};
+
+	const presentDraft = (draft: ExpenseDraft) => {
+		const matchedItem = findItemForConcept(items, draft.itemName);
+		setPending({ draft, matchedItem });
+		const perInstallment =
+			draft.installmentsTotal > 1
+				? draft.amount / draft.installmentsTotal
+				: undefined;
+		const itemLine = matchedItem
+			? `Ítem existente: ${matchedItem.name}`
+			: `Ítem nuevo: "${toTitleCaseEs(draft.itemName)}" (${
+					ITEM_TYPE_LABELS[draft.itemType ?? 'other']
+				})`;
+		appendAssistant(
+			[
+				'🤖 Detecté un gasto para crear:',
+				`   ${itemLine}`,
+				`   Descripción: ${draft.description}`,
+				`   Monto total: ${formatCurrency(draft.amount)}${
+					perInstallment !== undefined && Number.isFinite(perInstallment)
+						? ` · ${draft.installmentsTotal} cuotas de ${formatCurrency(perInstallment)}`
+						: ''
+				}`,
+				'¿Confirmás la creación? (s/n)',
+			].join('\n'),
+		);
+	};
+
+	const confirmPending = () => {
+		const current = pending;
+		if (!current) return;
+		const { draft, matchedItem } = current;
+		const item =
+			matchedItem ??
+			onCreateItem({
+				name: toTitleCaseEs(draft.itemName),
+				type: draft.itemType ?? 'other',
+			});
+		onCreateExpense({
+			itemId: item.id,
+			description: draft.description,
+			amount: draft.amount,
+			date: todayISO(),
+			installments:
+				draft.installmentsTotal > 1
+					? { total: draft.installmentsTotal, current: 1 }
+					: undefined,
+			ownership: { percentage: 100 },
+		});
+		setPending(null);
+		appendAssistant(`✅ Gasto creado en "${item.name}".`);
+	};
+
+	const cancelPending = () => {
+		setPending(null);
+		appendAssistant('Cancelado. No se creó nada.');
+	};
 
 	const send = (question: string) => {
 		setMessages((prev) => [...prev, { role: 'user', content: question }]);
 		const direct = answerDateQuestion(question);
 		if (direct !== null) {
-			setMessages((prev) => [...prev, { role: 'assistant', content: direct }]);
-			return;
-		}
-		if (!hasData) {
-			setMessages((prev) => [
-				...prev,
-				{ role: 'assistant', content: 'No hay datos cargados. Creá ítems y gastos desde el Dashboard para que pueda ayudarte.' },
-			]);
+			appendAssistant(direct);
 			return;
 		}
 		setThinking(true);
-		agent
-			.ask(question)
-			.then((result) => {
-				setMessages((prev) => [
-					...prev,
-					{
-						role: 'assistant',
-						content: result.answer,
-						toolCallCount: result.toolCallCount,
-					},
-				]);
+		extractExpenseIntent(provider, question)
+			.then((intent) => {
+				if (intent?.intent === 'create_expense') {
+					presentDraft(intent.draft);
+					return undefined;
+				}
+				if (!hasData) {
+					appendAssistant(
+						'No hay datos cargados. Creá ítems y gastos desde el Dashboard para que pueda ayudarte.',
+					);
+					return undefined;
+				}
+				return agent.ask(question).then((result) => {
+					setMessages((prev) => [
+						...prev,
+						{
+							role: 'assistant',
+							content: result.answer,
+							toolCallCount: result.toolCallCount,
+						},
+					]);
+				});
 			})
 			.catch((err: unknown) => {
 				const message = err instanceof Error ? err.message : String(err);
 				setMessages((prev) => [...prev, { role: 'error', content: message }]);
+				setPending(null);
 			})
 			.finally(() => {
 				setThinking(false);
 			});
 	};
 
-	useInput((_input, key) => {
-		if (key.escape || (key.ctrl && _input.toLowerCase() === 'c')) {
+	useInput((value, key) => {
+		if (key.escape || (key.ctrl && value.toLowerCase() === 'c')) {
+			if (pending) {
+				cancelPending();
+				return;
+			}
 			onBack();
+			return;
+		}
+		if (pending) {
+			const answer = value.toLowerCase();
+			if (answer === 's' || answer === 'y') confirmPending();
+			else if (answer === 'n') cancelPending();
 			return;
 		}
 		if (key.return) {
@@ -85,8 +190,8 @@ export function Chat({ agent, hasData, onBack }: ChatProps) {
 		if (key.tab || key.pageUp || key.pageDown) {
 			return;
 		}
-		if (_input) {
-			setInput((s) => s + _input);
+		if (value) {
+			setInput((s) => s + value);
 		}
 	});
 
@@ -109,10 +214,14 @@ export function Chat({ agent, hasData, onBack }: ChatProps) {
 				marginBottom={1}
 			>
 				{messages.length === 0 ? (
-					<Box>
+					<Box flexDirection="column">
 						<Text color={HINT_COLOR}>
 							{'  '}Preguntá sobre tus gastos en lenguaje natural. Ej: "¿cuánto
 							gasté en marzo?"
+						</Text>
+						<Text color={HINT_COLOR}>
+							{'  '}También podés crear gastos. Ej: "añadir gasto para la tarjeta
+							de credito de la naranja, zapatillas 1.200.000 en 6 cuotas"
 						</Text>
 					</Box>
 				) : (
@@ -144,7 +253,9 @@ export function Chat({ agent, hasData, onBack }: ChatProps) {
 
 			<Box>
 				<Text color={HINT_COLOR}>
-					{'  '}Enter Enviar · Esc Volver
+					{pending
+						? '  s Confirmar · n Cancelar'
+						: '  Enter Enviar · Esc Volver'}
 				</Text>
 			</Box>
 		</Box>

@@ -92,23 +92,24 @@ TUI funcional con datos hardcodeados que muestra items de gastos con sus totales
 
 **Cuándo:** después de v4. Orden interno de v5: chat → categorización → patrones → recomendaciones → MCP server.
 
-## v6 — Ingreso de gastos por chat (NO planificada)
+## v6 — Ingreso de gastos por chat
 
-> ⚠️ **Idea a futuro, no se va a implementar.** Queda documentada como visión para no perder el contexto si algún día se evalúa. No hay branch ni trabajo asociado.
+> Primera versión implementada (branch `feat/031-chat-create-expense`) por decisión del usuario de habilitar escritura con confirmación. El registry de tools sigue siendo **solo lectura**: la creación no pasa por tools sino por extracción de intención + callbacks de la TUI.
 
-**Objetivo:** que el chat pueda crear gastos hablando: el usuario describe la compra en lenguaje natural ("cama sommier $600000 en 6 cuotas"), el modelo aclara lo que falte (medio de pago, tarjeta, persona), el humano confirma y el gasto se guarda y aparece en el Dashboard.
+**Implementado:**
+- `src/ai/expenseIntent.ts`: extracción de intención (`create_expense` | `none`) con borrador tipado (ítem, tipo inferido, descripción, monto total ARS, cuotas) y matching de concepto contra ítems existentes (case/accent-insensitive, substring y subset de tokens).
+- Chat de la TUI: al detectar intención muestra el borrador y pide confirmación `s/n`; `s` crea el ítem (si no existe, tipo inferido o `other`) y el gasto vía callbacks de `App` con refresco inmediato; `n` cancela sin escribir.
+- Confirmación explícita del humano antes de escribir en la DB: siempre.
 
+**Pendiente:**
 - [ ] Tool de escritura `create_expense` en el registry de tools (hoy todas son `readonly`)
 - [ ] Flujo de diálogo guiado: el LLM pide los datos faltantes antes de guardar
-- [ ] Confirmación explícita del humano antes de escribir en la DB
-- [ ] Refresco del Dashboard/App al crear el gasto desde el chat
+- [ ] Ownership compartido desde el chat (hoy queda 100% propio)
 
-**Cómo implementar:**
-- Ampliar `src/ai/tools.ts` con herramientas WRITE (ej: `create_expense`) manteniendo la clasificación READ/WRITE.
-- Distinguir en el agente cuándo una tool es de escritura y requerir confirmación (revertir la decisión de "chat solo lectura").
+**Cómo seguir:**
+- Ampliar `src/ai/tools.ts` con herramientas WRITE manteniendo la clasificación READ/WRITE.
+- Distinguir en el agente cuándo una tool es de escritura y requerir confirmación.
 - Separar también qué tools ve el MCP server: probablemente se mantienen solo lectura para agentes externos.
 
 **Decisiones pendientes:**
-- ¿El chat de la TUI permite escritura pero el MCP queda solo lectura, o ambos? Hoy el roadmap dice que ambos son solo lectura.
-
-**Cuándo:** después de v5, solo si se re-evalúa la decisión de seguridad de "chat solo lectura". Es una candidata a v6, no un compromiso.
+- ¿El MCP permite escritura o queda solo lectura? Hoy el MCP hereda solo las tools de lectura.
