@@ -16,6 +16,23 @@ export function currentMonth(): string {
   return `${year}-${month}`;
 }
 
+export function shiftMonth(month: string, delta: number): string {
+  const year = Number(month.slice(0, 4));
+  const monthIndex = Number(month.slice(5, 7)) - 1;
+  if (
+    !/^\d{4}-\d{2}$/.test(month) ||
+    !Number.isInteger(year) ||
+    monthIndex < 0 ||
+    monthIndex > 11
+  ) {
+    throw new Error(`Invalid month "${month}", expected format YYYY-MM`);
+  }
+  const absolute = year * 12 + monthIndex + delta;
+  const nextYear = Math.floor(absolute / 12);
+  const nextMonthIndex = absolute % 12;
+  return `${String(nextYear).padStart(4, "0")}-${String(nextMonthIndex + 1).padStart(2, "0")}`;
+}
+
 export interface MonthlyTotal {
   total: number;
   myShare: number;
