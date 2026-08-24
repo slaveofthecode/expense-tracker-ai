@@ -65,7 +65,7 @@ export function ExpenseDetail({
 			<Box flexDirection="column">
 				<Box>
 					<Text bold color={LABEL_COLOR}>
-						Ítem:{' '}
+						Grupo:{' '}
 					</Text>
 					<Text color={DATA_COLOR}>{item.name}</Text>
 				</Box>

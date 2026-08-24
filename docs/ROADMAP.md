@@ -10,19 +10,19 @@ Cada versión define:
 
 ## v1 — Visual Prototype
 
-TUI funcional con datos hardcodeados que muestra items de gastos con sus totales mensuales.
+TUI funcional con datos hardcodeados que muestra grupos de gastos con sus totales mensuales.
 
 - [x] Definir modelos de datos
-- [x] Mock data con items y gastos de ejemplo
-- [x] Dashboard con lista de items y total del mes
-- [x] Detalle de item con sus gastos
+- [x] Mock data con grupos y gastos de ejemplo
+- [x] Dashboard con lista de grupos y total del mes
+- [x] Detalle de grupo con sus gastos
 - [x] Persistencia en SQLite
 
 ## v2 — Persistencia e Ingreso de Datos
 
 - [x] SQLite como base de datos local
 - [x] Formularios TUI para agregar gastos
-- [x] CRUD de items (crear, editar, eliminar)
+- [x] CRUD de grupos (crear, editar, eliminar)
 - [x] Editar y eliminar gastos
 - [x] Soporte para cuotas (tarjetas, préstamos)
 - [x] Vigencia mensual al crear gastos: "Alquiler $560.000 durante 4 meses" genera N registros idénticos en meses consecutivos (mismo día, con clamp a fin de mes), excluyente con cuotas y disponible solo en alta (ver `src/utils/fixedMonths.ts`)
@@ -33,14 +33,14 @@ TUI funcional con datos hardcodeados que muestra items de gastos con sus totales
 
 - [x] Filtro por tipo en Dashboard (tecla `t`, cicla `credit_card`, `kids`, `car`, `home`, `other`)
 - [x] Búsqueda global con resultados en vivo: `SearchPalette` al presionar `/` (directo, sin pasar por lista de comandos)
-- [x] Resultados por gasto: cada fila muestra item, tipo, persona, monto y fecha; si un item matchea sin gastos, se muestra como fila extra
-- [x] Enter sobre un resultado navega al detalle del item posicionando la fila del gasto que matcheó (ajustando el año)
+- [x] Resultados por gasto: cada fila muestra grupo, tipo, persona, monto y fecha; si un grupo matchea sin gastos, se muestra como fila extra
+- [x] Enter sobre un resultado navega al detalle del grupo posicionando la fila del gasto que matcheó (ajustando el año)
 - [x] Filtro por persona (gastos compartidos según `ownership.person`) a través de la búsqueda
 - [x] Estilo visual unificado en las grillas (Dashboard, ItemDetail, ItemDetailCard): celdas grises, header del mes actual blanco bold, compartidos amarillos, fila seleccionada solo en bold sin cambio de color
 
 **Cómo implementar:**
-- `src/utils/filters.ts`: `searchResults` devuelve filas por gasto (item, tipo, persona, monto, fecha) y filas de item sin gastos; reutiliza `normalize` (case/accent-insensitive). La misma lógica se reutiliza después en la tool `search_expenses` de v5.
-- `src/app/components/SearchPalette.tsx`: input con resultados en vivo (↑↓ para navegar, Enter abre el item, Esc cierra), reemplaza a `CommandPalette`.
+- `src/utils/filters.ts`: `searchResults` devuelve filas por gasto (grupo, tipo, persona, monto, fecha) y filas de grupo sin gastos; reutiliza `normalize` (case/accent-insensitive). La misma lógica se reutiliza después en la tool `search_expenses` de v5.
+- `src/app/components/SearchPalette.tsx`: input con resultados en vivo (↑↓ para navegar, Enter abre el grupo, Esc cierra), reemplaza a `CommandPalette`.
 - El screen `itemDetail` lleva `focusExpenseId` opcional para posicionar el cursor en la fila del gasto origen; `App` ajusta el año antes de navegar.
 - Fuera de alcance: búsqueda semántica con IA (se evalúa como mejora post-v5). El filtro por tipo sigue funcionando pero ya no se muestra en el footer.
 
@@ -52,7 +52,7 @@ TUI funcional con datos hardcodeados que muestra items de gastos con sus totales
 
 - [x] Pantalla `Charts` (tecla `g` en Dashboard, hint en el footer) con 4 gráficos seleccionables con `1`/`2`/`3`/`4`:
   - Gasto mensual del año (12 barras; tu parte en amarillo sobre el total)
-  - Gasto por tipo de ítem (barras por `ItemType`, ordenadas desc, con % del total)
+  - Gasto por tipo de grupo (barras por `ItemType`, ordenadas desc, con % del total)
   - Top ítems del año (top 5 con monto y %)
   - Distribución por tipo (barra única segmentada por tipo con leyenda)
 - [x] Año navegable con `←`/`→`; `Esc` vuelve al Dashboard
@@ -72,7 +72,7 @@ TUI funcional con datos hardcodeados que muestra items de gastos con sus totales
 - [x] Módulo `src/ai/` con interfaz de proveedor intercambiable (Ollama local por defecto; cloud OpenAI/Anthropic/Gemini opcional por env var)
 - [x] Chat AI en la TUI: consultas en lenguaje natural (ej: "¿cuánto gasté en marzo?") con respuestas basadas en datos reales
 - [x] Tools de consulta (solo lectura): `list_items`, `list_expenses`, `get_monthly_summary`, `get_yearly_summary`, `search_expenses`
-- [x] Categorización automática por sugerencia al ingresar (la IA propone el item y el humano confirma)
+- [x] Categorización automática por sugerencia al ingresar (la IA propone el grupo y el humano confirma)
 - [ ] Detección de patrones de gasto (cálculo numérico en `summaries.ts` + insights en lenguaje natural por LLM)
 - [ ] Recomendaciones (reglas determinísticas + redacción y jerarquía por LLM)
 - [ ] MCP server (`src/mcp/`) exponiendo las tools de lectura para cualquier agente externo (opencode, Claude Desktop, etc.)
@@ -80,7 +80,7 @@ TUI funcional con datos hardcodeados que muestra items de gastos con sus totales
 **Cómo implementar (orden sugerido):**
 1. `src/ai/tools.ts`: registry único de tools de lectura construidas sobre `repository.ts` y `summaries.ts`. Clasificar siempre READ/WRITE; el MCP y el chat de la TUI usan las mismas tools.
 2. `src/ai/provider.ts`: interfaz LLM + implementación Ollama con `fetch` nativo a `localhost:11434`. Config por env (`AI_MODEL`, `OLLAMA_HOST`). Health-check si Ollama no está corriendo.
-3. `src/ai/agent.ts`: loop de tool-calling con system prompt de dominio (tipos de item, semántica de cuotas y prorrateo, ownership/`myShare`, formato es-AR). Máximo N iteraciones como guard contra loops.
+3. `src/ai/agent.ts`: loop de tool-calling con system prompt de dominio (tipos de grupo, semántica de cuotas y prorrateo, ownership/`myShare`, formato es-AR). Máximo N iteraciones como guard contra loops.
 4. Screen `Chat` en Ink + tecla `c`. Primera versión: solo lectura, sin streaming.
 5. Recién después: categorización (sugerencia al ingresar), patrones, recomendaciones.
 6. MCP server al final: expone las MISMAS tools de lectura vía stdio y se registra en `opencode.json`. Así cualquier agente consulta los gastos con el mismo comportamiento que el chat de la TUI.

@@ -84,7 +84,7 @@ export function ExpenseForm({
 	const fields: FormField[] = [
 		{ label: 'Descripción', type: 'text', initialValue: initial.description },
 		{
-			label: 'Ítem',
+			label: 'Grupo',
 			type: 'select',
 			options: items.map((i) => ({ value: i.id, label: i.name })),
 			initialValue: initialItemValue,
@@ -182,7 +182,7 @@ export function ExpenseForm({
 			if (s && !itemTouched.current) applySuggestion(s);
 			if (!s) {
 				setSuggestError(
-					'La IA no pudo determinar un ítem para este gasto.',
+					'La IA no pudo determinar un grupo para este gasto.',
 				);
 			}
 		} catch (err) {
@@ -207,7 +207,7 @@ export function ExpenseForm({
 		const person = values[idx.person].trim();
 
 		if (!itemId) {
-			setError('Selecciona un ítem');
+			setError('Selecciona un grupo');
 			return;
 		}
 		if (!description) {
@@ -317,7 +317,7 @@ export function ExpenseForm({
 			{items.length === 0 ? (
 				<Box marginBottom={1}>
 					<Text color={ERROR_COLOR}>
-						{'  '}No hay ítems creados. Creá uno primero con "i" desde el Dashboard.
+						{'  '}No hay grupos creados. Creá uno primero con "i" desde el Dashboard.
 					</Text>
 				</Box>
 			) : null}

@@ -116,15 +116,15 @@ describe("createAgent", () => {
         toolCalls: [{ id: "call_0", name: "list_items", arguments: {} }],
       }),
       (m) => ({
-        content: "Hay 2 ítems: Alquiler y Tarjeta Naranja.",
+        content: "Hay 2 grupos: Alquiler y Tarjeta Naranja.",
         toolCalls: [],
       }),
     ]);
     const agent = createAgent({ provider, tools });
 
-    const result = await agent.ask("¿qué ítems tengo?");
+    const result = await agent.ask("¿qué grupos tengo?");
 
-    expect(result.answer).toBe("Hay 2 ítems: Alquiler y Tarjeta Naranja.");
+    expect(result.answer).toBe("Hay 2 grupos: Alquiler y Tarjeta Naranja.");
     expect(result.toolCallCount).toBe(1);
     expect(provider.chatCalls).toHaveLength(2);
 

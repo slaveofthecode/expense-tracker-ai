@@ -10,7 +10,7 @@ export function buildSuggestionPrompt(
   description: string,
 ): string {
   const names = items.map((i) => `${i.name} (${i.type})`).join(", ");
-  return `¿A qué ítem corresponde el gasto "${description}"? Elegí uno de estos: ${names}. Respondé SOLO con el nombre exacto de un ítem.`;
+  return `¿A qué grupo corresponde el gasto "${description}"? Elegí uno de estos: ${names}. Respondé SOLO con el nombre exacto de un grupo.`;
 }
 
 export async function suggestItemWithAgent(

@@ -95,7 +95,7 @@ export function SearchPalette({
 			{query.trim() === '' ? (
 				<Box>
 					<Text color={HINT_COLOR}>
-						{'  '}Escribí para buscar en conceptos, ítems y personas
+						{'  '}Escribí para buscar en conceptos, grupos y personas
 					</Text>
 				</Box>
 			) : results.length === 0 ? (
@@ -122,7 +122,7 @@ export function SearchPalette({
 			)}
 			<Box marginTop={1}>
 				<Text color={HINT_COLOR}>
-					{'  '}↑↓ Navegar · Enter Ir al ítem · Esc Cerrar
+					{'  '}↑↓ Navegar · Enter Ir al grupo · Esc Cerrar
 				</Text>
 			</Box>
 		</Box>

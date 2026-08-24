@@ -270,7 +270,7 @@ export function App({ db }: AppProps) {
     case "addItem":
       return (
         <ItemForm
-          title="Agregar Ítem"
+          title="Agregar Grupo"
           initialName=""
           initialType="other"
           onSubmit={handleAddItem}
@@ -283,7 +283,7 @@ export function App({ db }: AppProps) {
       if (!item) return null;
       return (
         <ItemForm
-          title={`Editar Ítem — ${item.name}`}
+          title={`Editar Grupo — ${item.name}`}
           initialName={item.name}
           initialType={item.type}
           onSubmit={(input) => handleUpdateItem(item.id, input)}

@@ -34,8 +34,8 @@ const TYPE_COLORS: Record<ItemType, string> = {
 
 const CHART_TITLES = [
 	'Gasto mensual',
-	'Por tipo de ítem',
-	'Top ítems del año',
+	'Por tipo de grupo',
+	'Top grupos del año',
 	'Distribución por tipo',
 ];
 

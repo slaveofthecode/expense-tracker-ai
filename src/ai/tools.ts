@@ -60,14 +60,14 @@ export function buildTools(ctx: ReadToolsContext): AiTool[] {
     {
       name: "list_items",
       description:
-        "Lista todos los ítems de gasto (tarjetas de crédito, nenas, auto, depto-casa, otros). " +
-        "Útil para conocer los ítems existentes y sus ids. Opcionalmente filtra por tipo " +
+        "Lista todos los grupos de gasto (tarjetas de crédito, nenas, auto, depto-casa, otros). " +
+        "Útil para conocer los grupos existentes y sus ids. Opcionalmente filtra por tipo " +
         "(credit_card, kids, car, home, other).",
       parameters: [
         {
           name: "type",
           type: "string",
-          description: "Filtra los ítems por tipo.",
+          description: "Filtra los grupos por tipo.",
           enum: [...ITEM_TYPES],
         },
       ],
@@ -81,13 +81,13 @@ export function buildTools(ctx: ReadToolsContext): AiTool[] {
       name: "list_expenses",
       description:
         "Lista los gastos registrados, ordenados por fecha. Opcionalmente filtra por año o " +
-        "por ítem (itemId). Cada gasto incluye descripción, monto, fecha, cuotas y ownership " +
+        "por grupo (itemId). Cada gasto incluye descripción, monto, fecha, cuotas y ownership " +
         "(porcentaje propio y persona si está compartido).",
       parameters: [
         {
           name: "itemId",
           type: "string",
-          description: "Filtra los gastos de un ítem específico.",
+          description: "Filtra los gastos de un grupo específico.",
         },
         {
           name: "year",
@@ -114,7 +114,7 @@ export function buildTools(ctx: ReadToolsContext): AiTool[] {
     {
       name: "get_monthly_summary",
       description:
-        "Resumen de gastos de un mes (formato YYYY-MM, ej: 2026-03). Devuelve por cada ítem " +
+        "Resumen de gastos de un mes (formato YYYY-MM, ej: 2026-03). Devuelve por cada grupo " +
         "el total del mes y la parte propia (myShare). Si no se indica month, usa el mes actual.",
       parameters: [
         {
@@ -136,7 +136,7 @@ export function buildTools(ctx: ReadToolsContext): AiTool[] {
     {
       name: "get_yearly_summary",
       description:
-        "Resumen anual de gastos: por cada ítem devuelve el total de cada uno de los 12 meses " +
+        "Resumen anual de gastos: por cada grupo devuelve el total de cada uno de los 12 meses " +
         "(total y myShare), prorrateando las cuotas. Si no se indica year, usa el último año " +
         "con gastos registrados.",
       parameters: [
@@ -157,8 +157,8 @@ export function buildTools(ctx: ReadToolsContext): AiTool[] {
     {
       name: "search_expenses",
       description:
-        "Busca gastos por texto en la descripción, el nombre del ítem o la persona. Devuelve " +
-        "una fila por gasto que matchea y, si un ítem matchea sin gastos, una fila extra de ítem.",
+        "Busca gastos por texto en la descripción, el nombre del grupo o la persona. Devuelve " +
+        "una fila por gasto que matchea y, si un grupo matchea sin gastos, una fila extra de grupo.",
       parameters: [
         {
           name: "query",
@@ -178,8 +178,8 @@ export function buildTools(ctx: ReadToolsContext): AiTool[] {
       name: "analyze_patterns",
       description:
         "Analiza patrones de gasto: cambios mes a mes, tendencias (subida/bajada/estable), " +
-        "anomalías (gastos inusuales) e ítems recurrentes. Devuelve datos pre-calculados por " +
-        "ítem para que puedas interpretar tendencias sin hacer cálculos manuales.",
+        "anomalías (gastos inusuales) e grupos recurrentes. Devuelve datos pre-calculados por " +
+        "grupo para que puedas interpretar tendencias sin hacer cálculos manuales.",
       parameters: [
         {
           name: "year",
@@ -189,7 +189,7 @@ export function buildTools(ctx: ReadToolsContext): AiTool[] {
         {
           name: "itemId",
           type: "string",
-          description: "Analiza un ítem específico. Si se omite, analiza todos los ítems.",
+          description: "Analiza un grupo específico. Si se omite, analiza todos los grupos.",
         },
       ],
       readonly: true,
@@ -215,7 +215,7 @@ export function buildTools(ctx: ReadToolsContext): AiTool[] {
         {
           name: "itemId",
           type: "string",
-          description: "Genera recomendaciones para un ítem específico.",
+          description: "Genera recomendaciones para un grupo específico.",
         },
       ],
       readonly: true,
