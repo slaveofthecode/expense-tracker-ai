@@ -86,6 +86,10 @@ export function ItemDetailCard({
 			setSearchOpen(true);
 			return;
 		}
+		if (_input.toLowerCase() === 'a') {
+			onAddExpense();
+			return;
+		}
 		if (yearExpenses.length === 0) return;
 		if (key.upArrow) {
 			setSelectedIndex((i) => (i > 0 ? i - 1 : yearExpenses.length - 1));
@@ -95,9 +99,6 @@ export function ItemDetailCard({
 		}
 		if (key.return) {
 			onSelectExpense(yearExpenses[currentIndex].id);
-		}
-		if (_input.toLowerCase() === 'a') {
-			onAddExpense();
 		}
 	});
 
