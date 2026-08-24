@@ -3,6 +3,7 @@ import {
   formatCurrency,
   formatDate,
   formatMonth,
+  parseCurrency,
   todayISO,
   myShare,
   ownershipLabel,
@@ -44,6 +45,46 @@ describe("formatMonth", () => {
 describe("todayISO", () => {
   it("formats as YYYY-MM-DD", () => {
     expect(todayISO()).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+});
+
+describe("parseCurrency", () => {
+  it("parses plain digits", () => {
+    expect(parseCurrency("1234")).toBe(1234);
+  });
+
+  it("parses es-AR style with dot thousands and comma decimals", () => {
+    expect(parseCurrency("$1.234,56")).toBe(1234.56);
+  });
+
+  it("parses dot as decimal when not a thousand grouping", () => {
+    expect(parseCurrency("1.5")).toBe(1.5);
+  });
+
+  it("parses dots-only as thousands separators (es-AR)", () => {
+    expect(parseCurrency("1.200.000")).toBe(1200000);
+    expect(parseCurrency("12.500")).toBe(12500);
+    expect(parseCurrency("$1.234.567")).toBe(1234567);
+  });
+
+  it("parses en-US style with comma thousands and dot decimals", () => {
+    expect(parseCurrency("1,234.56")).toBe(1234.56);
+  });
+
+  it("parses commas-only as thousands separators (en-US)", () => {
+    expect(parseCurrency("1,234,567")).toBe(1234567);
+  });
+
+  it("parses comma as decimal when not a thousand grouping", () => {
+    expect(parseCurrency("1,5")).toBe(1.5);
+  });
+
+  it("returns NaN for empty input", () => {
+    expect(parseCurrency("")).toBeNaN();
+  });
+
+  it("returns NaN for non-numeric input", () => {
+    expect(parseCurrency("abc")).toBeNaN();
   });
 });
 

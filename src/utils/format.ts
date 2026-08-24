@@ -61,10 +61,15 @@ export function formatYearWide(year: number): string {
 /**
  * Parse a currency string (supports es-AR and en-US styles) into a number.
  * Examples:
- *  "$1.234,56" => 1234.56 (es-AR)
- *  "1,234.56"  => 1234.56 (en-US)
- *  "1234"      => 1234
+ *  "$1.234,56"    => 1234.56 (es-AR)
+ *  "1.200.000"    => 1200000 (es-AR, dot as thousands separator)
+ *  "1,234.56"     => 1234.56 (en-US)
+ *  "1,234,567"    => 1234567 (en-US, comma as thousands separator)
+ *  "1234"         => 1234
  */
+const DOTS_THOUSANDS_RE = /^-?\d{1,3}(\.\d{3})+$/;
+const COMMAS_THOUSANDS_RE = /^-?\d{1,3}(,\d{3})+$/;
+
 export function parseCurrency(input: string): number {
   if (!input) return NaN;
   const s = String(input).trim();
@@ -76,8 +81,16 @@ export function parseCurrency(input: string): number {
 
   let normalized = cleaned;
   if (hasDot && hasComma) {
-    // assume dot is thousands separator and comma is decimal (es-AR)
-    normalized = cleaned.replace(/\./g, "").replace(/,/g, ".");
+    // the rightmost separator is the decimal one (es-AR vs en-US)
+    if (cleaned.lastIndexOf(".") > cleaned.lastIndexOf(",")) {
+      normalized = cleaned.replace(/,/g, "");
+    } else {
+      normalized = cleaned.replace(/\./g, "").replace(/,/g, ".");
+    }
+  } else if (DOTS_THOUSANDS_RE.test(cleaned)) {
+    normalized = cleaned.replace(/\./g, "");
+  } else if (COMMAS_THOUSANDS_RE.test(cleaned)) {
+    normalized = cleaned.replace(/,/g, "");
   } else if (hasComma && !hasDot) {
     // assume comma is decimal
     normalized = cleaned.replace(/,/g, ".");
