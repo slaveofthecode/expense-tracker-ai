@@ -60,9 +60,9 @@ export function buildTools(ctx: ReadToolsContext): AiTool[] {
     {
       name: "list_items",
       description:
-        "Lista todos los ítems de gasto (tarjetas, préstamos, recurrentes, seguros, otros). " +
+        "Lista todos los ítems de gasto (tarjetas de crédito, nenas, auto, depto-casa, otros). " +
         "Útil para conocer los ítems existentes y sus ids. Opcionalmente filtra por tipo " +
-        "(credit_card, loan, recurring, insurance, other).",
+        "(credit_card, kids, car, home, other).",
       parameters: [
         {
           name: "type",

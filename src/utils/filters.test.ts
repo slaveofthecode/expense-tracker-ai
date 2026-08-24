@@ -3,9 +3,9 @@ import { filterItems, filterExpenses, searchItems, searchResults } from "./filte
 import type { Item, Expense } from "../types";
 
 const items: Item[] = [
-  { id: "alquiler", name: "Alquiler", type: "recurring" },
+  { id: "alquiler", name: "Alquiler", type: "home" },
   { id: "naranja", name: "Tarjeta Naranja", type: "credit_card" },
-  { id: "auto-seguro", name: "Seguro Auto", type: "insurance" },
+  { id: "auto-seguro", name: "Seguro Auto", type: "car" },
   { id: "cafe", name: "Café", type: "other" },
 ];
 
@@ -57,7 +57,7 @@ describe("filterItems", () => {
   });
 
   it("combines query and type", () => {
-    const result = filterItems(items, { query: "auto", type: "insurance" });
+    const result = filterItems(items, { query: "auto", type: "car" });
     expect(result.map((i) => i.id)).toEqual(["auto-seguro"]);
   });
 
@@ -79,7 +79,7 @@ describe("filterItems", () => {
   });
 
   it("returns empty when no item has the filtered type", () => {
-    const result = filterItems(items, { type: "loan" });
+    const result = filterItems(items, { type: "kids" });
     expect(result).toHaveLength(0);
   });
 });
@@ -118,7 +118,7 @@ describe("searchItems", () => {
   });
 
   it("filters by type only without a query", () => {
-    const result = searchItems(items, expenses, { type: "insurance" });
+    const result = searchItems(items, expenses, { type: "car" });
     expect(result.map((i) => i.id)).toEqual(["auto-seguro"]);
   });
 
@@ -288,7 +288,7 @@ describe("searchResults", () => {
   });
 
   it("places item-only rows after expense rows", () => {
-    const extra: Item = { id: "expensas", name: "Expensas", type: "recurring" };
+    const extra: Item = { id: "expensas", name: "Expensas", type: "home" };
     const result = searchResults([...items, extra], expenses, "a");
     const kinds = result.map((r) => r.kind);
     const lastItemKind = kinds.lastIndexOf("item");

@@ -1,8 +1,8 @@
 export const ITEM_TYPES = [
   "credit_card",
-  "loan",
-  "recurring",
-  "insurance",
+  "kids",
+  "car",
+  "home",
   "other",
 ] as const;
 
@@ -10,11 +10,14 @@ export type ItemType = (typeof ITEM_TYPES)[number];
 
 export const ITEM_TYPE_LABELS: Record<ItemType, string> = {
   credit_card: "Tarjeta de Crédito",
-  loan: "Préstamo",
-  recurring: "Recurrente",
-  insurance: "Seguro",
-  other: "Otro",
+  kids: "Nenas",
+  car: "Auto",
+  home: "Depto-Casa",
+  other: "Otros",
 };
+
+/** Legacy item types kept only for DB migration purposes. */
+export const LEGACY_ITEM_TYPES = ["loan", "recurring", "insurance"] as const;
 
 export interface Item {
   id: string;

@@ -14,9 +14,9 @@ import {
 } from "./charts";
 
 const items: Item[] = [
-  { id: "alquiler", name: "Alquiler", type: "recurring" },
+  { id: "alquiler", name: "Alquiler", type: "home" },
   { id: "naranja", name: "Tarjeta Naranja", type: "credit_card" },
-  { id: "auto-seguro", name: "Seguro Auto", type: "insurance" },
+  { id: "auto-seguro", name: "Seguro Auto", type: "car" },
   { id: "cafe", name: "Café", type: "other" },
 ];
 
@@ -85,7 +85,7 @@ describe("totalsByType", () => {
   it("sums per type, keeps order desc and skips empty types", () => {
     const summaries = calcYearlySummaries(items, expenses, 2026);
     const result = totalsByType(items, summaries);
-    expect(result.map((r) => r.type)).toEqual(["recurring", "credit_card", "insurance"]);
+    expect(result.map((r) => r.type)).toEqual(["home", "credit_card", "car"]);
     expect(result.map((r) => r.value)).toEqual([180000, 60000, 30000]);
   });
 

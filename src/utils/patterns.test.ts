@@ -137,7 +137,7 @@ describe("findAnomalies", () => {
 
 describe("detectRecurringItems", () => {
 	const items: Item[] = [
-		{ id: "alquiler", name: "Alquiler", type: "recurring" },
+		{ id: "alquiler", name: "Alquiler", type: "home" },
 		{ id: "compra", name: "Compra", type: "credit_card" },
 	];
 
@@ -178,7 +178,7 @@ describe("detectRecurringItems", () => {
 
 describe("buildPatternData", () => {
 	const items: Item[] = [
-		{ id: "alquiler", name: "Alquiler", type: "recurring" },
+		{ id: "alquiler", name: "Alquiler", type: "home" },
 		{ id: "compra", name: "Compra", type: "credit_card" },
 	];
 

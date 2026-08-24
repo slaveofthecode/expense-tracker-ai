@@ -49,7 +49,8 @@ interface Item {
 	type: ItemType;
 }
 
-type ItemType = 'credit_card' | 'loan' | 'recurring' | 'insurance' | 'other';
+type ItemType = 'credit_card' | 'kids' | 'car' | 'home' | 'other';
+// Legacy values (loan, recurring, insurance) migran a 'other' al iniciar la app.
 
 interface Expense {
 	id: string;

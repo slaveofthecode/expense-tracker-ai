@@ -30,27 +30,52 @@ describe("schema", () => {
       .all();
     expect(tables).toHaveLength(2);
   });
+
+  it("migrates legacy item types to other", () => {
+    db.query(
+      "INSERT INTO items (id, name, type) VALUES ('i1', 'Préstamo viejo', 'loan')",
+    ).run();
+    db.query(
+      "INSERT INTO items (id, name, type) VALUES ('i2', 'Netflix', 'recurring')",
+    ).run();
+    db.query(
+      "INSERT INTO items (id, name, type) VALUES ('i3', 'Seguro', 'insurance')",
+    ).run();
+    db.query(
+      "INSERT INTO items (id, name, type) VALUES ('i4', 'Naranja', 'credit_card')",
+    ).run();
+
+    runMigrations(db);
+
+    const types = new Map(
+      listItems(db).map((item) => [item.id, item.type]),
+    );
+    expect(types.get("i1")).toBe("other");
+    expect(types.get("i2")).toBe("other");
+    expect(types.get("i3")).toBe("other");
+    expect(types.get("i4")).toBe("credit_card");
+  });
 });
 
 describe("items CRUD", () => {
   it("creates and lists an item", () => {
-    const item = createItem(db, { name: "Netflix", type: "recurring" });
+    const item = createItem(db, { name: "Netflix", type: "home" });
     const found = listItems(db).find((i) => i.id === item.id);
     expect(found).toBeDefined();
     expect(found!.name).toBe("Netflix");
-    expect(found!.type).toBe("recurring");
+    expect(found!.type).toBe("home");
   });
 
   it("updates an item", () => {
-    const item = createItem(db, { name: "Netflix", type: "recurring" });
-    updateItem(db, item.id, { name: "Spotify", type: "recurring" });
+    const item = createItem(db, { name: "Netflix", type: "home" });
+    updateItem(db, item.id, { name: "Spotify", type: "home" });
     const found = listItems(db).find((i) => i.id === item.id);
     expect(found).toBeDefined();
     expect(found!.name).toBe("Spotify");
   });
 
   it("deletes an item and cascades its expenses", () => {
-    const item = createItem(db, { name: "Netflix", type: "recurring" });
+    const item = createItem(db, { name: "Netflix", type: "home" });
     createExpense(db, {
       itemId: item.id,
       description: "Plan",

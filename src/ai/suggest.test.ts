@@ -6,7 +6,7 @@ import type { ChatMessage, LLMProvider, LLMResponse } from "./provider";
 import { buildSuggestionPrompt, suggestItemWithAgent } from "./suggest";
 
 const items: Item[] = [
-  { id: "alquiler", name: "Alquiler", type: "recurring" },
+  { id: "alquiler", name: "Alquiler", type: "home" },
   { id: "naranja", name: "Tarjeta Naranja", type: "credit_card" },
 ];
 
@@ -36,7 +36,7 @@ describe("buildSuggestionPrompt", () => {
   it("lists the available items with their types", () => {
     const prompt = buildSuggestionPrompt(items, "Patente 1er vencimiento");
     expect(prompt).toContain("Patente 1er vencimiento");
-    expect(prompt).toContain("Alquiler (recurring)");
+    expect(prompt).toContain("Alquiler (home)");
     expect(prompt).toContain("Tarjeta Naranja (credit_card)");
   });
 });

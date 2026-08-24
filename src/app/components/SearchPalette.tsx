@@ -13,10 +13,10 @@ const MAX_RESULTS = 12;
 
 const TYPE_SHORT: Record<ItemType, string> = {
 	credit_card: 'TC',
-	loan: 'Préstamo',
-	recurring: 'Recurrente',
-	insurance: 'Seguro',
-	other: 'Otro',
+	kids: 'Nenas',
+	car: 'Auto',
+	home: 'Depto-Casa',
+	other: 'Otros',
 };
 
 interface SearchPaletteProps {

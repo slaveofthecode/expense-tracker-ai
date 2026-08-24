@@ -3,10 +3,10 @@ import { suggestItem, parseSuggestionAnswer } from "./suggestItem";
 import type { Item, Expense } from "../types";
 
 const items: Item[] = [
-  { id: "alquiler", name: "Alquiler", type: "recurring" },
+  { id: "alquiler", name: "Alquiler", type: "home" },
   { id: "naranja", name: "Tarjeta Naranja", type: "credit_card" },
-  { id: "auto-seguro", name: "Seguro Auto", type: "insurance" },
-  { id: "auto-rentas", name: "Auto Rentas", type: "recurring" },
+  { id: "auto-seguro", name: "Seguro Auto", type: "car" },
+  { id: "auto-rentas", name: "Auto Rentas", type: "home" },
   { id: "cafe", name: "Café", type: "other" },
 ];
 
@@ -103,7 +103,7 @@ describe("suggestItem", () => {
 describe("parseSuggestionAnswer", () => {
   it("parses an item name embedded in a sentence", () => {
     const suggestion = parseSuggestionAnswer(
-      "Lo agregaría a Recurrente — Alquiler",
+      "Lo agregaría a Depto-Casa — Alquiler",
       items,
     );
     expect(suggestion).toBeDefined();
