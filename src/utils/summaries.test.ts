@@ -6,6 +6,7 @@ import {
   getLatestMonth,
   getLatestYear,
   monthOf,
+  shiftMonth,
 } from "./summaries";
 import type { Item, Expense } from "../types";
 
@@ -44,6 +45,38 @@ const expenses: Expense[] = [
 describe("monthOf", () => {
   it("extracts YYYY-MM from an ISO date", () => {
     expect(monthOf("2026-07-05")).toBe("2026-07");
+  });
+});
+
+describe("shiftMonth", () => {
+  it("returns the same month with delta 0", () => {
+    expect(shiftMonth("2026-08", 0)).toBe("2026-08");
+  });
+
+  it("moves forward within the same year", () => {
+    expect(shiftMonth("2026-03", 1)).toBe("2026-04");
+  });
+
+  it("moves backward within the same year", () => {
+    expect(shiftMonth("2026-05", -2)).toBe("2026-03");
+  });
+
+  it("crosses into the previous year going back from january", () => {
+    expect(shiftMonth("2026-01", -1)).toBe("2025-12");
+  });
+
+  it("crosses into the next year going forward from december", () => {
+    expect(shiftMonth("2025-12", 1)).toBe("2026-01");
+  });
+
+  it("handles multi-month deltas across years", () => {
+    expect(shiftMonth("2026-03", -3)).toBe("2025-12");
+    expect(shiftMonth("2026-10", 4)).toBe("2027-02");
+  });
+
+  it("throws on invalid month format", () => {
+    expect(() => shiftMonth("2026-13", 1)).toThrow();
+    expect(() => shiftMonth("bad", 1)).toThrow();
   });
 });
 
