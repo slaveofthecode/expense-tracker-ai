@@ -4,9 +4,9 @@ import type { SearchResult } from "../utils/filters";
 import { buildTools, getTool } from "./tools";
 
 const items: Item[] = [
-  { id: "alquiler", name: "Alquiler", type: "recurring" },
+  { id: "alquiler", name: "Alquiler", type: "home" },
   { id: "naranja", name: "Tarjeta Naranja", type: "credit_card" },
-  { id: "auto-seguro", name: "Seguro Auto", type: "insurance" },
+  { id: "auto-seguro", name: "Seguro Auto", type: "car" },
   { id: "cafe", name: "Café", type: "other" },
 ];
 

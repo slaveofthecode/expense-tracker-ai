@@ -178,7 +178,7 @@ export function App({ db }: AppProps) {
       if (!item) return null;
       const itemExpenses = expenses.filter((e) => e.itemId === screen.itemId);
       
-      if (item.type === "recurring" || item.type === "insurance" || item.type === "other") {
+      if (item.type === "credit_card") {
         return (
           <ItemDetailCard
             item={item}

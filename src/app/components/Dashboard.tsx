@@ -199,7 +199,7 @@ export function Dashboard({
 
 					// Determine whether this item should be treated as an aggregator
 					const itemExpenses = expenses.filter((e) => e.itemId === item.id);
-					const isAggregator = item.type === 'credit_card' || item.type === 'loan';
+					const isAggregator = item.type === 'credit_card';
 
 					return (
 						<Box key={item.id}>

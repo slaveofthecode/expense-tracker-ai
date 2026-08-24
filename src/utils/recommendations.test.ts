@@ -2,7 +2,7 @@ import { describe, it, expect } from "bun:test";
 import { generateRecommendations } from "./recommendations";
 import type { Item, Expense } from "../types";
 
-const makeItem = (id: string, name: string, type: Item["type"] = "recurring"): Item => ({
+const makeItem = (id: string, name: string, type: Item["type"] = "home"): Item => ({
 	id,
 	name,
 	type,

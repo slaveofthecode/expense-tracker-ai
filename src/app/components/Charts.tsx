@@ -26,9 +26,9 @@ const YEAR_COLOR = '#fff1a8';
 
 const TYPE_COLORS: Record<ItemType, string> = {
 	credit_card: '#ff5555',
-	loan: '#ffd700',
-	recurring: '#00d4ff',
-	insurance: '#9ece6a',
+	kids: '#00d4ff',
+	car: '#ffd700',
+	home: '#9ece6a',
 	other: '#c678dd',
 };
 

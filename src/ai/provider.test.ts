@@ -202,7 +202,7 @@ describe("chat", () => {
           role: "assistant",
           content: "",
           tool_calls: [
-            { function: { name: "list_items", arguments: { type: "loan" } } },
+            { function: { name: "list_items", arguments: { type: "kids" } } },
           ],
         },
         done: true,
@@ -211,7 +211,7 @@ describe("chat", () => {
 
     const response = await provider.chat(messages);
 
-    expect(response.toolCalls[0]?.arguments).toEqual({ type: "loan" });
+    expect(response.toolCalls[0]?.arguments).toEqual({ type: "kids" });
   });
 
   it("serializes assistant tool calls and tool result names back to the model", async () => {

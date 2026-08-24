@@ -1,4 +1,5 @@
 import type { Database } from "bun:sqlite";
+import { LEGACY_ITEM_TYPES } from "../types";
 
 export const SCHEMA = `
   CREATE TABLE IF NOT EXISTS items (
@@ -22,4 +23,17 @@ export const SCHEMA = `
 
 export function runMigrations(db: Database): void {
   db.run(SCHEMA);
+  migrateLegacyItemTypes(db);
+}
+
+/**
+ * Legacy types (loan, recurring, insurance) were removed from the domain.
+ * Existing rows are migrated to "other". Idempotent: it is a no-op once no
+ * legacy values remain.
+ */
+function migrateLegacyItemTypes(db: Database): void {
+  const placeholders = LEGACY_ITEM_TYPES.map(() => "?").join(", ");
+  db.query(
+    `UPDATE items SET type = 'other' WHERE type IN (${placeholders})`,
+  ).run(...LEGACY_ITEM_TYPES);
 }

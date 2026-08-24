@@ -30,7 +30,7 @@ TUI funcional con datos hardcodeados que muestra items de gastos con sus totales
 
 **Objetivo:** encontrar gastos rápido desde cualquier pantalla y navegar directo al detalle.
 
-- [x] Filtro por tipo en Dashboard (tecla `t`, cicla `credit_card`, `loan`, `recurring`, `insurance`, `other`)
+- [x] Filtro por tipo en Dashboard (tecla `t`, cicla `credit_card`, `kids`, `car`, `home`, `other`)
 - [x] Búsqueda global con resultados en vivo: `SearchPalette` al presionar `/` (directo, sin pasar por lista de comandos)
 - [x] Resultados por gasto: cada fila muestra item, tipo, persona, monto y fecha; si un item matchea sin gastos, se muestra como fila extra
 - [x] Enter sobre un resultado navega al detalle del item posicionando la fila del gasto que matcheó (ajustando el año)

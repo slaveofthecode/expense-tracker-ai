@@ -10,7 +10,7 @@ import {
 import type { Item, Expense } from "../types";
 
 const items: Item[] = [
-  { id: "a", name: "Item A", type: "recurring" },
+  { id: "a", name: "Item A", type: "home" },
   { id: "b", name: "Item B", type: "credit_card" },
 ];
 

@@ -11,7 +11,7 @@ import {
 import type { ChatMessage, LLMProvider, LLMResponse } from "./provider";
 
 const items: Item[] = [
-  { id: "alquiler", name: "Alquiler", type: "recurring" },
+  { id: "alquiler", name: "Alquiler", type: "home" },
   { id: "naranja", name: "Tarjeta Naranja", type: "credit_card" },
 ];
 
