@@ -4,31 +4,33 @@ import type { Item, Expense, ItemType } from '../../types';
 import { ITEM_TYPES } from '../../types';
 import {
 	formatCurrency,
-	formatYearWide,
-	MONTHS_SHORT_ES,
+	formatMonth,
 } from '../../utils/format';
-import { calcYearlySummaries, currentMonth } from '../../utils/summaries';
+import {
+	calcMonthlySummaries,
+	currentMonth,
+	shiftMonth,
+} from '../../utils/summaries';
 import type { SearchResult } from '../../utils/filters';
 import { Confirm } from './Confirm';
 import { SearchPalette } from './SearchPalette';
 
 const NOT_MINE_COLOR = '#e0af68';
-const YEAR_COLOR = '#ffd700';
-const MONTH_HEADER_COLOR = '#ffffff';
+const TITLE_COLOR = '#00d4ff';
+const PERIOD_COLOR = '#fff1a8';
 const ITEM_HEADER_COLOR = '#c678dd';
 const ITEM_NAME_COLOR = '#c0caf5';
-const MONTH_CELL_COLOR = '#9e9e9e';
-const ITEM_WIDTH = 24;
-const MONTH_WIDTH = 15;
-// toggle inverted background selection preview (true = inverted background, false = colored text)
+const AMOUNT_COLOR = '#9e9e9e';
 const USE_INVERTED_SELECTION = false;
+const ITEM_WIDTH = 24;
+const AMOUNT_WIDTH = 15;
 const TYPE_FILTERS: (ItemType | 'all')[] = ['all', ...ITEM_TYPES];
 
 interface DashboardProps {
 	items: Item[];
 	expenses: Expense[];
-	year: number;
-	onYearChange: (year: number) => void;
+	month: string;
+	onMonthChange: (month: string) => void;
 	onSelectItem: (itemId: string) => void;
 	onSearchResult: (result: SearchResult) => void;
 	onAddItem: () => void;
@@ -40,11 +42,18 @@ interface DashboardProps {
 	onQuit: () => void;
 }
 
+interface MonthRow {
+	itemId: string;
+	name: string;
+	total: number;
+	myShare: number;
+}
+
 export function Dashboard({
 	items,
 	expenses,
-	year,
-	onYearChange,
+	month,
+	onMonthChange,
 	onSelectItem,
 	onSearchResult,
 	onAddItem,
@@ -63,14 +72,25 @@ export function Dashboard({
 		typeFilter === 'all'
 			? items
 			: items.filter((item) => item.type === typeFilter);
+	const summaries = calcMonthlySummaries(visibleItems, expenses, month);
+	const itemById = new Map(items.map((item) => [item.id, item]));
+	const rows: MonthRow[] = summaries
+		.filter((s) => s.totalAmount > 0)
+		.map((s) => ({
+			itemId: s.itemId,
+			name: itemById.get(s.itemId)?.name ?? '?',
+			total: s.totalAmount,
+			myShare: s.myShare,
+		}))
+		.sort((a, b) => b.total - a.total);
 	const currentIndex = Math.min(
 		selectedIndex,
-		Math.max(visibleItems.length - 1, 0)
+		Math.max(rows.length - 1, 0)
 	);
-	const summaries = calcYearlySummaries(visibleItems, expenses, year);
-	const now = currentMonth();
-	const currentYear = Number(now.slice(0, 4));
-	const currentMonthIndex = Number(now.slice(5, 7)) - 1;
+	const periodLabel = formatMonth(month).replace(/^./, (c) =>
+		c.toUpperCase()
+	);
+	const isCurrentPeriod = month === currentMonth();
 
 	useInput((_input, key) => {
 		if (searchOpen || confirmingDelete) return;
@@ -79,11 +99,11 @@ export function Dashboard({
 			return;
 		}
 		if (key.leftArrow) {
-			onYearChange(year - 1);
+			onMonthChange(shiftMonth(month, -1));
 			return;
 		}
 		if (key.rightArrow) {
-			onYearChange(year + 1);
+			onMonthChange(shiftMonth(month, 1));
 			return;
 		}
 		if (_input.toLowerCase() === '/') {
@@ -113,18 +133,18 @@ export function Dashboard({
 			onOpenChat();
 			return;
 		}
-		if (visibleItems.length === 0) return;
+		if (rows.length === 0) return;
 		if (key.upArrow) {
-			setSelectedIndex((i) => (i > 0 ? i - 1 : visibleItems.length - 1));
+			setSelectedIndex((i) => (i > 0 ? i - 1 : rows.length - 1));
 		}
 		if (key.downArrow) {
-			setSelectedIndex((i) => (i < visibleItems.length - 1 ? i + 1 : 0));
+			setSelectedIndex((i) => (i < rows.length - 1 ? i + 1 : 0));
 		}
 		if (key.return) {
-			onSelectItem(visibleItems[currentIndex].id);
+			onSelectItem(rows[currentIndex].itemId);
 		}
 		if (_input.toLowerCase() === 'e') {
-			onEditItem(visibleItems[currentIndex].id);
+			onEditItem(rows[currentIndex].itemId);
 		}
 		if (_input.toLowerCase() === 'd') {
 			setConfirmingDelete(true);
@@ -132,7 +152,9 @@ export function Dashboard({
 	});
 
 	if (confirmingDelete) {
-		const item = visibleItems[currentIndex];
+		const row = rows[currentIndex];
+		const item = itemById.get(row.itemId);
+		if (!item) return null;
 		return (
 			<Confirm
 				message={`¿Eliminar "${item.name}"? Sus gastos también se eliminarán.`}
@@ -145,15 +167,19 @@ export function Dashboard({
 		);
 	}
 
+	const monthTotal = rows.reduce((acc, r) => acc + r.total, 0);
+	const monthMyShare = rows.reduce((acc, r) => acc + r.myShare, 0);
+
 	return (
 		<Box flexDirection="column" padding={1}>
 			<Box marginBottom={1} flexDirection="row" gap={2} marginLeft={2}>
-				<Text bold color="#00d4ff">
+				<Text bold color={TITLE_COLOR}>
 					{'EXPENSE TRACKER AI'}
 				</Text>
-				<Text color={'gray'}>{' [ '}</Text>
-				<Text bold color={'#fff1a8'}>
-					{String(formatYearWide(year)).split('').join('')}
+				<Text color={'gray'}>{' [ ' }</Text>
+				<Text bold color={isCurrentPeriod ? '#9ece6a' : PERIOD_COLOR}>
+					{periodLabel}
+					{isCurrentPeriod ? ' ●' : ''}
 				</Text>
 				<Text color={'gray'}>{' ] '}</Text>
 			</Box>
@@ -167,85 +193,98 @@ export function Dashboard({
 				/>
 			) : null}
 
-			<Box flexDirection="column" marginBottom={1}>
-				<Box>
-					<Text bold color={ITEM_HEADER_COLOR}>
+			{rows.length > 0 ? (
+				<Box flexDirection="column">
+					<Box>
+						<Text bold color={ITEM_HEADER_COLOR}>
+							{'  '}
+							{'Concepto'.padEnd(ITEM_WIDTH)}
+						</Text>
+						<Text bold color={ITEM_HEADER_COLOR}>
+							{'Total'.padStart(AMOUNT_WIDTH)}
+						</Text>
+						<Text bold color={ITEM_HEADER_COLOR}>
+							{'Mi parte'.padStart(AMOUNT_WIDTH)}
+						</Text>
+					</Box>
+					<Text color="#333" dimColor>
 						{'  '}
-						{'Concepto'.padEnd(ITEM_WIDTH)}
+						{'─'.repeat(ITEM_WIDTH + AMOUNT_WIDTH * 2)}
 					</Text>
-					{MONTHS_SHORT_ES.map((month, mi) => {
-						const isCurrent = year === currentYear && mi === currentMonthIndex;
+					{rows.map((row, i) => {
+						const isSelected = i === currentIndex;
+						const prefix = isSelected ? '❯ ' : '  ';
+						const isShared = row.myShare < row.total;
 						return (
-							<Text
-								key={`header-${mi}`}
-								bold={isCurrent}
-								color={MONTH_HEADER_COLOR}
-								dimColor={false}
-							>
-								{month.padStart(MONTH_WIDTH)}
-							</Text>
+							<Box key={row.itemId}>
+								<Text
+									color={ITEM_NAME_COLOR}
+									bold={isSelected}
+									inverse={USE_INVERTED_SELECTION && isSelected}
+								>
+									{prefix}
+									{row.name.slice(0, ITEM_WIDTH - 2).padEnd(ITEM_WIDTH)}
+								</Text>
+								<Text
+									color={isShared ? NOT_MINE_COLOR : AMOUNT_COLOR}
+									bold={isSelected}
+									inverse={USE_INVERTED_SELECTION && isSelected}
+									dimColor={false}
+								>
+									{formatCurrency(row.total).padStart(AMOUNT_WIDTH)}
+								</Text>
+								<Text
+									color={AMOUNT_COLOR}
+									bold={isSelected}
+									inverse={USE_INVERTED_SELECTION && isSelected}
+									dimColor={false}
+								>
+									{formatCurrency(row.myShare).padStart(AMOUNT_WIDTH)}
+								</Text>
+							</Box>
 						);
 					})}
-				</Box>
-				<Text color="#333" dimColor>
-					{'  '}
-					{'─'.repeat(ITEM_WIDTH + MONTH_WIDTH * 12)}
-				</Text>
-				{summaries.map((s, i) => {
-					const item = visibleItems.find((it) => it.id === s.itemId);
-					if (!item) return null;
-					const isSelected = i === currentIndex;
-					const prefix = isSelected ? '❯ ' : '  ';
-
-					// Determine whether this item should be treated as an aggregator
-					const itemExpenses = expenses.filter((e) => e.itemId === item.id);
-					const isAggregator = item.type === 'credit_card' || item.type === 'loan';
-
-					return (
-						<Box key={item.id}>
-							<Text
-								color={ITEM_NAME_COLOR}
-								bold={isSelected}
-								inverse={USE_INVERTED_SELECTION && isSelected}
-							>
-								{prefix}
-								{item.name.slice(0, ITEM_WIDTH - 2).padEnd(ITEM_WIDTH)}
-							</Text>
-							{s.months.map((m, mi) => {
-								const isShared = m.total > 0 && m.myShare < m.total;
-								const monthColor =
-									!isAggregator && isShared
-										? NOT_MINE_COLOR
-										: MONTH_CELL_COLOR;
-								return (
-									<Text
-										key={`month-${item.id}-${mi}`}
-										color={monthColor}
-										bold={isSelected}
-										inverse={USE_INVERTED_SELECTION && isSelected}
-										dimColor={false}
-									>
-										{m.total > 0
-											? formatCurrency(m.total).padStart(MONTH_WIDTH)
-											: ' '.repeat(MONTH_WIDTH)}
-									</Text>
-								);
-							})}
-						</Box>
-					);
-				})}
-				{items.length === 0 ? (
-					<Text dimColor>
-						No hay ítems todavía. Presiona "i" para agregar uno.
+					<Text color="#333" dimColor>
+						{'  '}
+						{'─'.repeat(ITEM_WIDTH + AMOUNT_WIDTH * 2)}
 					</Text>
-				) : visibleItems.length === 0 ? (
-					<Text dimColor>No hay ítems que coincidan con la búsqueda.</Text>
-				) : null}
-			</Box>
+					<Box>
+						<Text color={AMOUNT_COLOR}>
+							{'  '}
+							{'Total del mes'.padEnd(ITEM_WIDTH)}
+						</Text>
+						<Text
+							color={monthMyShare < monthTotal ? NOT_MINE_COLOR : AMOUNT_COLOR}
+						>
+							{formatCurrency(monthTotal).padStart(AMOUNT_WIDTH)}
+						</Text>
+						<Text color={AMOUNT_COLOR}>
+							{formatCurrency(monthMyShare).padStart(AMOUNT_WIDTH)}
+						</Text>
+					</Box>
+				</Box>
+			) : items.length === 0 ? (
+				<Text dimColor>
+					{'  '}No hay ítems todavía. Presiona "i" para agregar uno.
+				</Text>
+			) : visibleItems.length === 0 ? (
+				<Text dimColor>
+					{'  '}No hay ítems que coincidan con el filtro de tipo.
+				</Text>
+			) : (
+				<Box flexDirection="column" gap={1}>
+					<Text dimColor>
+						{'  '}{`No hay registros en ${periodLabel.toLowerCase()}.`}
+					</Text>
+					<Text dimColor>
+						{'  '}Usá ← → para cambiar de mes o presioná "a" para agregar un gasto.
+					</Text>
+				</Box>
+			)}
 
-		<Box marginBottom={1}>
+		<Box marginTop={1} marginBottom={1}>
 			<Text color="#88c0d0">
-				{'  '}↑↓ Navegar · Enter Seleccionar · ←→ Año ·{' '}
+				{'  '}↑↓ Navegar · Enter Seleccionar · ←→ Mes ·{' '}
 			</Text>
 			<Text color="#88c0d0">
 				<Text bold>/</Text> Buscar · <Text bold>i</Text> Agregar Ítem
@@ -260,9 +299,15 @@ export function Dashboard({
 			</Text>
 		</Box>
 
-			<Box>
-				<Text color={NOT_MINE_COLOR}>{'  '}■ </Text>
-				<Text dimColor>gasto compartido o de otra persona</Text>
+			<Box flexDirection="column">
+				<Box>
+					<Text color={NOT_MINE_COLOR}>{'  '}■ </Text>
+					<Text dimColor>gasto compartido o de otra persona</Text>
+				</Box>
+				<Box>
+					<Text color="#9ece6a">{'  '}● </Text>
+					<Text dimColor>mes actual</Text>
+				</Box>
 			</Box>
 		</Box>
 	);

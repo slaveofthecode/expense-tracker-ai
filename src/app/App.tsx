@@ -21,8 +21,8 @@ import { ItemDetailCard } from "./components/ItemDetailCard";
 import { ExpenseDetail } from "./components/ExpenseDetail";
 import { ItemForm } from "./components/ItemForm";
 import { ExpenseForm, defaultExpenseFormInitial } from "./components/ExpenseForm";
-import { todayISO, formatCurrency } from "../utils/format";
-import { getLatestYear } from "../utils/summaries";
+import { formatCurrency } from "../utils/format";
+import { currentMonth, monthOf } from "../utils/summaries";
 import type { NewExpense, NewItem, Screen } from "../types";
 import type { SearchResult } from "../utils/filters";
 
@@ -62,9 +62,12 @@ export function App({ db }: AppProps) {
   const [items, setItems] = useState(() => listItems(db));
   const [expenses, setExpenses] = useState(() => listExpenses(db));
   const [screen, setScreen] = useState<Screen>({ name: "dashboard" });
-  const [year, setYear] = useState<number>(
-    () => getLatestYear(expenses) ?? new Date().getFullYear(),
-  );
+  const [month, setMonth] = useState<string>(() => currentMonth());
+  const year = Number(month.slice(0, 4));
+
+  const handleYearChange = (nextYear: number) => {
+    setMonth(`${nextYear}-${month.slice(5, 7)}`);
+  };
   const [agent] = useState(() =>
     createAgent({
       provider: createOllamaProvider(),
@@ -128,7 +131,7 @@ export function App({ db }: AppProps) {
     const item = items.find((i) => i.id === result.itemId);
     if (!item) return;
     if (result.kind === "expense") {
-      setYear(Number(result.date.slice(0, 4)));
+      setMonth(monthOf(result.date));
       setScreen({
         name: "itemDetail",
         itemId: item.id,
@@ -145,8 +148,8 @@ export function App({ db }: AppProps) {
         <Dashboard
           items={items}
           expenses={expenses}
-          year={year}
-          onYearChange={setYear}
+          month={month}
+          onMonthChange={setMonth}
           onSelectItem={(itemId) => setScreen({ name: "itemDetail", itemId })}
           onSearchResult={handleSearchResult}
           onAddItem={() => setScreen({ name: "addItem" })}
@@ -165,7 +168,7 @@ export function App({ db }: AppProps) {
           items={items}
           expenses={expenses}
           year={year}
-          onYearChange={setYear}
+          onYearChange={handleYearChange}
           onBack={handleBack}
         />
       );
@@ -186,7 +189,7 @@ export function App({ db }: AppProps) {
             allItems={items}
             allExpenses={expenses}
             year={year}
-            onYearChange={setYear}
+            onYearChange={handleYearChange}
             onSelectExpense={(expenseId) =>
               setScreen({ name: "expenseDetail", expenseId, itemId: item.id })
             }
@@ -205,7 +208,7 @@ export function App({ db }: AppProps) {
           allItems={items}
           allExpenses={expenses}
           year={year}
-          onYearChange={setYear}
+          onYearChange={handleYearChange}
           onSelectExpense={(expenseId) =>
             setScreen({ name: "expenseDetail", expenseId, itemId: item.id })
           }
