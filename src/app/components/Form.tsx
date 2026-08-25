@@ -9,7 +9,7 @@ export interface FormOption {
 
 export interface FormField {
   label: string;
-  type?: "text" | "select";
+  type?: "text" | "select" | "combo";
   options?: FormOption[];
   initialValue: string;
 }
@@ -46,6 +46,11 @@ export function Form({
 
   const activeField = fields[activeIndex];
   const isSelect = activeField.type === "select";
+  const isCombo = activeField.type === "combo";
+
+  /** Returns the preset option currently selected in a combo field, if any. */
+  const comboPreset = (index: number): FormOption | undefined =>
+    fields[index].options?.find((o) => o.value !== "" && o.value === values[index]);
 
   const LABEL_COLOR = "#c678dd";
   const DATA_COLOR = "#c0caf5";
@@ -99,14 +104,19 @@ export function Form({
       return;
     }
     if (key.leftArrow) {
-      if (isSelect) cycleOption(-1);
+      if (isSelect || isCombo) cycleOption(-1);
       return;
     }
     if (key.rightArrow) {
-      if (isSelect) cycleOption(1);
+      if (isSelect || isCombo) cycleOption(1);
       return;
     }
     if ((key.backspace || key.delete) && !isSelect) {
+      if (isCombo && comboPreset(activeIndex)) {
+        // First backspace over a preset clears it and starts a custom value.
+        commit(values.map((v, i) => (i === activeIndex ? "" : v)));
+        return;
+      }
       commit(values.map((v, i) => (i === activeIndex ? v.slice(0, -1) : v)));
       return;
     }
@@ -118,7 +128,11 @@ export function Form({
         onAsk(activeIndex);
         return;
       }
-      commit(values.map((v, i) => (i === activeIndex ? v + _input : v)));
+      const next =
+        isCombo && comboPreset(activeIndex)
+          ? _input
+          : values[activeIndex] + _input;
+      commit(values.map((v, i) => (i === activeIndex ? next : v)));
     }
   });
 
@@ -133,8 +147,10 @@ export function Form({
       <Box flexDirection="column" marginBottom={1}>
         {fields.map((field, i) => {
           const isActive = i === activeIndex;
-          let display =
-            field.options?.find((o) => o.value === values[i])?.label ?? values[i];
+          const optionMatch = field.options?.find(
+            (o) => o.value === values[i],
+          );
+          let display = optionMatch?.label ?? values[i];
           // Auto-format amount field with currency while typing
           if (field.label === "Monto") {
             const raw = values[i] ?? "";
@@ -149,14 +165,16 @@ export function Form({
             }
           }
 
-          const cursor = isActive && !isSelect ? "▌" : "";
+          const showingPreset = field.type === "combo" && optionMatch !== undefined;
+          const cursor = isActive && !isSelect && !showingPreset ? "▌" : "";
           return (
             <Box key={field.label}>
               <Text color={isActive ? ACTIVE_COLOR : undefined}>
                 {isActive ? "❯ " : "  "}
               </Text>
               <Text color={LABEL_COLOR} bold={isActive}>
-                {field.label}: 
+                {field.label}
+                {": "}
               </Text>
               <Text color={isActive ? ACTIVE_COLOR : DATA_COLOR}>
                 {display}

@@ -23,7 +23,7 @@ import { ItemForm } from "./components/ItemForm";
 import { ExpenseForm, defaultExpenseFormInitial } from "./components/ExpenseForm";
 import { formatCurrency } from "../utils/format";
 import { currentMonth, monthOf } from "../utils/summaries";
-import { resolveAutoGroup } from "../utils/autoGroup";
+import { resolveGroupForSave } from "../utils/autoGroup";
 import type { Item, NewExpense, NewItem, Screen } from "../types";
 import type { SearchResult } from "../utils/filters";
 
@@ -41,7 +41,6 @@ function getBackScreen(current: Screen): Screen {
       return { name: "dashboard" };
     case "expenseDetail":
       return { name: "itemDetail", itemId: current.itemId };
-    case "addItem":
     case "editItem":
       return { name: "dashboard" };
     case "addExpense":
@@ -86,12 +85,6 @@ export function App({ db }: AppProps) {
     process.exit(0);
   };
 
-  const handleAddItem = (input: NewItem) => {
-    createItem(db, input);
-    refresh();
-    setScreen({ name: "dashboard" });
-  };
-
   const handleUpdateItem = (itemId: string, input: NewItem) => {
     updateItem(db, itemId, input);
     refresh();
@@ -105,18 +98,28 @@ export function App({ db }: AppProps) {
 
   const handleAddExpense = (inputs: NewExpense[]) => {
     const first = inputs[0];
-    let groupId = first?.itemId ?? "";
-    if (!groupId && first) {
-      const resolution = resolveAutoGroup(first.description, items);
+    let groupId = "";
+    if (first) {
+      const resolution = resolveGroupForSave(
+        first.itemId,
+        first.description,
+        items,
+      );
       groupId =
-        resolution.matched?.id ??
-        createItem(db, {
-          name: resolution.newName || "Otros",
-          type: resolution.newType,
-        }).id;
+        resolution.kind === "existing"
+          ? resolution.itemId
+          : createItem(db, {
+              name: resolution.name || "Otros",
+              type: resolution.type,
+            }).id;
     }
     for (const input of inputs) {
-      createExpense(db, { ...input, itemId: input.itemId || groupId });
+      const raw = input.itemId.trim();
+      const explicit = items.some((item) => item.id === raw);
+      createExpense(db, {
+        ...input,
+        itemId: explicit ? raw : groupId,
+      });
     }
     refresh();
     setScreen(
@@ -178,7 +181,6 @@ export function App({ db }: AppProps) {
           onMonthChange={setMonth}
           onSelectItem={(itemId) => setScreen({ name: "itemDetail", itemId })}
           onSearchResult={handleSearchResult}
-          onAddItem={() => setScreen({ name: "addItem" })}
           onEditItem={(itemId) => setScreen({ name: "editItem", itemId })}
           onDeleteItem={handleDeleteItem}
           onAddExpense={() => setScreen({ name: "addExpense" })}
@@ -277,17 +279,6 @@ export function App({ db }: AppProps) {
         />
       );
     }
-
-    case "addItem":
-      return (
-        <ItemForm
-          title="Agregar Grupo"
-          initialName=""
-          initialType="other"
-          onSubmit={handleAddItem}
-          onBack={handleBack}
-        />
-      );
 
     case "editItem": {
       const item = items.find((i) => i.id === screen.itemId);

@@ -592,9 +592,13 @@
           Everything else works without it.
         </p>
         <p>
-          When adding an expense, the app suggests the matching group live as you type
-          (instant local matching against group names and past expenses; press
-          <code>?</code> on the description to ask the AI when there's no local match).
+          When adding an expense, the group field is hybrid: cycle through existing
+          groups with <code>←</code>/<code>→</code> or just type a new group name and
+          it is created on save (with a live preview showing whether it will reuse an
+          existing match or create a new one). The app also suggests the matching group
+          from the description (instant local matching against group names and past
+          expenses; press <code>?</code> on the description to ask the AI when there's
+          no local match).
         </p>
         <p>
           Want to verify the connection from your browser? Open the
@@ -631,8 +635,7 @@ bun start</code></pre>
               <tr><td><code>Enter</code></td><td>Select / next form field</td></tr>
               <tr><td><code>Esc</code></td><td>Back / quit</td></tr>
               <tr><td><code>/</code></td><td>Search everything (concept, group, person) with live results</td></tr>
-              <tr><td><code>a</code></td><td>Add expense</td></tr>
-              <tr><td><code>i</code></td><td>Add group</td></tr>
+              <tr><td><code>a</code></td><td>Add expense (groups are created right in the form)</td></tr>
               <tr><td><code>e</code></td><td>Edit (group on dashboard, expense in detail)</td></tr>
               <tr><td><code>d</code></td><td>Delete (with confirmation)</td></tr>
               <tr><td><code>g</code></td><td>Open terminal charts (4 chart types, 1-4 to switch)</td></tr>

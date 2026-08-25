@@ -6,7 +6,8 @@ import {
 	MONTHS_SHORT_ES,
 	formatYearWide,
 } from '../../utils/format';
-import { currentMonth, monthOf } from '../../utils/summaries';
+import { currentMonth } from '../../utils/summaries';
+import { buildDetailRows, findRowContaining, type DetailRow } from '../../utils/detailRows';
 import type { SearchResult } from '../../utils/filters';
 import { SearchPalette } from './SearchPalette';
 
@@ -50,17 +51,10 @@ export function ItemDetail({
 }: ItemDetailProps) {
 	const [selectedIndex, setSelectedIndex] = useState(0);
 	const [searchOpen, setSearchOpen] = useState(false);
-	const yearExpenses = expenses.filter((e) => {
-		const startYear = Number(monthOf(e.date).slice(0, 4));
-		const startMonth = Number(monthOf(e.date).slice(5, 7)) - 1;
-		const window = e.installments?.total ?? 1;
-		const endAbsolute = startMonth + window - 1;
-		const endYear = startYear + Math.floor(endAbsolute / 12);
-		return year >= startYear && year <= endYear;
-	});
+	const rows: DetailRow[] = buildDetailRows(expenses, year);
 	const currentIndex = Math.min(
 		selectedIndex,
-		Math.max(yearExpenses.length - 1, 0)
+		Math.max(rows.length - 1, 0)
 	);
 	const now = currentMonth();
 	const currentYear = Number(now.slice(0, 4));
@@ -71,7 +65,7 @@ export function ItemDetail({
 			setSelectedIndex(0);
 			return;
 		}
-		const idx = yearExpenses.findIndex((e) => e.id === initialExpenseId);
+		const idx = findRowContaining(rows, initialExpenseId);
 		setSelectedIndex(idx >= 0 ? idx : 0);
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [item.id, initialExpenseId]);
@@ -98,15 +92,15 @@ export function ItemDetail({
 			onAddExpense();
 			return;
 		}
-		if (yearExpenses.length === 0) return;
+		if (rows.length === 0) return;
 		if (key.upArrow) {
-			setSelectedIndex((i) => (i > 0 ? i - 1 : yearExpenses.length - 1));
+			setSelectedIndex((i) => (i > 0 ? i - 1 : rows.length - 1));
 		}
 		if (key.downArrow) {
-			setSelectedIndex((i) => (i < yearExpenses.length - 1 ? i + 1 : 0));
+			setSelectedIndex((i) => (i < rows.length - 1 ? i + 1 : 0));
 		}
 		if (key.return) {
-			onSelectExpense(yearExpenses[currentIndex].id);
+			onSelectExpense(rows[currentIndex].expenseIds[0]);
 		}
 	});
 
@@ -156,31 +150,18 @@ export function ItemDetail({
 					{'  '}
 					{'─'.repeat(DESC_WIDTH + MONTH_WIDTH * 12)}
 				</Text>
-				{yearExpenses.map((e, i) => {
+				{rows.map((row, i) => {
 					const isSelected = i === currentIndex;
 					const prefix = isSelected ? '❯ ' : '  ';
-					const startYear = Number(monthOf(e.date).slice(0, 4));
-					const startMonth = Number(monthOf(e.date).slice(5, 7)) - 1;
-					const window = e.installments?.total ?? 1;
-					const monthlyAmount =
-						window > 1 ? Math.round(e.amount / window) : e.amount;
-					const covered = new Set<number>();
-					for (let k = 0; k < window; k++) {
-						const absolute = startMonth + k;
-						if (startYear + Math.floor(absolute / 12) !== year) continue;
-						covered.add(absolute % 12);
-					}
-					const isShared = e.ownership.percentage < 100;
+					const covered = row.coveredMonths;
+					const isShared = row.isShared;
 					const firstCuotaMonth =
-						window > 1 && startYear === year ? startMonth : -1;
-					const badge = e.installments
-						? ` en ${e.installments.total} ctas`
-						: '';
-					const description = `${e.description}${badge}`
+						row.firstInstallmentMonth ?? -1;
+					const description = `${row.description}${row.badge}`
 						.padEnd(DESC_WIDTH)
 						.slice(0, DESC_WIDTH);
 					return (
-						<Box key={e.id}>
+						<Box key={row.key}>
 							<Text
 								color={ROW_COLOR}
 								bold={isSelected}
@@ -206,8 +187,8 @@ export function ItemDetail({
 										inverse={USE_INVERTED_SELECTION && isSelected}
 										dimColor={false}
 									>
-										{showAmount && monthlyAmount > 0
-											? formatCurrency(monthlyAmount).padStart(MONTH_WIDTH)
+										{showAmount && row.monthlyAmount > 0
+											? formatCurrency(row.monthlyAmount).padStart(MONTH_WIDTH)
 											: ' '.repeat(MONTH_WIDTH)}
 									</Text>
 								);
@@ -215,7 +196,7 @@ export function ItemDetail({
 						</Box>
 					);
 				})}
-				{yearExpenses.length === 0 ? (
+				{rows.length === 0 ? (
 					<Text dimColor>No hay gastos en {year}.</Text>
 				) : null}
 			</Box>

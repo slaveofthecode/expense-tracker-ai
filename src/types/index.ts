@@ -72,7 +72,6 @@ export type Screen =
   | { name: "chat" }
   | { name: "itemDetail"; itemId: string; focusExpenseId?: string }
   | { name: "expenseDetail"; expenseId: string; itemId: string }
-  | { name: "addItem" }
   | { name: "editItem"; itemId: string }
   | { name: "addExpense"; itemId?: string }
   | { name: "editExpense"; expenseId: string; itemId: string };
