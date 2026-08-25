@@ -11,7 +11,7 @@
 
 - **NUNCA hacer cambios sobre `main`.** Todo cambio se hace en una branch nueva creada desde `main` actualizado (primero `git pull origin main`). Si el AI detecta que está sobre `main`, debe frenar y crear la branch antes de tocar cualquier archivo.
 - **Después de crear un PR, mover a `main` actualizada** (`git checkout main && git pull origin main`) para quedar posicionado para la próxima tarea. Solo posicionarse, sin tocar archivos.
-- **Al crear PRs, siempre asignar al usuario** con `-a @self` (`gh pr create ... -a @self`).
+- **Al crear PRs, siempre asignar al usuario** con `gh pr edit <num> --add-assignee slaveofthecode` (después de crear el PR con `gh pr create`).
 
 ## Usuario
 
