@@ -37,7 +37,7 @@ TUI funcional con datos hardcodeados que muestra grupos de gastos con sus totale
 - [x] Resultados por gasto: cada fila muestra grupo, tipo, persona, monto y fecha; si un grupo matchea sin gastos, se muestra como fila extra
 - [x] Enter sobre un resultado navega al detalle del grupo posicionando la fila del gasto que matcheó (ajustando el año)
 - [x] Filtro por persona (gastos compartidos según `ownership.person`) a través de la búsqueda
-- [x] Estilo visual unificado en las grillas (Dashboard, ItemDetail, ItemDetailCard): celdas grises, header del mes actual blanco bold, compartidos amarillos, fila seleccionada solo en bold sin cambio de color
+- [x] Estilo visual unificado en las grillas (Dashboard, ItemDetail): celdas grises, header del mes actual blanco bold, compartidos amarillos, fila seleccionada solo en bold sin cambio de color. Todos los grupos (incluidos credit_card) usan la grilla mensual mes a mes; la vista de tarjetas individual fue eliminada
 
 **Cómo implementar:**
 - `src/utils/filters.ts`: `searchResults` devuelve filas por gasto (grupo, tipo, persona, monto, fecha) y filas de grupo sin gastos; reutiliza `normalize` (case/accent-insensitive). La misma lógica se reutiliza después en la tool `search_expenses` de v5.
