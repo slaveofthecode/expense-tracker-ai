@@ -17,7 +17,6 @@ import { Dashboard } from "./components/Dashboard";
 import { Charts } from "./components/Charts";
 import { Chat } from "./components/Chat";
 import { ItemDetail } from "./components/ItemDetail";
-import { ItemDetailCard } from "./components/ItemDetailCard";
 import { ExpenseDetail } from "./components/ExpenseDetail";
 import { ItemForm } from "./components/ItemForm";
 import { ExpenseForm, defaultExpenseFormInitial } from "./components/ExpenseForm";
@@ -218,26 +217,6 @@ export function App({ db }: AppProps) {
       const item = items.find((i) => i.id === screen.itemId);
       if (!item) return null;
       const itemExpenses = expenses.filter((e) => e.itemId === screen.itemId);
-      
-      if (item.type === "credit_card") {
-        return (
-          <ItemDetailCard
-            item={item}
-            expenses={itemExpenses}
-            allItems={items}
-            allExpenses={expenses}
-            year={year}
-            onYearChange={handleYearChange}
-            onSelectExpense={(expenseId) =>
-              setScreen({ name: "expenseDetail", expenseId, itemId: item.id })
-            }
-            onSearchResult={handleSearchResult}
-            initialExpenseId={screen.focusExpenseId}
-            onAddExpense={() => setScreen({ name: "addExpense", itemId: item.id })}
-            onBack={handleBack}
-          />
-        );
-      }
 
       return (
         <ItemDetail
