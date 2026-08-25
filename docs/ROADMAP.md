@@ -25,8 +25,8 @@ TUI funcional con datos hardcodeados que muestra grupos de gastos con sus totale
 - [x] CRUD de grupos (crear, editar, eliminar)
 - [x] Editar y eliminar gastos
 - [x] Soporte para cuotas (tarjetas, préstamos)
-- [x] Vigencia mensual al crear gastos: "Alquiler $560.000 durante 4 meses" genera N registros idénticos en meses consecutivos (mismo día, con clamp a fin de mes), excluyente con cuotas y disponible solo en alta (ver `src/utils/fixedMonths.ts`)
-- [x] Grupo automático al crear gastos desde el Dashboard: el campo Grupo acepta "— crear grupo nuevo —"; al guardar se matchea la descripción contra grupos existentes (`findItemForConcept`) o se crea el grupo solo (nombre en Title Case + tipo inferido por palabras clave, ver `src/utils/autoGroup.ts`), con preview antes de confirmar. La edición nunca auto-crea grupos
+- [x] Vigencia mensual al crear gastos: "Alquiler $560.000 durante 4 meses" genera N registros idénticos en meses consecutivos (mismo día, con clamp a fin de mes), excluyente con cuotas y disponible solo en alta (ver `src/utils/fixedMonths.ts`). En el detalle del grupo los registros idénticos se consolidan en UNA fila con el valor en cada mes cubierto (ver `src/utils/detailRows.ts`); las cuotas mantienen su fila propia
+- [x] Grupo automático al crear gastos: el campo Grupo es un híbrido (ver `src/utils/autoGroup.ts`) — se puede escribir un nombre nuevo directamente (ej: "Tarjeta de Credito Naranja", respetado tal cual) o ciclar los existentes con `←`/`→`; antes de crear, lo escrito se matchea contra grupos existentes (`findItemForConcept`) para evitar duplicados, con preview en vivo ("Se usará el grupo existente X" / "Se creará el grupo Y (tipo inferido por palabras clave)"). Si el campo queda vacío, el grupo se deriva de la descripción. El Dashboard ya no tiene alta de grupo independiente (la tecla `i` desapareció): los grupos nacen al cargar gastos. La edición nunca auto-crea grupos
 
 ## v3 — Búsqueda y Filtros
 

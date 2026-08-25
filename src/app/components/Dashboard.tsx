@@ -33,7 +33,6 @@ interface DashboardProps {
 	onMonthChange: (month: string) => void;
 	onSelectItem: (itemId: string) => void;
 	onSearchResult: (result: SearchResult) => void;
-	onAddItem: () => void;
 	onEditItem: (itemId: string) => void;
 	onDeleteItem: (itemId: string) => void;
 	onAddExpense: () => void;
@@ -56,7 +55,6 @@ export function Dashboard({
 	onMonthChange,
 	onSelectItem,
 	onSearchResult,
-	onAddItem,
 	onEditItem,
 	onDeleteItem,
 	onAddExpense,
@@ -119,10 +117,6 @@ export function Dashboard({
 		}
 		if (_input.toLowerCase() === 'a') {
 			onAddExpense();
-			return;
-		}
-		if (_input.toLowerCase() === 'i') {
-			onAddItem();
 			return;
 		}
 		if (_input.toLowerCase() === 'g') {
@@ -265,7 +259,7 @@ export function Dashboard({
 				</Box>
 			) : items.length === 0 ? (
 				<Text dimColor>
-					{'  '}No hay grupos todavía. Presiona "i" para agregar uno.
+					{'  '}No hay gastos todavía. Presiona "a" para cargar el primero: el grupo se crea solo.
 				</Text>
 			) : visibleItems.length === 0 ? (
 				<Text dimColor>
@@ -287,8 +281,7 @@ export function Dashboard({
 				{'  '}↑↓ Navegar · Enter Seleccionar · ←→ Mes ·{' '}
 			</Text>
 			<Text color="#88c0d0">
-				<Text bold>/</Text> Buscar · <Text bold>i</Text> Agregar Grupo
-				{' · '}<Text bold>a</Text> Agregar Gasto
+				<Text bold>/</Text> Buscar · <Text bold>a</Text> Agregar Gasto
 				{rows.length > 0 ? (
 					<>
 						{' · '}<Text bold>e</Text> Editar · <Text bold>d</Text> Eliminar

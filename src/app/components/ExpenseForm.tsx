@@ -9,7 +9,7 @@ import {
 } from '../../utils/fixedMonths';
 import { suggestItem, type ItemSuggestion } from '../../utils/suggestItem';
 import {
-	resolveAutoGroup,
+	resolveGroupForSave,
 } from '../../utils/autoGroup';
 import { suggestItemWithAgent } from '../../ai/suggest';
 import type { Agent } from '../../ai/agent';
@@ -50,7 +50,7 @@ interface ExpenseFormProps {
 	initial: ExpenseFormInitial;
 	/** Enables the "Vigencia (meses)" field to create one record per month. */
 	allowFixedMonths?: boolean;
-	/** Adds the "— crear grupo nuevo —" option and resolves/creates the group on save. */
+	/** Group field becomes a combo: pick an existing group or type a new one. */
 	allowAutoGroup?: boolean;
 	onSubmit: (expenses: NewExpense[]) => void;
 	onBack: () => void;
@@ -89,18 +89,13 @@ export function ExpenseForm({
 		? initial.itemId
 		: initial.itemId || items[0]?.id || '';
 
-	const groupOptions = allowAutoGroup
-		? [
-				{ value: '', label: '— crear grupo nuevo —' },
-				...items.map((i) => ({ value: i.id, label: i.name })),
-			]
-		: items.map((i) => ({ value: i.id, label: i.name }));
+	const groupOptions = items.map((i) => ({ value: i.id, label: i.name }));
 
 	const fields: FormField[] = [
 		{ label: 'Descripción', type: 'text', initialValue: initial.description },
 		{
 			label: 'Grupo',
-			type: 'select',
+			type: allowAutoGroup ? 'combo' : 'select',
 			options: groupOptions,
 			initialValue: initialItemValue,
 		},
@@ -222,7 +217,7 @@ export function ExpenseForm({
 		const person = values[idx.person].trim();
 
 		if (!itemId && !(allowAutoGroup && description)) {
-			setError('Selecciona un grupo');
+			setError('Elegí o escribí un grupo');
 			return;
 		}
 		if (!description) {
@@ -328,23 +323,30 @@ export function ExpenseForm({
 			: undefined;
 
 	const autoGroupPreview = (() => {
-		if (!allowAutoGroup || (liveValues[idx.item] ?? '') !== '') return undefined;
-		const description = (liveValues[idx.description] ?? '').trim();
-		if (description === '') return undefined;
-		const resolution = resolveAutoGroup(description, items);
-		return resolution.matched
-			? `🤖 Grupo: ${resolution.matched.name}`
-			: `🤖 Se creará el grupo '${resolution.newName}' (${
-					ITEM_TYPE_LABELS[resolution.newType]
-				})`;
+		if (!allowAutoGroup) return undefined;
+		const rawGroup = (liveValues[idx.item] ?? '').trim();
+		const resolution = resolveGroupForSave(
+			rawGroup,
+			liveValues[idx.description] ?? '',
+			items,
+		);
+		if (resolution.kind === 'existing') {
+			if (resolution.itemId === rawGroup) return undefined;
+			const name = items.find((i) => i.id === resolution.itemId)?.name ?? '';
+			return `🤖 Se usará el grupo existente '${name}'`;
+		}
+		if (resolution.name.trim() === '') return undefined;
+		return `🤖 Se creará el grupo '${resolution.name}' (${
+			ITEM_TYPE_LABELS[resolution.type]
+		})`;
 	})();
 
 	return (
 		<Box flexDirection="column" padding={1}>
-			{items.length === 0 ? (
+			{items.length === 0 && allowAutoGroup ? (
 				<Box marginBottom={1}>
-					<Text color={ERROR_COLOR}>
-						{'  '}No hay grupos creados. Creá uno primero con "i" desde el Dashboard.
+					<Text color={MUTED_COLOR}>
+						{'  '}No hay grupos todavía: escribí el nombre en "Grupo" y se creará al guardar.
 					</Text>
 				</Box>
 			) : null}

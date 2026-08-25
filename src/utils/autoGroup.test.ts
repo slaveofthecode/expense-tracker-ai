@@ -1,6 +1,6 @@
 import { describe, it, expect } from "bun:test";
 import type { Item } from "../types";
-import { inferGroupType, resolveAutoGroup } from "./autoGroup";
+import { inferGroupType, resolveAutoGroup, resolveGroupForSave } from "./autoGroup";
 
 const items: Item[] = [
   { id: "naranja", name: "Tarjeta Naranja", type: "credit_card" },
@@ -43,5 +43,40 @@ describe("resolveAutoGroup", () => {
     expect(result.matched).toBeUndefined();
     expect(result.newName).toBe("");
     expect(result.newType).toBe("other");
+  });
+});
+
+describe("resolveGroupForSave", () => {
+  it("keeps an explicit group id untouched", () => {
+    const result = resolveGroupForSave("naranja", "zapatillas", items);
+    expect(result).toEqual({ kind: "existing", itemId: "naranja" });
+  });
+
+  it("matches typed text against an existing group before creating", () => {
+    const result = resolveGroupForSave(
+      "tarjeta de credito naranja",
+      "zapatillas",
+      items,
+    );
+    expect(result).toEqual({ kind: "existing", itemId: "naranja" });
+  });
+
+  it("creates a new group keeping the typed name as-is", () => {
+    const result = resolveGroupForSave("Tarjeta de Credito Naranja", "", []);
+    expect(result).toEqual({
+      kind: "new",
+      name: "Tarjeta de Credito Naranja",
+      type: "credit_card",
+    });
+  });
+
+  it("falls back to the description concept when the field is empty", () => {
+    const result = resolveGroupForSave("", "Expensa agosto", []);
+    expect(result).toEqual({ kind: "new", name: "Expensa Agosto", type: "home" });
+  });
+
+  it("matches the description against existing groups on fallback", () => {
+    const result = resolveGroupForSave("", "compra tarjeta naranja", items);
+    expect(result).toEqual({ kind: "existing", itemId: "naranja" });
   });
 });
