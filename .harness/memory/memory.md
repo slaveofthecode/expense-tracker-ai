@@ -11,11 +11,13 @@
 
 - **NUNCA hacer cambios sobre `main`.** Todo cambio se hace en una branch nueva creada desde `main` actualizado (primero `git pull origin main`). Si el AI detecta que está sobre `main`, debe frenar y crear la branch antes de tocar cualquier archivo.
 - **Después de crear un PR, mover a `main` actualizada** (`git checkout main && git pull origin main`) para quedar posicionado para la próxima tarea. Solo posicionarse, sin tocar archivos.
+- **Al crear PRs, siempre asignar al usuario** con `-a @self` (`gh pr create ... -a @self`).
 
 ## Usuario
 
 - Prefiere que el AI aclare conceptos antes de implementar (MCP, permisos, proveedores AI).
 - Decide por opciones simples y seguras: chat solo lectura, local-first (Ollama), sin features inventadas en docs.
+- GitHub: `slaveofthecode`. Siempre asignarle los PRs creados por la AI.
 
 ## Sesión
 
