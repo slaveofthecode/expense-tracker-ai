@@ -110,6 +110,24 @@ export function parseExpenseIntentResponse(
   };
 }
 
+/**
+ * Resolves the best group name for a draft by matching against existing items.
+ * Priority: exact match on itemName → match on original question text → fallback to original itemName.
+ */
+export function resolveGroupName(
+	itemName: string,
+	question: string,
+	items: Item[],
+): { name: string; type: ItemType } {
+	const byItemName = findItemForConcept(items, itemName);
+	if (byItemName) return { name: byItemName.name, type: byItemName.type };
+
+	const byQuestion = findItemForConcept(items, question);
+	if (byQuestion) return { name: byQuestion.name, type: byQuestion.type };
+
+	return { name: itemName, type: "other" };
+}
+
 function buildExpenseIntentPrompt(items: Item[]): string {
 	const groupList =
 		items.length > 0
@@ -131,7 +149,14 @@ export async function extractExpenseIntent(
 		],
 		[],
 	);
-	return parseExpenseIntentResponse(response.content);
+	const raw = parseExpenseIntentResponse(response.content);
+	if (!raw || raw.intent !== "create_expense" || items.length === 0) return raw;
+
+	const resolved = resolveGroupName(raw.draft.itemName, question, items);
+	return {
+		intent: "create_expense",
+		draft: { ...raw.draft, itemName: resolved.name, itemType: resolved.type },
+	};
 }
 
 const LOWERCASE_WORDS = new Set([
@@ -166,6 +191,12 @@ function tokenize(text: string): string[] {
     .filter(Boolean);
 }
 
+function tokenMatches(a: string, b: string): boolean {
+  if (a === b) return true;
+  if (a.startsWith(b) || b.startsWith(a)) return true;
+  return false;
+}
+
 /**
  * Finds an existing item that matches the concept named by the user
  * (case/accent-insensitive exact, substring or word-subset match).
@@ -186,10 +217,10 @@ export function findItemForConcept(
     const name = normalize(item.name);
     const nameTokens = new Set(tokenize(item.name));
     const nameTokensInQuery = [...nameTokens].every((t) =>
-      queryTokens.has(t),
+      [...queryTokens].some((q) => tokenMatches(q, t)),
     );
     const queryTokensInName = [...queryTokens].every((t) =>
-      nameTokens.has(t),
+      [...nameTokens].some((n) => tokenMatches(n, t)),
     );
     const matches =
       name.includes(query) ||
