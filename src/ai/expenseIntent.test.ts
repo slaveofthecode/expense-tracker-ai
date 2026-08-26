@@ -190,6 +190,15 @@ describe("findItemForConcept", () => {
     expect(findItemForConcept(abbreviated, "tarjeta naranja")?.id).toBe("tn");
     expect(findItemForConcept(abbreviated, "la tarjeta naranja")?.id).toBe("tn");
   });
+
+  it("does not false-match long tokens via prefix (bici vs Departamento)", () => {
+    const groups: Item[] = [
+      { id: "dep", name: "Departamento", type: "home" },
+      { id: "tn", name: "T. Naranja", type: "credit_card" },
+    ];
+    expect(findItemForConcept(groups, "bici para migodita")).toBeUndefined();
+    expect(findItemForConcept(groups, "bici de 900000 con tarjeta naranja")?.id).toBe("tn");
+  });
 });
 
 describe("toTitleCaseEs", () => {

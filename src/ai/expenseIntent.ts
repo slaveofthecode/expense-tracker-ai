@@ -24,7 +24,7 @@ Reglas:
 - amount es el MONTO TOTAL del gasto en pesos argentinos (con cuotas, la suma de todas).
 - itemType: uno de credit_card, kids, car, home, other si el mensaje lo permite deducir; si no, null.
 - installmentsTotal: cantidad de cuotas mencionadas; si no se mencionan, 1.
-- description: descripción breve del producto o servicio.
+- description: descripción breve del producto o servicio, con palabras separadas por espacios (nunca juntar palabras).
 
 Ejemplos:
 "Añadir gasto para la tarjeta de credito de la naranja, par de zapatillas 1.200.000 en 6 cuotas" → {"intent":"create_expense","itemName":"tarjeta de credito de la naranja","itemType":"credit_card","description":"par de zapatillas","amount":1200000,"installmentsTotal":6}
@@ -191,9 +191,13 @@ function tokenize(text: string): string[] {
     .filter(Boolean);
 }
 
+const CONNECTOR_TOKENS = new Set(["de", "del", "la", "el", "los", "las", "y", "al", "en", "para", "con", "un", "una", "uno"]);
+
 function tokenMatches(a: string, b: string): boolean {
   if (a === b) return true;
-  if (a.startsWith(b) || b.startsWith(a)) return true;
+  const shorter = a.length <= b.length ? a : b;
+  const longer = a.length <= b.length ? b : a;
+  if (shorter.length <= 3 && !CONNECTOR_TOKENS.has(shorter) && longer.startsWith(shorter)) return true;
   return false;
 }
 
