@@ -7,6 +7,7 @@ import {
   parseExpenseIntentResponse,
   resolveGroupName,
   toTitleCaseEs,
+  EXPENSE_INTENT_SYSTEM_PROMPT,
 } from "./expenseIntent";
 
 const ZAPAS_JSON =
@@ -244,5 +245,24 @@ describe("resolveGroupName", () => {
   it("uses exact type from matched group", () => {
     const result = resolveGroupName("auto", "nafta del auto", existingGroups);
     expect(result).toEqual({ name: "Auto", type: "car" });
+  });
+
+  it("resolves 'naranja' extracted from a credit-card mention to T. Naranja", () => {
+    const result = resolveGroupName(
+      "naranja",
+      "bicicleta a 1500000 en 6 cuotas con la naranja",
+      existingGroups,
+    );
+    expect(result).toEqual({ name: "T. Naranja", type: "credit_card" });
+  });
+});
+
+describe("prompt rules for credit card references", () => {
+  it("includes rule about extracting payment method references", () => {
+    expect(EXPENSE_INTENT_SYSTEM_PROMPT).toContain("con la naranja");
+    expect(EXPENSE_INTENT_SYSTEM_PROMPT).toContain("pagado con X");
+    expect(EXPENSE_INTENT_SYSTEM_PROMPT).toContain(
+      "bicicleta a 1500000 en 6 cuotas con la naranja",
+    );
   });
 });
