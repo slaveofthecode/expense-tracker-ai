@@ -25,9 +25,12 @@ Reglas:
 - itemType: uno de credit_card, kids, car, home, other si el mensaje lo permite deducir; si no, null.
 - installmentsTotal: cantidad de cuotas mencionadas; si no se mencionan, 1.
 - description: descripción breve del producto o servicio, con palabras separadas por espacios (nunca juntar palabras).
+- itemName: SIEMPRE extraer el grupo/concepto que el usuario menciona. Si el usuario dice "con la naranja", "tarjeta naranja", "con la tarjeta", "pagado con X", el itemName debe ser esa referencia (ej: "naranja", "tarjeta naranja"), NO el nombre del producto comprado.
+- Si hay cuotas mencionadas, itemType debe ser credit_card (las cuotas implican tarjeta de crédito).
 
 Ejemplos:
 "Añadir gasto para la tarjeta de credito de la naranja, par de zapatillas 1.200.000 en 6 cuotas" → {"intent":"create_expense","itemName":"tarjeta de credito de la naranja","itemType":"credit_card","description":"par de zapatillas","amount":1200000,"installmentsTotal":6}
+"bicicleta a 1500000 en 6 cuotas con la naranja" → {"intent":"create_expense","itemName":"naranja","itemType":"credit_card","description":"bicicleta","amount":1500000,"installmentsTotal":6}
 "Gasté 45000 en nafta para el auto" → {"intent":"create_expense","itemName":"auto","itemType":"car","description":"nafta","amount":45000,"installmentsTotal":1}
 "¿Cuánto gasté en marzo?" → {"intent":"none"}
 
