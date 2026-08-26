@@ -5,6 +5,7 @@ import {
   extractExpenseIntent,
   findItemForConcept,
   parseExpenseIntentResponse,
+  resolveGroupName,
   toTitleCaseEs,
 } from "./expenseIntent";
 
@@ -181,6 +182,23 @@ describe("findItemForConcept", () => {
     expect(findItemForConcept(items, "netflix")).toBeUndefined();
     expect(findItemForConcept(items, "   ")).toBeUndefined();
   });
+
+  it("matches abbreviated names like T. against full words like tarjeta", () => {
+    const abbreviated: Item[] = [
+      { id: "tn", name: "T. Naranja", type: "credit_card" },
+    ];
+    expect(findItemForConcept(abbreviated, "tarjeta naranja")?.id).toBe("tn");
+    expect(findItemForConcept(abbreviated, "la tarjeta naranja")?.id).toBe("tn");
+  });
+
+  it("does not false-match long tokens via prefix (bici vs Departamento)", () => {
+    const groups: Item[] = [
+      { id: "dep", name: "Departamento", type: "home" },
+      { id: "tn", name: "T. Naranja", type: "credit_card" },
+    ];
+    expect(findItemForConcept(groups, "bici para migodita")).toBeUndefined();
+    expect(findItemForConcept(groups, "bici de 900000 con tarjeta naranja")?.id).toBe("tn");
+  });
 });
 
 describe("toTitleCaseEs", () => {
@@ -194,5 +212,37 @@ describe("toTitleCaseEs", () => {
   it("collapses whitespace and handles empty input", () => {
     expect(toTitleCaseEs("  auto   familiar ")).toBe("Auto Familiar");
     expect(toTitleCaseEs("")).toBe("");
+  });
+});
+
+const existingGroups: Item[] = [
+  { id: "naranja", name: "T. Naranja", type: "credit_card" },
+  { id: "alquiler", name: "Alquiler", type: "home" },
+  { id: "auto", name: "Auto", type: "car" },
+];
+
+describe("resolveGroupName", () => {
+  it("matches extracted itemName against existing groups", () => {
+    const result = resolveGroupName("tarjeta naranja", "", existingGroups);
+    expect(result).toEqual({ name: "T. Naranja", type: "credit_card" });
+  });
+
+  it("falls back to matching the original question text", () => {
+    const result = resolveGroupName(
+      "bicicleta para migodita",
+      "compra de bicicleta con la tarjeta naranja",
+      existingGroups,
+    );
+    expect(result).toEqual({ name: "T. Naranja", type: "credit_card" });
+  });
+
+  it("returns original name when no match found", () => {
+    const result = resolveGroupName("zmartagas", "compra zmartagas", existingGroups);
+    expect(result).toEqual({ name: "zmartagas", type: "other" });
+  });
+
+  it("uses exact type from matched group", () => {
+    const result = resolveGroupName("auto", "nafta del auto", existingGroups);
+    expect(result).toEqual({ name: "Auto", type: "car" });
   });
 });

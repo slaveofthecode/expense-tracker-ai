@@ -24,7 +24,7 @@ Reglas:
 - amount es el MONTO TOTAL del gasto en pesos argentinos (con cuotas, la suma de todas).
 - itemType: uno de credit_card, kids, car, home, other si el mensaje lo permite deducir; si no, null.
 - installmentsTotal: cantidad de cuotas mencionadas; si no se mencionan, 1.
-- description: descripción breve del producto o servicio.
+- description: descripción breve del producto o servicio, con palabras separadas por espacios (nunca juntar palabras).
 
 Ejemplos:
 "Añadir gasto para la tarjeta de credito de la naranja, par de zapatillas 1.200.000 en 6 cuotas" → {"intent":"create_expense","itemName":"tarjeta de credito de la naranja","itemType":"credit_card","description":"par de zapatillas","amount":1200000,"installmentsTotal":6}
@@ -110,6 +110,24 @@ export function parseExpenseIntentResponse(
   };
 }
 
+/**
+ * Resolves the best group name for a draft by matching against existing items.
+ * Priority: exact match on itemName → match on original question text → fallback to original itemName.
+ */
+export function resolveGroupName(
+	itemName: string,
+	question: string,
+	items: Item[],
+): { name: string; type: ItemType } {
+	const byItemName = findItemForConcept(items, itemName);
+	if (byItemName) return { name: byItemName.name, type: byItemName.type };
+
+	const byQuestion = findItemForConcept(items, question);
+	if (byQuestion) return { name: byQuestion.name, type: byQuestion.type };
+
+	return { name: itemName, type: "other" };
+}
+
 function buildExpenseIntentPrompt(items: Item[]): string {
 	const groupList =
 		items.length > 0
@@ -131,7 +149,14 @@ export async function extractExpenseIntent(
 		],
 		[],
 	);
-	return parseExpenseIntentResponse(response.content);
+	const raw = parseExpenseIntentResponse(response.content);
+	if (!raw || raw.intent !== "create_expense" || items.length === 0) return raw;
+
+	const resolved = resolveGroupName(raw.draft.itemName, question, items);
+	return {
+		intent: "create_expense",
+		draft: { ...raw.draft, itemName: resolved.name, itemType: resolved.type },
+	};
 }
 
 const LOWERCASE_WORDS = new Set([
@@ -166,6 +191,16 @@ function tokenize(text: string): string[] {
     .filter(Boolean);
 }
 
+const CONNECTOR_TOKENS = new Set(["de", "del", "la", "el", "los", "las", "y", "al", "en", "para", "con", "un", "una", "uno"]);
+
+function tokenMatches(a: string, b: string): boolean {
+  if (a === b) return true;
+  const shorter = a.length <= b.length ? a : b;
+  const longer = a.length <= b.length ? b : a;
+  if (shorter.length <= 3 && !CONNECTOR_TOKENS.has(shorter) && longer.startsWith(shorter)) return true;
+  return false;
+}
+
 /**
  * Finds an existing item that matches the concept named by the user
  * (case/accent-insensitive exact, substring or word-subset match).
@@ -186,10 +221,10 @@ export function findItemForConcept(
     const name = normalize(item.name);
     const nameTokens = new Set(tokenize(item.name));
     const nameTokensInQuery = [...nameTokens].every((t) =>
-      queryTokens.has(t),
+      [...queryTokens].some((q) => tokenMatches(q, t)),
     );
     const queryTokensInName = [...queryTokens].every((t) =>
-      nameTokens.has(t),
+      [...nameTokens].some((n) => tokenMatches(n, t)),
     );
     const matches =
       name.includes(query) ||
