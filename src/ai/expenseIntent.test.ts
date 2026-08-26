@@ -3,6 +3,7 @@ import type { Item } from "../types";
 import type { ChatMessage, LLMProvider, LLMResponse } from "./provider";
 import {
   extractExpenseIntent,
+  extractCreditCardRef,
   findItemForConcept,
   parseExpenseIntentResponse,
   resolveGroupName,
@@ -222,6 +223,33 @@ const existingGroups: Item[] = [
   { id: "auto", name: "Auto", type: "car" },
 ];
 
+describe("extractCreditCardRef", () => {
+  it("extracts 'naranja' from 'con la naranja'", () => {
+    expect(extractCreditCardRef("bicicleta con la naranja")).toBe("naranja");
+  });
+
+  it("extracts 'T. Cordobesa' from 'con la T. Cordobesa'", () => {
+    expect(
+      extractCreditCardRef("iPhone con la T. Cordobesa"),
+    ).toBe("t. cordobesa");
+  });
+
+  it("extracts from 'tarjeta de credito de la naranja'", () => {
+    expect(
+      extractCreditCardRef("zapatillas tarjeta de credito de la naranja"),
+    ).toBeTruthy();
+  });
+
+  it("extracts from 'con el galicia'", () => {
+    expect(extractCreditCardRef("compra con el galicia")).toBe("galicia");
+  });
+
+  it("returns undefined when no credit card pattern found", () => {
+    expect(extractCreditCardRef("gasté 5000 en nafta")).toBeUndefined();
+    expect(extractCreditCardRef("alquiler del depto")).toBeUndefined();
+  });
+});
+
 describe("resolveGroupName", () => {
   it("matches extracted itemName against existing groups", () => {
     const result = resolveGroupName("tarjeta naranja", "", existingGroups);
@@ -254,6 +282,24 @@ describe("resolveGroupName", () => {
       existingGroups,
     );
     expect(result).toEqual({ name: "T. Naranja", type: "credit_card" });
+  });
+
+  it("overrides LLM's wrong itemName when question has credit card reference", () => {
+    const result = resolveGroupName(
+      "auto",
+      "iPhone con la T. Cordobesa a 1560000 en 12 cuotas",
+      existingGroups,
+    );
+    expect(result).toEqual({ name: "T. Cordobesa", type: "credit_card" });
+  });
+
+  it("creates new credit_card group when CC ref not in existing groups", () => {
+    const result = resolveGroupName(
+      "auto",
+      "compra con la visa gold",
+      existingGroups,
+    );
+    expect(result).toEqual({ name: "Visa Gold", type: "credit_card" });
   });
 });
 
