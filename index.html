@@ -517,8 +517,8 @@
       <h1>Expense Tracker AI</h1>
       <p>
         Terminal-based expense tracker with local SQLite persistence, year-based
-        grid views, installments, shared expenses, and full CRUD. AI-powered
-        analysis and automatic categorization coming next.
+        grid views, installments, shared expenses, full CRUD, AI-powered chat
+        for natural-language expense queries, and automatic group suggestions.
         Built with Ink + React, Bun, TypeScript, and a multi-agent AI development workflow.
       </p>
       <div class="hero-actions">
@@ -631,15 +631,16 @@ bun start</code></pre>
             </thead>
             <tbody>
               <tr><td><code>↑</code> / <code>↓</code></td><td>Navigate lists and form fields</td></tr>
-              <tr><td><code>←</code> / <code>→</code></td><td>Change option in a form select / change year</td></tr>
+              <tr><td><code>←</code> / <code>→</code></td><td>Change option in a form select / change month</td></tr>
               <tr><td><code>Enter</code></td><td>Select / next form field</td></tr>
               <tr><td><code>Esc</code></td><td>Back / quit</td></tr>
-              <tr><td><code>/</code></td><td>Search everything (concept, group, person) with live results</td></tr>
+              <tr><td><code>/</code></td><td>Search expenses, groups and people (live results)</td></tr>
               <tr><td><code>a</code></td><td>Add expense (groups are created right in the form)</td></tr>
               <tr><td><code>e</code></td><td>Edit (group on dashboard, expense in detail)</td></tr>
               <tr><td><code>d</code></td><td>Delete (with confirmation)</td></tr>
               <tr><td><code>g</code></td><td>Open terminal charts (4 chart types, 1-4 to switch)</td></tr>
-              <tr><td><code>c</code></td><td>Open the AI chat (natural-language questions about your expenses)</td></tr>
+              <tr><td><code>c</code></td><td>Open AI chat (natural-language questions about your expenses)</td></tr>
+              <tr><td><code>t</code></td><td>Cycle group type filter on dashboard</td></tr>
             </tbody>
           </table>
         </div>

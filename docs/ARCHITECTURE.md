@@ -105,7 +105,8 @@ expense-tracker-ai/
     │       ├── Chat.tsx        # Chat con IA (consultas + creación de gastos con confirmación s/n)
     │       ├── ItemDetail.tsx
     │       ├── ExpenseDetail.tsx
-    │       ├── Form.tsx        # Formulario genérico (texto/select)
+    │       ├── SearchPalette.tsx # Búsqueda global con resultados en vivo
+    │       ├── Form.tsx        # Formulario genérico (texto/select/combo)
     │       ├── ItemForm.tsx    # Alta/edición de grupos (internamente Item)
     │       ├── ExpenseForm.tsx # Alta/edición de gastos (sugerencia de ítem en vivo)
     │       └── Confirm.tsx     # Confirmación de borrado
@@ -114,10 +115,17 @@ expense-tracker-ai/
     │   ├── schema.ts     # Migraciones
     │   └── repository.ts # CRUD tipado contra los tipos de dominio
     ├── types/            # Modelos de dominio
-    └── utils/            # Formato, summaries, filtros, charts y sugerencia de ítem
+    └── utils/            # Formato, summaries, filtros, charts, patrones y sugerencia de ítem
         ├── autoGroup.ts   # Grupo automático: inferencia de tipo por keywords + resolución concepto→grupo (resolveAutoGroup para descripción, resolveGroupForSave para el campo híbrido del form)
+        ├── charts.ts      # Gráficos en terminal: computeCharts, scaleBlocksMin, distributeSegments
+        ├── dateIntent.ts  # Intercepta preguntas de fecha/año/mes en el chat (sin LLM)
         ├── detailRows.ts  # Filas del detalle de grupo: consolida registros idénticos (vigencia N) en una fila multi-mes; cuotas van por separado
+        ├── filters.ts     # Filtros y búsqueda: filterItems, filterExpenses, searchItems, searchResults
         ├── fixedMonths.ts # Expansión de vigencia mensual: N registros idénticos en meses consecutivos
+        ├── format.ts      # Formato de moneda, fechas, meses
+        ├── patterns.ts    # Análisis de patrones: tendencias, anomalías, gastos recurrentes
+        ├── recommendations.ts # Recomendaciones basadas en patrones de gasto
+        ├── summaries.ts   # Resúmenes mensuales y anuales con prorrateo de cuotas
         └── suggestItem.ts # Matching determinístico (name + historial) para sugerir grupo
 ```
 

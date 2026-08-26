@@ -2,7 +2,7 @@
 
 App de gastos con interfaz TUI (terminal), diseñada para llevar un control personal de gastos recurrentes, cuotas de tarjetas, préstamos y gastos compartidos.
 
-Funcionalidades: vistas de grilla anual (12 meses por item), selector de año, soporte de cuotas con prorrateo mensual, gastos compartidos con porcentaje de propiedad, y CRUD completo de items y gastos.
+Funcionalidades: vistas de grilla anual (12 meses por grupo), selector de año, soporte de cuotas con prorrateo mensual, gastos compartidos con porcentaje de propiedad, y CRUD completo de grupos y gastos.
 
 ## Stack
 
@@ -27,7 +27,7 @@ bun start
 
 ## Análisis con IA (opcional)
 
-La app puede analizar tus gastos con un modelo de IA que corre **localmente** vía [Ollama](https://ollama.com): tus datos nunca salen de tu máquina. Esta función se activa con el chat de la v5 (próximamente); el resto de la app funciona sin instalar nada de esto.
+La app puede analizar tus gastos con un modelo de IA que corre **localmente** vía [Ollama](https://ollama.com): tus datos nunca salen de tu máquina. Esta función se activa con el chat (`c`); el resto de la app funciona sin instalar nada de esto.
 
 1. **Instalar Ollama**
 
@@ -64,11 +64,11 @@ El proyecto incluye un servidor [MCP](https://modelcontextprotocol.io) que expon
 
 | Tool                | Descripción                                                  |
 | ------------------- | ------------------------------------------------------------ |
-| `list_items`        | Lista ítems de gasto (filtrable por tipo)                   |
+| `list_items`        | Lista grupos de gasto (filtrable por tipo)                  |
 | `list_expenses`     | Lista gastos (filtrable por año o ítem)                     |
 | `get_monthly_summary` | Resumen de gastos de un mes                               |
 | `get_yearly_summary`  | Resumen anual con prorrateo de cuotas                     |
-| `search_expenses`   | Búsqueda por descripción, ítem o persona                    |
+| `search_expenses`   | Búsqueda por descripción, grupo o persona                   |
 | `analyze_patterns`  | Detecta tendencias, anomalías y gastos recurrentes          |
 | `get_recommendations` | Genera recomendaciones basadas en patrones de gasto       |
 
@@ -113,13 +113,16 @@ Agregá esta configuración en tu archivo de config del cliente MCP:
 | Tecla   | Acción                                               |
 | ------- | ---------------------------------------------------- |
 | `↑`/`↓` | Navegar listas y campos de formulario                |
-| `←`/`→` | Cambiar opción en select de formulario / cambiar año |
+| `←`/`→` | Cambiar opción en select de formulario / cambiar mes |
 | `Enter` | Seleccionar / avanzar campo en formulario            |
 | `Esc`   | Volver / salir                                       |
+| `/`     | Buscar gastos, grupos y personas (resultados en vivo)|
 | `a`     | Agregar gasto                                        |
-| `i`     | Agregar item                                         |
-| `e`     | Editar (item en dashboard, gasto en detalle)         |
+| `e`     | Editar (grupo en dashboard, gasto en detalle)        |
 | `d`     | Eliminar (con confirmación)                          |
+| `g`     | Abrir gráficos (4 tipos de gráfico, 1-4 para cambiar)|
+| `c`     | Abrir chat IA (preguntas en lenguaje natural)        |
+| `t`     | Ciclar filtro por tipo de grupo en dashboard         |
 
 Los datos se guardan en `.data/expenses.db` (local, gitignored).
 
@@ -128,10 +131,11 @@ Los datos se guardan en `.data/expenses.db` (local, gitignored).
 ```
 expense-tracker-ai/
 ├── index.html        # Website público
+├── ollama-test.html  # Playground web para testear la API de Ollama
 ├── README.md         # Este archivo
 ├── AGENTS.md         # Reglas para AI agents
+├── opencode.json     # Config OpenCode
 ├── .env.example      # Env vars documentadas (OLLAMA_HOST, AI_MODEL)
-
 ├── docs/             # Documentación
 │   ├── ROADMAP.md    # Visión de versiones
 │   └── ARCHITECTURE.md # Decisiones técnicas
@@ -180,7 +184,7 @@ Notas de paridad: los modelos no se pinnean por agente (cada tool usa su modelo 
   - **Quién:** el agente `tester`.
   - **Cuándo:** cada vez que el humano lo invoca (por convención, al terminar cualquier tarea de código).
 
-- **`pr`** (`.harness/commands/pr.md`): genera título y descripción del diff y crea un Pull Request en GitHub (`gh pr create --assignee "@me"`).
+- **`pr`** (`.harness/commands/pr.md`): genera título y descripción del diff, crea un Pull Request en GitHub (`gh pr create`) y lo asigna al usuario (`gh pr edit --add-assignee`).
   - **Quién:** el agente `orchestrator`.
   - **Cuándo:** cuando el humano lo invoca desde una branch de trabajo (nunca desde `main`). Requiere `gh` autenticado y confirmación del humano antes de crear el PR.
   - **Qué pasa después:** el AI vuelve a `main` actualizada (`git checkout main && git pull origin main`) para quedar posicionado en la próxima tarea.
