@@ -110,19 +110,28 @@ export function parseExpenseIntentResponse(
   };
 }
 
+function buildExpenseIntentPrompt(items: Item[]): string {
+	const groupList =
+		items.length > 0
+			? `\nGrupos existentes (usá el nombre exacto si el usuario se refiere a uno):\n${items.map((i) => `- "${i.name}" (tipo: ${i.type})`).join("\n")}`
+			: "\nNo hay grupos creados aún.";
+	return EXPENSE_INTENT_SYSTEM_PROMPT + groupList;
+}
+
 /** Asks the provider whether the message wants to create an expense. */
 export async function extractExpenseIntent(
-  provider: LLMProvider,
-  question: string,
+	provider: LLMProvider,
+	question: string,
+	items: Item[] = [],
 ): Promise<ExpenseIntent | undefined> {
-  const response = await provider.chat(
-    [
-      { role: "system", content: EXPENSE_INTENT_SYSTEM_PROMPT },
-      { role: "user", content: question },
-    ],
-    [],
-  );
-  return parseExpenseIntentResponse(response.content);
+	const response = await provider.chat(
+		[
+			{ role: "system", content: buildExpenseIntentPrompt(items) },
+			{ role: "user", content: question },
+		],
+		[],
+	);
+	return parseExpenseIntentResponse(response.content);
 }
 
 const LOWERCASE_WORDS = new Set([
