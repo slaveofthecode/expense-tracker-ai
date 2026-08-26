@@ -127,7 +127,7 @@ export function Chat({
 			return;
 		}
 		setThinking(true);
-		extractExpenseIntent(provider, question)
+		extractExpenseIntent(provider, question, items)
 			.then((intent) => {
 				if (intent?.intent === 'create_expense') {
 					presentDraft(intent.draft);

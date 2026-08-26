@@ -123,6 +123,31 @@ describe("extractExpenseIntent", () => {
     expect(provider.lastMessages[1]?.content).toBe("cargá unas zapatillas");
     expect(result?.intent).toBe("create_expense");
   });
+
+  it("includes existing items in the system prompt when provided", async () => {
+    const provider = new CapturingProvider();
+    const existingItems: Item[] = [
+      { id: "naranja", name: "T. Naranja", type: "credit_card" },
+      { id: "alquiler", name: "Alquiler", type: "home" },
+    ];
+    await extractExpenseIntent(
+      provider,
+      "compra de bicicleta 800000 en 4 cuotas",
+      existingItems,
+    );
+    const systemPrompt = provider.lastMessages[0]?.content as string;
+    expect(systemPrompt).toContain("T. Naranja");
+    expect(systemPrompt).toContain("Alquiler");
+    expect(systemPrompt).toContain("Grupos existentes");
+  });
+
+  it("omits group list from prompt when no items exist", async () => {
+    const provider = new CapturingProvider();
+    await extractExpenseIntent(provider, "gasté 5000 en nafta", []);
+    const systemPrompt = provider.lastMessages[0]?.content as string;
+    expect(systemPrompt).toContain("No hay grupos creados aún");
+    expect(systemPrompt).not.toContain("Grupos existentes");
+  });
 });
 
 const items: Item[] = [
