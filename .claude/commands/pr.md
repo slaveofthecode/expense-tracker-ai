@@ -9,7 +9,7 @@ Crea un Pull Request en GitHub siguiendo `.harness/commands/pr.md`:
 3. Obtén el diff de cambios con `git diff main...HEAD --stat` y `git diff main...HEAD`
 4. Genera un título y descripción en inglés representativos de los cambios
 5. Muestra al usuario el resumen y pedí confirmación antes de crear el PR
-6. Si el usuario confirma, ejecuta `gh pr create --assignee "@me"` con el título y body generados
+6. Si el usuario confirma, ejecuta `gh pr create` con el título y body generados, y luego `gh pr edit <num> --add-assignee slaveofthecode` para asignarlo
 7. Devuelve la URL del PR creado
 8. Posicionate en `main` actualizada para la próxima tarea: `git checkout main && git pull origin main`
 
