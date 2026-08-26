@@ -114,14 +114,43 @@ export function parseExpenseIntentResponse(
 }
 
 /**
+ * Extracts a credit card reference from the question text using common
+ * Spanish patterns: "con la T. Cordobesa", "tarjeta naranja", etc.
+ * Returns the reference text or undefined when no pattern matches.
+ */
+export function extractCreditCardRef(question: string): string | undefined {
+	const normalized = normalize(question);
+	const patterns = [
+		/con\s+(?:la|el)\s+(.+?)(?:\s*,|\s+(?:a|de|en|por)\b|\s*$)/i,
+		/tarjeta\s+(?:de\s+(?:credito\s+)?(?:de\s+la\s+)?)?(.+?)(?:\s*,|\s*$)/i,
+	];
+	for (const pattern of patterns) {
+		const match = normalized.match(pattern);
+		if (match?.[1]) {
+			const ref = match[1].trim();
+			if (ref) return ref;
+		}
+	}
+	return undefined;
+}
+
+/**
  * Resolves the best group name for a draft by matching against existing items.
- * Priority: exact match on itemName → match on original question text → fallback to original itemName.
+ * Priority: credit card heuristic from question → exact match on itemName →
+ * match on original question text → fallback to original itemName.
  */
 export function resolveGroupName(
 	itemName: string,
 	question: string,
 	items: Item[],
 ): { name: string; type: ItemType } {
+	const ccRef = extractCreditCardRef(question);
+	if (ccRef) {
+		const byCc = findItemForConcept(items, ccRef);
+		if (byCc) return { name: byCc.name, type: byCc.type };
+		return { name: toTitleCaseEs(ccRef), type: "credit_card" };
+	}
+
 	const byItemName = findItemForConcept(items, itemName);
 	if (byItemName) return { name: byItemName.name, type: byItemName.type };
 
