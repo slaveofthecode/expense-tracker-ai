@@ -9,16 +9,35 @@ export interface ExpenseDraft {
   description: string;
   amount: number;
   installmentsTotal: number;
+  ownershipPercentage?: number;
+  ownershipPerson?: string;
+}
+
+export type MissingField = "itemName" | "description" | "amount";
+
+export interface IncompleteExpenseDraft {
+  itemName?: string;
+  itemType?: ItemType;
+  description?: string;
+  amount?: number;
+  installmentsTotal: number;
+  ownershipPercentage?: number;
+  ownershipPerson?: string;
 }
 
 export type ExpenseIntent =
   | { intent: "create_expense"; draft: ExpenseDraft }
+  | {
+      intent: "create_expense_incomplete";
+      draft: IncompleteExpenseDraft;
+      missingFields: MissingField[];
+    }
   | { intent: "none" };
 
 export const EXPENSE_INTENT_SYSTEM_PROMPT = `Sos un extractor de intenciones para una app de gastos personales. Analizás el mensaje del usuario y respondés SOLO con JSON válido, sin explicaciones ni markdown ni bloques de código.
 
 Si el mensaje pide registrar, crear o agregar un gasto, respondé con este formato:
-{"intent":"create_expense","itemName":"<grupo o concepto tal como lo nombra el usuario>","itemType":"credit_card|kids|car|home|other|null","description":"<descripción corta del gasto>","amount":<monto total en ARS como número>,"installmentsTotal":<cantidad de cuotas>}
+{"intent":"create_expense","itemName":"<grupo o concepto tal como lo nombra el usuario>","itemType":"credit_card|kids|car|home|other|null","description":"<descripción corta del gasto>","amount":<monto total en ARS como número>,"installmentsTotal":<cantidad de cuotas>,"ownershipPercentage":<porcentaje propio>,"ownershipPerson":"<persona si es compartido, si no null>"}
 
 Reglas:
 - amount es el MONTO TOTAL del gasto en pesos argentinos (con cuotas, la suma de todas).
@@ -27,11 +46,14 @@ Reglas:
 - description: descripción breve del producto o servicio, con palabras separadas por espacios (nunca juntar palabras).
 - itemName: SIEMPRE extraer el grupo/concepto que el usuario menciona. Si el usuario dice "con la naranja", "tarjeta naranja", "con la tarjeta", "pagado con X", el itemName debe ser esa referencia (ej: "naranja", "tarjeta naranja"), NO el nombre del producto comprado.
 - Si hay cuotas mencionadas, itemType debe ser credit_card (las cuotas implican tarjeta de crédito).
+- ownershipPercentage: 100 si el gasto es solo del usuario. Si el gasto es compartido ("a medias", "mitad y mitad", "50/50", "compartido con X"), el porcentaje propio (50 si no se indica el reparto).
+- ownershipPerson: nombre de la otra persona si el gasto es compartido; si no, null.
 
 Ejemplos:
-"Añadir gasto para la tarjeta de credito de la naranja, par de zapatillas 1.200.000 en 6 cuotas" → {"intent":"create_expense","itemName":"tarjeta de credito de la naranja","itemType":"credit_card","description":"par de zapatillas","amount":1200000,"installmentsTotal":6}
-"bicicleta a 1500000 en 6 cuotas con la naranja" → {"intent":"create_expense","itemName":"naranja","itemType":"credit_card","description":"bicicleta","amount":1500000,"installmentsTotal":6}
-"Gasté 45000 en nafta para el auto" → {"intent":"create_expense","itemName":"auto","itemType":"car","description":"nafta","amount":45000,"installmentsTotal":1}
+"Añadir gasto para la tarjeta de credito de la naranja, par de zapatillas 1.200.000 en 6 cuotas" → {"intent":"create_expense","itemName":"tarjeta de credito de la naranja","itemType":"credit_card","description":"par de zapatillas","amount":1200000,"installmentsTotal":6,"ownershipPercentage":100,"ownershipPerson":null}
+"bicicleta a 1500000 en 6 cuotas con la naranja" → {"intent":"create_expense","itemName":"naranja","itemType":"credit_card","description":"bicicleta","amount":1500000,"installmentsTotal":6,"ownershipPercentage":100,"ownershipPerson":null}
+"Gasté 45000 en nafta para el auto" → {"intent":"create_expense","itemName":"auto","itemType":"car","description":"nafta","amount":45000,"installmentsTotal":1,"ownershipPercentage":100,"ownershipPerson":null}
+"Pagamos la cena a medias con Gus, 100000" → {"intent":"create_expense","itemName":"cena","itemType":"other","description":"cena","amount":100000,"installmentsTotal":1,"ownershipPercentage":50,"ownershipPerson":"Gus"}
 "¿Cuánto gasté en marzo?" → {"intent":"none"}
 
 Cualquier otro mensaje (preguntas, consultas, saludos) → {"intent":"none"}`;
@@ -73,10 +95,30 @@ function coerceInstallments(value: unknown): number {
     : 1;
 }
 
+function coerceOwnershipPercentage(value: unknown): number | undefined {
+  const parsed =
+    typeof value === "number"
+      ? value
+      : typeof value === "string"
+        ? Number.parseFloat(value)
+        : NaN;
+  return Number.isFinite(parsed) && parsed >= 1 && parsed <= 100
+    ? Math.round(parsed)
+    : undefined;
+}
+
+function coerceOwnershipPerson(value: unknown): string | undefined {
+  return typeof value === "string" && value.trim() !== ""
+    ? value.trim()
+    : undefined;
+}
+
 /**
  * Parses the raw LLM output into an ExpenseIntent.
  * Returns undefined when the payload cannot be interpreted at all
- * (invalid JSON or missing intent field).
+ * (invalid JSON or missing intent field). When intent is create_expense but
+ * required fields are missing, returns create_expense_incomplete with the
+ * list of missing fields so the chat can run a guided dialog.
  */
 export function parseExpenseIntentResponse(
   raw: string,
@@ -99,18 +141,115 @@ export function parseExpenseIntentResponse(
   const description =
     typeof data.description === "string" ? data.description.trim() : "";
   const amount = coerceAmount(data.amount);
-  if (!itemName || !description || amount === undefined) return undefined;
+  const itemType = coerceItemType(data.itemType);
+  const installmentsTotal = coerceInstallments(data.installmentsTotal);
+  let ownershipPercentage = coerceOwnershipPercentage(data.ownershipPercentage);
+  const ownershipPerson = coerceOwnershipPerson(data.ownershipPerson);
+  if (ownershipPerson && ownershipPercentage === undefined) {
+    ownershipPercentage = 50;
+  }
+
+  const missingFields: MissingField[] = [];
+  if (!itemName) missingFields.push("itemName");
+  if (!description) missingFields.push("description");
+  if (amount === undefined) missingFields.push("amount");
+
+  if (!itemName || !description || amount === undefined) {
+    return {
+      intent: "create_expense_incomplete",
+      draft: {
+        itemName: itemName || undefined,
+        itemType,
+        description: description || undefined,
+        amount,
+        installmentsTotal,
+        ...(ownershipPercentage !== undefined
+          ? { ownershipPercentage }
+          : {}),
+        ...(ownershipPerson ? { ownershipPerson } : {}),
+      },
+      missingFields,
+    };
+  }
 
   return {
     intent: "create_expense",
     draft: {
       itemName,
-      itemType: coerceItemType(data.itemType),
+      itemType,
       description,
       amount,
-      installmentsTotal: coerceInstallments(data.installmentsTotal),
+      installmentsTotal,
+      ...(ownershipPercentage !== undefined
+        ? { ownershipPercentage }
+        : {}),
+      ...(ownershipPerson ? { ownershipPerson } : {}),
     },
   };
+}
+
+/**
+ * Extracts an es-AR amount (e.g. "1.200.000", "$45.000,50", "45000") from
+ * a free-text answer. When several numbers are present, picks the largest
+ * (the installments count like "6 cuotas" won't win over the amount).
+ */
+export function parseAmountFromText(text: string): number | undefined {
+  const matches = text.match(/\$?[\d][\d.,]{0,}/g);
+  if (!matches) return undefined;
+  const candidates = matches
+    .map((candidate) => parseCurrency(candidate))
+    .filter((value) => Number.isFinite(value) && value > 0);
+  if (candidates.length === 0) return undefined;
+  candidates.sort((a, b) => b - a);
+  return candidates[0];
+}
+
+/** Returns the required fields still missing from a guided draft. */
+export function missingFieldsOf(
+  draft: IncompleteExpenseDraft,
+): MissingField[] {
+  const missing: MissingField[] = [];
+  if (!draft.itemName) missing.push("itemName");
+  if (!draft.description) missing.push("description");
+  if (draft.amount === undefined || draft.amount <= 0) missing.push("amount");
+  return missing;
+}
+
+/**
+ * Fills a single missing field from a guided-dialog answer. Returns the
+ * updated draft plus the (possibly reduced) list of still-missing fields.
+ * `ok` is false when the answer could not be interpreted (e.g. no amount).
+ */
+export function applyGuidedAnswer(
+  draft: IncompleteExpenseDraft,
+  field: MissingField,
+  raw: string,
+): {
+  draft: IncompleteExpenseDraft;
+  missingFields: MissingField[];
+  ok: boolean;
+} {
+  const next: IncompleteExpenseDraft = {
+    ...draft,
+    installmentsTotal: draft.installmentsTotal,
+  };
+  let ok = true;
+
+  if (field === "itemName") {
+    const value = raw.trim();
+    if (value) next.itemName = value;
+    else ok = false;
+  } else if (field === "description") {
+    const value = raw.trim();
+    if (value) next.description = value;
+    else ok = false;
+  } else {
+    const value = parseAmountFromText(raw);
+    if (value === undefined) ok = false;
+    else next.amount = value;
+  }
+
+  return { draft: next, missingFields: missingFieldsOf(next), ok };
 }
 
 /**
