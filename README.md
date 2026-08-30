@@ -99,8 +99,8 @@ Agregá esta configuración en el archivo de config del cliente (`claude_desktop
 {
   "mcpServers": {
     "expense-tracker": {
-      "command": "bunx",
-      "args": ["tsx", "src/mcp/server.ts"],
+      "command": "bun",
+      "args": ["src/mcp/server.ts"],
       "cwd": "/ruta/a/expense-tracker-ai",
       "env": {
         "DB_PATH": ".data/expenses.db"
@@ -109,6 +109,8 @@ Agregá esta configuración en el archivo de config del cliente (`claude_desktop
   }
 }
 ```
+
+> Nota: el server MCP usa el runtime de Bun (`bun`, que ejecuta TypeScript nativo y provee `bun:sqlite`). No usar `bunx tsx` para lanzarlo: corre bajo Node y falla al cargar `bun:sqlite`.
 
 ## Comandos
 
