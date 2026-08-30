@@ -3,10 +3,13 @@ import { useState } from 'react';
 import type { Agent } from '../../ai/agent';
 import type { LLMProvider } from '../../ai/provider';
 import {
+	applyGuidedAnswer,
 	extractExpenseIntent,
 	findItemForConcept,
 	toTitleCaseEs,
 	type ExpenseDraft,
+	type IncompleteExpenseDraft,
+	type MissingField,
 } from '../../ai/expenseIntent';
 import { ITEM_TYPE_LABELS } from '../../types';
 import type { Item, NewExpense, NewItem } from '../../types';
@@ -34,6 +37,39 @@ interface PendingCreation {
 	matchedItem?: Item;
 }
 
+interface GuidedCollection {
+	draft: IncompleteExpenseDraft;
+	missingFields: MissingField[];
+}
+
+const FIELD_PROMPTS: Record<MissingField, string> = {
+	itemName: 'En qué grupo lo cargás? Escribí el nombre de uno existente o uno nuevo.',
+	description: 'Qué compraste o pagaste?',
+	amount: 'Cuánto fue? (monto en pesos)',
+};
+
+const FIELD_LABELS: Record<MissingField, string> = {
+	itemName: 'Grupo',
+	description: 'Descripción',
+	amount: 'Monto',
+};
+
+function completeDraft(draft: IncompleteExpenseDraft): ExpenseDraft {
+	return {
+		itemName: draft.itemName!,
+		itemType: draft.itemType,
+		description: draft.description!,
+		amount: draft.amount!,
+		installmentsTotal: draft.installmentsTotal,
+		ownershipPercentage: draft.ownershipPercentage,
+		ownershipPerson: draft.ownershipPerson,
+	};
+}
+
+function fieldPrompt(field: MissingField): string {
+	return `   · ${FIELD_LABELS[field]}: ${FIELD_PROMPTS[field]}`;
+}
+
 interface ChatProps {
 	agent: Agent;
 	provider: LLMProvider;
@@ -57,6 +93,7 @@ export function Chat({
 	const [input, setInput] = useState('');
 	const [thinking, setThinking] = useState(false);
 	const [pending, setPending] = useState<PendingCreation | null>(null);
+	const [collecting, setCollecting] = useState<GuidedCollection | null>(null);
 
 	const appendAssistant = (content: string) => {
 		setMessages((prev) => [...prev, { role: 'assistant', content }]);
@@ -74,6 +111,13 @@ export function Chat({
 			: `Grupo nuevo: "${toTitleCaseEs(draft.itemName)}" (${
 					ITEM_TYPE_LABELS[draft.itemType ?? 'other']
 				})`;
+		const ownershipLine =
+			draft.ownershipPercentage !== undefined &&
+			draft.ownershipPercentage < 100
+				? `   Compartido: ${draft.ownershipPercentage}%${
+						draft.ownershipPerson ? ` con ${draft.ownershipPerson}` : ''
+					}`
+				: '';
 		appendAssistant(
 			[
 				'🤖 Detecté un gasto para crear:',
@@ -84,8 +128,11 @@ export function Chat({
 						? ` · ${draft.installmentsTotal} cuotas de ${formatCurrency(perInstallment)}`
 						: ''
 				}`,
+				ownershipLine,
 				'¿Confirmás la creación? (s/n)',
-			].join('\n'),
+			]
+				.filter((line) => line !== '')
+				.join('\n'),
 		);
 	};
 
@@ -108,7 +155,10 @@ export function Chat({
 				draft.installmentsTotal > 1
 					? { total: draft.installmentsTotal, current: 1 }
 					: undefined,
-			ownership: { percentage: 100 },
+			ownership: {
+				percentage: draft.ownershipPercentage ?? 100,
+				person: draft.ownershipPerson,
+			},
 		});
 		setPending(null);
 		appendAssistant(`✅ Gasto creado en "${item.name}".`);
@@ -117,6 +167,51 @@ export function Chat({
 	const cancelPending = () => {
 		setPending(null);
 		appendAssistant('Cancelado. No se creó nada.');
+	};
+
+	const startGuided = (
+		draft: IncompleteExpenseDraft,
+		missingFields: MissingField[],
+	) => {
+		setCollecting({ draft, missingFields });
+		const list = missingFields.map((field) => `   · ${FIELD_LABELS[field]}`).join('\n');
+		appendAssistant(
+			[
+				'🤖 Querés cargar un gasto, pero me faltan datos:',
+				list,
+				'Respondé el primero y seguimos:',
+				fieldPrompt(missingFields[0]),
+			].join('\n'),
+		);
+	};
+
+	const cancelGuided = () => {
+		setCollecting(null);
+		appendAssistant('Cancelado. No se cargó ningún gasto.');
+	};
+
+	const continueGuided = (answer: string) => {
+		const current = collecting;
+		if (!current) return;
+		const field = current.missingFields[0];
+		const result = applyGuidedAnswer(current.draft, field, answer);
+		if (!result.ok) {
+			appendAssistant(`No entendí eso. ${FIELD_PROMPTS[field]}`);
+			return;
+		}
+		if (result.missingFields.length > 0) {
+			setCollecting({ draft: result.draft, missingFields: result.missingFields });
+			appendAssistant(
+				[
+					`Perfecto. Queda pendiente:`,
+					result.missingFields.map((f) => `   · ${FIELD_LABELS[f]}`).join('\n'),
+					fieldPrompt(result.missingFields[0]),
+				].join('\n'),
+			);
+			return;
+		}
+		setCollecting(null);
+		presentDraft(completeDraft(result.draft));
 	};
 
 	const send = (question: string) => {
@@ -129,6 +224,10 @@ export function Chat({
 		setThinking(true);
 		extractExpenseIntent(provider, question, items)
 			.then((intent) => {
+				if (intent?.intent === 'create_expense_incomplete') {
+					startGuided(intent.draft, intent.missingFields);
+					return undefined;
+				}
 				if (intent?.intent === 'create_expense') {
 					presentDraft(intent.draft);
 					return undefined;
@@ -166,6 +265,10 @@ export function Chat({
 				cancelPending();
 				return;
 			}
+			if (collecting) {
+				cancelGuided();
+				return;
+			}
 			onBack();
 			return;
 		}
@@ -173,6 +276,14 @@ export function Chat({
 			const answer = value.toLowerCase();
 			if (answer === 's' || answer === 'y') confirmPending();
 			else if (answer === 'n') cancelPending();
+			return;
+		}
+		if (collecting && key.return) {
+			const answer = input.trim();
+			if (answer !== '' && !thinking) {
+				setInput('');
+				continueGuided(answer);
+			}
 			return;
 		}
 		if (key.return) {
@@ -255,7 +366,9 @@ export function Chat({
 				<Text color={HINT_COLOR}>
 					{pending
 						? '  s Confirmar · n Cancelar'
-						: '  Enter Enviar · Esc Volver'}
+						: collecting
+							? '  Enter Enviar · Esc Cancelar'
+							: '  Enter Enviar · Esc Volver'}
 				</Text>
 			</Box>
 		</Box>

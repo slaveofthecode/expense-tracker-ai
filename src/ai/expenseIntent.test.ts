@@ -2,9 +2,12 @@ import { describe, it, expect } from "bun:test";
 import type { Item } from "../types";
 import type { ChatMessage, LLMProvider, LLMResponse } from "./provider";
 import {
+  applyGuidedAnswer,
   extractExpenseIntent,
   extractCreditCardRef,
   findItemForConcept,
+  missingFieldsOf,
+  parseAmountFromText,
   parseExpenseIntentResponse,
   resolveGroupName,
   toTitleCaseEs,
@@ -75,31 +78,162 @@ describe("parseExpenseIntentResponse", () => {
     ).toBe(1);
   });
 
-  it("returns undefined for missing required fields or bad amounts", () => {
+  it("parses shared ownership when present", () => {
+    const raw =
+      '{"intent":"create_expense","itemName":"cena","itemType":"other","description":"cena","amount":100000,"installmentsTotal":1,"ownershipPercentage":50,"ownershipPerson":"Gus"}';
+    const result = parseExpenseIntentResponse(raw);
+    expect(result?.intent === "create_expense" && result.draft).toMatchObject({
+      ownershipPercentage: 50,
+      ownershipPerson: "Gus",
+    });
+  });
+
+  it("omits ownership fields when the expense is not shared", () => {
+    const result = parseExpenseIntentResponse(ZAPAS_JSON);
     expect(
-      parseExpenseIntentResponse(
-        '{"intent":"create_expense","itemName":"","description":"x","amount":10}',
-      ),
+      result?.intent === "create_expense" &&
+        result.draft.ownershipPercentage,
     ).toBeUndefined();
     expect(
-      parseExpenseIntentResponse(
-        '{"intent":"create_expense","itemName":"X","description":"","amount":10}',
-      ),
+      result?.intent === "create_expense" && result.draft.ownershipPerson,
     ).toBeUndefined();
+  });
+
+  it("normalizes shared ownership to 50% when a person is named without a split", () => {
+    const raw =
+      '{"intent":"create_expense","itemName":"cena","description":"cena","amount":100000,"installmentsTotal":1,"ownershipPerson":"Gus"}';
+    const result = parseExpenseIntentResponse(raw);
     expect(
-      parseExpenseIntentResponse(
-        '{"intent":"create_expense","itemName":"X","description":"y","amount":-5}',
-      ),
-    ).toBeUndefined();
+      result?.intent === "create_expense" && result.draft.ownershipPercentage,
+    ).toBe(50);
+  });
+
+  it("returns an incomplete intent listing missing required fields", () => {
+    const missingItemName = parseExpenseIntentResponse(
+      '{"intent":"create_expense","itemName":"","description":"x","amount":10}',
+    );
+    expect(missingItemName).toEqual({
+      intent: "create_expense_incomplete",
+      draft: {
+        itemName: undefined,
+        description: "x",
+        amount: 10,
+        installmentsTotal: 1,
+      },
+      missingFields: ["itemName"],
+    });
+
+    const missingDescription = parseExpenseIntentResponse(
+      '{"intent":"create_expense","itemName":"X","description":"","amount":10}',
+    );
+    expect(missingDescription?.intent).toBe("create_expense_incomplete");
     expect(
-      parseExpenseIntentResponse('{"intent":"create_expense"}'),
-    ).toBeUndefined();
+      missingDescription?.intent === "create_expense_incomplete"
+        ? missingDescription.missingFields
+        : [],
+    ).toEqual(["description"]);
+
+    const badAmount = parseExpenseIntentResponse(
+      '{"intent":"create_expense","itemName":"X","description":"y","amount":-5}',
+    );
+    expect(badAmount?.intent).toBe("create_expense_incomplete");
+    expect(
+      badAmount?.intent === "create_expense_incomplete"
+        ? badAmount.missingFields
+        : [],
+    ).toEqual(["amount"]);
+
+    const allMissing = parseExpenseIntentResponse(
+      '{"intent":"create_expense"}',
+    );
+    expect(allMissing?.intent).toBe("create_expense_incomplete");
+    expect(
+      allMissing?.intent === "create_expense_incomplete"
+        ? allMissing.missingFields
+        : [],
+    ).toEqual(["itemName", "description", "amount"]);
   });
 
   it("returns undefined for unparseable output", () => {
     expect(parseExpenseIntentResponse("no json here")).toBeUndefined();
     expect(parseExpenseIntentResponse("{broken json}")).toBeUndefined();
     expect(parseExpenseIntentResponse('{"intent":"unknown_kind"}')).toBeUndefined();
+  });
+});
+
+describe("guided dialog helpers", () => {
+  it("extracts es-AR amounts from free text", () => {
+    expect(parseAmountFromText("fueron 1.200.000 en 6 cuotas")).toBe(1200000);
+    expect(parseAmountFromText("gasté $45.000,50")).toBe(45000.5);
+    expect(parseAmountFromText("son 45000")).toBe(45000);
+    expect(parseAmountFromText("no lo sé")).toBeUndefined();
+  });
+
+  it("prefers the largest number so installments counts don't win", () => {
+    expect(parseAmountFromText("1500000 en 6 cuotas")).toBe(1500000);
+  });
+
+  it("lists what is still missing from a draft", () => {
+    expect(missingFieldsOf({ installmentsTotal: 1 })).toEqual([
+      "itemName",
+      "description",
+      "amount",
+    ]);
+    expect(
+      missingFieldsOf({
+        itemName: "Auto",
+        description: "nafta",
+        amount: 45000,
+        installmentsTotal: 1,
+      }),
+    ).toEqual([]);
+  });
+
+  it("fills one missing field per guided answer", () => {
+    const base = {
+      itemName: "Auto",
+      itemType: "car" as const,
+      description: "nafta",
+      amount: undefined as number | undefined,
+      installmentsTotal: 1,
+    };
+
+    const withAmount = applyGuidedAnswer(base, "amount", "fueron $56.000");
+    expect(withAmount).toEqual({
+      draft: { ...base, amount: 56000 },
+      missingFields: [],
+      ok: true,
+    });
+
+    const badAmount = applyGuidedAnswer(base, "amount", "no me acuerdo");
+    expect(badAmount.ok).toBe(false);
+    expect(badAmount.missingFields).toEqual(["amount"]);
+
+    const withItem = applyGuidedAnswer(
+      { ...base, amount: 56000, itemName: undefined },
+      "itemName",
+      "la tarjeta naranja",
+    );
+    expect(withItem.draft.itemName).toBe("la tarjeta naranja");
+    expect(withItem.ok).toBe(true);
+  });
+
+  it("keeps previously collected fields across guided answers", () => {
+    const start = { installmentsTotal: 2, itemType: "credit_card" as const };
+    const step1 = applyGuidedAnswer(start, "description", "zapatillas");
+    const step2 = applyGuidedAnswer(
+      step1.draft,
+      "amount",
+      "1.200.000",
+    );
+    expect(step2.draft).toEqual({
+      installmentsTotal: 2,
+      itemType: "credit_card",
+      description: "zapatillas",
+      amount: 1200000,
+    });
+    expect(step2.missingFields).toEqual(["itemName"]);
+    expect(step1.missingFields).toEqual(["itemName", "amount"]);
   });
 });
 
