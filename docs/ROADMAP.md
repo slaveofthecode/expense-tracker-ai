@@ -74,9 +74,9 @@ TUI funcional con datos hardcodeados que muestra grupos de gastos con sus totale
 - [x] Chat AI en la TUI: consultas en lenguaje natural (ej: "¿cuánto gasté en marzo?") con respuestas basadas en datos reales
 - [x] Tools de consulta (solo lectura): `list_items`, `list_expenses`, `get_monthly_summary`, `get_yearly_summary`, `search_expenses`
 - [x] Categorización automática por sugerencia al ingresar (la IA propone el grupo y el humano confirma)
-- [ ] Detección de patrones de gasto (cálculo numérico en `summaries.ts` + insights en lenguaje natural por LLM)
-- [ ] Recomendaciones (reglas determinísticas + redacción y jerarquía por LLM)
-- [ ] MCP server (`src/mcp/`) exponiendo las tools de lectura para cualquier agente externo (opencode, Claude Desktop, etc.)
+- [x] Detección de patrones de gasto (cálculo numérico en `src/utils/patterns.ts` + insights en lenguaje natural por LLM): `analyze_patterns` calcula cambios mes a mes, tendencias (regresión lineal), anomalías (z-score) y grupos recurrentes (estabilidad ≥ 0.7)
+- [x] Recomendaciones (reglas determinísticas + redacción y jerarquía por LLM): `src/utils/recommendations.ts` genera recomendaciones ordenadas por severidad (subida >15%, pico de categoría, recurrente nuevo, principal motor de gasto >40%) expuestas vía `get_recommendations`
+- [x] MCP server (`src/mcp/server.ts`) exponiendo las tools de lectura para cualquier agente externo (opencode, Claude Desktop, etc.), registrado en `opencode.json` — solo lectura (`readOnlyHint` por tool)
 
 **Cómo implementar (orden sugerido):**
 1. `src/ai/tools.ts`: registry único de tools de lectura construidas sobre `repository.ts` y `summaries.ts`. Clasificar siempre READ/WRITE; el MCP y el chat de la TUI usan las mismas tools.
@@ -102,16 +102,13 @@ TUI funcional con datos hardcodeados que muestra grupos de gastos con sus totale
 - `src/ai/expenseIntent.ts`: extracción de intención (`create_expense` | `none`) con borrador tipado (ítem, tipo inferido, descripción, monto total ARS, cuotas) y matching de concepto contra ítems existentes (case/accent-insensitive, substring y subset de tokens).
 - Chat de la TUI: al detectar intención muestra el borrador y pide confirmación `s/n`; `s` crea el ítem (si no existe, tipo inferido o `other`) y el gasto vía callbacks de `App` con refresco inmediato; `n` cancela sin escribir.
 - Confirmación explícita del humano antes de escribir en la DB: siempre.
+- Mejoras de matching al crear por chat: los grupos existentes se pasan como contexto al extractor (`feat/040`); `resolveGroupName` prioriza la referencia de tarjeta de crédito detectada en la pregunta ("con la naranja", "tarjeta T. Cordobesa") antes que el nombre del producto; heurística de override para cuando el usuario nombra una tarjeta distinta a la del grupo (PRs #41–#45).
+- El system prompt del agente fuerza el uso de tools para preguntas factuales (`feat/039`).
+- Tool de escritura `create_expense` en el registry: `src/ai/tools.ts` clasifica cada tool con `readonly`; `buildTools(ToolsContext)` la incluye solo cuando recibe contexto de escritura (`createItem`/`createExpense`) — `createChatTools(db)` (chat, con escritura + confirmación) vs `createReadTools(db)` (MCP, solo lectura). Parámetros: `itemName`, `description`, `amount`, `itemType`, `installmentsTotal`, `date`, `ownershipPercentage`, `ownershipPerson`. Resuelve grupo existente (`findItemForConcept`) o lo crea automáticamente con tipo inferido; cuotas e ownership se aplican al crear.
+- Confirmación humana en el agente: `createAgent` acepta `onWriteCall` — una tool no-`readonly` requiere aprobación (sin handler, la escritura se rechaza y el modelo recibe el error).
+- Flujo de diálogo guiado: si faltan `itemName`, `description` o `amount`, el extractor devuelve `create_expense_incomplete` y el chat pregunta campo por campo lo que falta (`applyGuidedAnswer`, `parseAmountFromText` para montos en texto, Esc cancela).
+- Ownership compartido desde el chat: el prompt del extractor reconoce "a medias", "mitad y mitad", "compartido con X" y devuelve `ownershipPercentage`/`ownershipPerson` (si hay persona sin reparto, 50%); el borrador y la creación aplican el ownership.
 
-**Pendiente:**
-- [ ] Tool de escritura `create_expense` en el registry de tools (hoy todas son `readonly`)
-- [ ] Flujo de diálogo guiado: el LLM pide los datos faltantes antes de guardar
-- [ ] Ownership compartido desde el chat (hoy queda 100% propio)
-
-**Cómo seguir:**
-- Ampliar `src/ai/tools.ts` con herramientas WRITE manteniendo la clasificación READ/WRITE.
-- Distinguir en el agente cuándo una tool es de escritura y requerir confirmación.
-- Separar también qué tools ve el MCP server: probablemente se mantienen solo lectura para agentes externos.
-
-**Decisiones pendientes:**
-- ¿El MCP permite escritura o queda solo lectura? Hoy el MCP hereda solo las tools de lectura.
+**Decisiones finales:**
+- El MCP queda **solo lectura** (hereda `createReadTools`); la escritura con confirmación es exclusiva del chat de la TUI.
+- El chat **sí escribe**, siempre con confirmación explícita del humano (`s/n` en el borrador o aprobación de la tool).
