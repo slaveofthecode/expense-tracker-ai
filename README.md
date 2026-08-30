@@ -72,18 +72,28 @@ El proyecto incluye un servidor [MCP](https://modelcontextprotocol.io) que expon
 | `analyze_patterns`  | Detecta tendencias, anomalías y gastos recurrentes          |
 | `get_recommendations` | Genera recomendaciones basadas en patrones de gasto       |
 
-### Uso con opencode
+### Configuración incluida en el repo
 
-La configuración ya está en `opencode.json`. Solo necesitás tener la DB generada (correr `bun start` al menos una vez):
+El servidor MCP usa la misma base de datos que la app (`.data/expenses.db`, ver `DB_PATH`). La configuración nativa por herramienta ya está versionada:
+
+| Herramienta  | Archivo de registro                                                          | Cómo lo toma                                                        |
+| ------------ | ---------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| opencode     | `opencode.json` → `mcp.expense-tracker` (env `DB_PATH=.data/expenses.db`)    | Automático al iniciar                                               |
+| Claude Code  | `.mcp.json` (raíz del proyecto)                                              | Automático al abrir el repo                                         |
+| Cursor       | `.cursor/mcp.json`                                                           | Automático al abrir el repo                                         |
+| Claude Desktop | Config global del cliente (ver ejemplo abajo)                              | Manual                                                              |
+| GitHub Copilot | Config de la extensión (settings de VS Code)                               | Manual                                                              |
+
+Solo necesitás tener la DB generada (correr `bun start` al menos una vez):
 
 ```bash
 # La DB se crea en .data/expenses.db al iniciar la app
 bun start
 ```
 
-### Uso con Claude Desktop / Cursor
+### Uso con Claude Desktop (config global)
 
-Agregá esta configuración en tu archivo de config del cliente MCP:
+Agregá esta configuración en el archivo de config del cliente (`claude_desktop_config.json`):
 
 ```json
 {
