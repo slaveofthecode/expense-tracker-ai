@@ -19,8 +19,7 @@
     "expense-tracker": {
       "type": "local",
       "command": [
-        "bunx",
-        "tsx",
+        "bun",
         "src/mcp/server.ts"
       ],
       "enabled": true,

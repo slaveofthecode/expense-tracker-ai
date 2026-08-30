@@ -1,8 +1,8 @@
 {
   "mcpServers": {
     "expense-tracker": {
-      "command": "bunx",
-      "args": ["tsx", "src/mcp/server.ts"],
+      "command": "bun",
+      "args": ["src/mcp/server.ts"],
       "env": {
         "DB_PATH": ".data/expenses.db"
       }
