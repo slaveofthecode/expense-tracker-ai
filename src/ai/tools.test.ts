@@ -191,3 +191,106 @@ describe("search_expenses", () => {
     expect(() => run("search_expenses")).toThrow(/Missing required argument/);
   });
 });
+
+describe("create_expense", () => {
+  function writeContext() {
+    const createdItems: Item[] = [];
+    const createdExpenses: Expense[] = [];
+    const writer = {
+      ...context(),
+      createItem: (input: { name: string; type: Item["type"] }) => {
+        const item: Item = { id: `new-${createdItems.length + 1}`, ...input };
+        createdItems.push(item);
+        return item;
+      },
+      createExpense: (input: Omit<Expense, "id">) => {
+        const expense: Expense = {
+          id: `exp-${createdExpenses.length + 1}`,
+          ...input,
+        };
+        createdExpenses.push(expense);
+        return expense;
+      },
+    };
+    return { writer, createdItems, createdExpenses };
+  }
+
+  it("is not exposed without a write context", () => {
+    expect(getTool(buildTools(context()), "create_expense")).toBeUndefined();
+  });
+
+  it("is exposed with a write context and marked as non-read-only", () => {
+    const { writer } = writeContext();
+    const tool = getTool(buildTools(writer), "create_expense");
+    expect(tool).toBeDefined();
+    expect(tool!.readonly).toBe(false);
+  });
+
+  it("creates an expense inside an existing item", () => {
+    const { writer, createdExpenses } = writeContext();
+    const tool = getTool(buildTools(writer), "create_expense")!;
+    const result = tool.execute({
+      itemName: "tarjeta naranja",
+      description: "zapatillas",
+      amount: 120000,
+    }) as { item: Item; expense: Expense };
+    expect(result.item.id).toBe("naranja");
+    expect(createdExpenses).toHaveLength(1);
+    expect(createdExpenses[0]).toMatchObject({
+      itemId: "naranja",
+      description: "zapatillas",
+      amount: 120000,
+      ownership: { percentage: 100 },
+    });
+  });
+
+  it("auto-creates a new item with the type inferred from the description", () => {
+    const { writer, createdItems } = writeContext();
+    const tool = getTool(buildTools(writer), "create_expense")!;
+    const result = tool.execute({
+      itemName: "expensas edificio",
+      description: "expensas",
+      amount: 50000,
+    }) as { item: Item; expense: Expense };
+    expect(result.item.name).toBe("Expensas Edificio");
+    expect(result.item.type).toBe("home");
+    expect(createdItems).toHaveLength(1);
+  });
+
+  it("honors explicit itemType, installments and ownership for new items", () => {
+    const { writer, createdItems, createdExpenses } = writeContext();
+    const tool = getTool(buildTools(writer), "create_expense")!;
+    tool.execute({
+      itemName: "bici",
+      description: "bicicleta",
+      amount: "1.500.000",
+      itemType: "credit_card",
+      installmentsTotal: 6,
+      ownershipPercentage: 50,
+      ownershipPerson: "Gus",
+    });
+    expect(createdItems[0].type).toBe("credit_card");
+    expect(createdExpenses[0]).toMatchObject({
+      amount: 1500000,
+      installments: { total: 6, current: 1 },
+      ownership: { percentage: 50, person: "Gus" },
+    });
+  });
+
+  it("validates required arguments and amounts", () => {
+    const { writer } = writeContext();
+    const tool = getTool(buildTools(writer), "create_expense")!;
+    expect(() => tool.execute({ description: "x", amount: 100 })).toThrow(
+      /itemName/,
+    );
+    expect(() => tool.execute({ itemName: "x", amount: 100 })).toThrow(
+      /description/,
+    );
+    expect(() => tool.execute({ itemName: "x", description: "y" })).toThrow(
+      /amount/,
+    );
+    expect(() =>
+      tool.execute({ itemName: "x", description: "y", amount: -5 }),
+    ).toThrow(/amount/);
+  });
+});

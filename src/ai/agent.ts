@@ -69,6 +69,13 @@ export interface AgentOptions {
   tools: readonly AiTool[];
   systemPrompt?: string;
   maxIterations?: number;
+  /**
+   * Hook de confirmación para tools de escritura (readonly: false). Se invoca
+   * ANTES de ejecutar la tool; si devuelve false (o no hay handler), la escritura
+   * se cancela y el modelo recibe un mensaje de cancelación para que responda al
+   * usuario. Sin este hook, ninguna tool de escritura puede ejecutarse.
+   */
+  onWriteCall?: (call: ToolCall) => boolean | Promise<boolean>;
 }
 
 export function createAgent(options: AgentOptions): Agent {
@@ -102,6 +109,29 @@ export function createAgent(options: AgentOptions): Agent {
 
         for (const call of response.toolCalls) {
           toolCallCount += 1;
+          const tool = getTool(options.tools, call.name);
+          if (tool && !tool.readonly) {
+            let allowed = false;
+            if (options.onWriteCall) {
+              try {
+                allowed = await options.onWriteCall(call);
+              } catch {
+                allowed = false;
+              }
+            }
+            if (!allowed) {
+              messages.push({
+                role: "tool",
+                name: call.name,
+                content: JSON.stringify({
+                  error:
+                    "La creación de datos requiere confirmación humana y fue cancelada. " +
+                    "Informá al usuario que no se guardó nada.",
+                }),
+              });
+              continue;
+            }
+          }
           messages.push({
             role: "tool",
             name: call.name,

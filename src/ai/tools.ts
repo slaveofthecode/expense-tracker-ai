@@ -1,7 +1,15 @@
 import type { Database } from "bun:sqlite";
-import type { Expense, Item, ItemType } from "../types";
+import type { Expense, Item, ItemType, NewExpense, NewItem } from "../types";
 import { ITEM_TYPES } from "../types";
-import { listExpenses, listItems } from "../db/repository";
+import {
+  createExpense as repoCreateExpense,
+  createItem as repoCreateItem,
+  listExpenses,
+  listItems,
+} from "../db/repository";
+import { parseCurrency, todayISO } from "../utils/format";
+import { findItemForConcept, toTitleCaseEs } from "./expenseIntent";
+import { inferGroupType } from "../utils/autoGroup";
 import {
   calcMonthlySummaries,
   calcYearlySummaries,
@@ -30,7 +38,7 @@ export interface AiTool<TResult = unknown> {
   name: string;
   description: string;
   parameters: ToolParameter[];
-  readonly: true;
+  readonly: boolean;
   execute: (args: Record<string, unknown>) => TResult;
 }
 
@@ -38,6 +46,13 @@ export interface ReadToolsContext {
   listItems: () => Item[];
   listExpenses: () => Expense[];
 }
+
+export interface WriteToolsContext {
+  createItem: (input: NewItem) => Item;
+  createExpense: (input: NewExpense) => Expense;
+}
+
+export type ToolsContext = ReadToolsContext & Partial<WriteToolsContext>;
 
 function asString(value: unknown): string | undefined {
   return typeof value === "string" && value.trim() !== "" ? value : undefined;
@@ -55,8 +70,34 @@ function asItemType(value: unknown): ItemType | undefined {
     : undefined;
 }
 
-export function buildTools(ctx: ReadToolsContext): AiTool[] {
-  return [
+function coerceAmount(value: unknown): number | undefined {
+  const parsed =
+    typeof value === "number"
+      ? value
+      : typeof value === "string"
+        ? parseCurrency(value)
+        : NaN;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
+}
+
+function asPositiveInt(value: unknown, fallback: number): number {
+  return typeof value === "number" && Number.isFinite(value) && value >= 1
+    ? Math.floor(value)
+    : fallback;
+}
+
+function asDate(value: unknown): string | undefined {
+  const str = asString(value);
+  return str && /^\d{4}-\d{2}-\d{2}$/.test(str) ? str : undefined;
+}
+
+function clampPercentage(value: number | undefined, fallback: number): number {
+  if (value === undefined || !Number.isFinite(value)) return fallback;
+  return Math.min(100, Math.max(1, Math.round(value)));
+}
+
+export function buildTools(ctx: ToolsContext): AiTool[] {
+  const tools: AiTool[] = [
     {
       name: "list_items",
       description:
@@ -227,12 +268,127 @@ export function buildTools(ctx: ReadToolsContext): AiTool[] {
       },
     },
   ];
+
+  if (ctx.createItem && ctx.createExpense) {
+    tools.push({
+      name: "create_expense",
+      description:
+        "Crea un gasto. Si el grupo indicado en itemName no existe, lo crea automáticamente " +
+        "con el tipo dado o inferido de la descripción. Esta tool ESCRIBE en la base de datos; " +
+        "siempre requiere confirmación humana antes de ejecutarse.",
+      parameters: [
+        {
+          name: "itemName",
+          type: "string",
+          description:
+            "Grupo donde se registra el gasto (puede ser un grupo existente o el nombre de uno nuevo).",
+          required: true,
+        },
+        {
+          name: "description",
+          type: "string",
+          description: "Descripción corta del gasto.",
+          required: true,
+        },
+        {
+          name: "amount",
+          type: "number",
+          description: "Monto total en ARS (con cuotas, la suma de todas).",
+          required: true,
+        },
+        {
+          name: "itemType",
+          type: "string",
+          description: "Tipo del grupo si se crea uno nuevo.",
+          enum: [...ITEM_TYPES],
+        },
+        {
+          name: "installmentsTotal",
+          type: "number",
+          description: "Cantidad de cuotas (default 1).",
+        },
+        {
+          name: "date",
+          type: "string",
+          description: "Fecha del gasto en formato YYYY-MM-DD (default: hoy).",
+        },
+        {
+          name: "ownershipPercentage",
+          type: "number",
+          description:
+            "Porcentaje propio del gasto (default 100; menor a 100 indica gasto compartido).",
+        },
+        {
+          name: "ownershipPerson",
+          type: "string",
+          description:
+            "Persona con quien se comparte el gasto (se usa cuando ownershipPercentage < 100).",
+        },
+      ],
+      readonly: false,
+      execute: (args): { item: Item; expense: Expense } => {
+        const writer = ctx as ReadToolsContext & WriteToolsContext;
+        const itemName = asString(args.itemName);
+        const description = asString(args.description);
+        const amount = coerceAmount(args.amount);
+        if (!itemName) throw new Error('Missing required argument "itemName"');
+        if (!description) throw new Error('Missing required argument "description"');
+        if (amount === undefined) {
+          throw new Error('Missing required argument "amount" (número mayor a 0)');
+        }
+        const itemType = asItemType(args.itemType);
+        const installmentsTotal = asPositiveInt(args.installmentsTotal, 1);
+        const date = asDate(args.date) ?? todayISO();
+        const ownershipPercentage = clampPercentage(
+          asNumber(args.ownershipPercentage),
+          100,
+        );
+        const ownershipPerson = asString(args.ownershipPerson);
+
+        const existing = findItemForConcept(ctx.listItems(), itemName);
+        const item =
+          existing ??
+          writer.createItem({
+            name: toTitleCaseEs(itemName),
+            type: itemType ?? inferGroupType(description),
+          });
+
+        const expense = writer.createExpense({
+          itemId: item.id,
+          description,
+          amount,
+          date,
+          installments:
+            installmentsTotal > 1
+              ? { total: installmentsTotal, current: 1 }
+              : undefined,
+          ownership: {
+            percentage: ownershipPercentage,
+            person: ownershipPerson,
+          },
+        });
+
+        return { item, expense };
+      },
+    });
+  }
+
+  return tools;
 }
 
 export function createReadTools(db: Database): AiTool[] {
   return buildTools({
     listItems: () => listItems(db),
     listExpenses: () => listExpenses(db),
+  });
+}
+
+export function createChatTools(db: Database): AiTool[] {
+  return buildTools({
+    listItems: () => listItems(db),
+    listExpenses: () => listExpenses(db),
+    createItem: (input) => repoCreateItem(db, input),
+    createExpense: (input) => repoCreateExpense(db, input),
   });
 }
 
