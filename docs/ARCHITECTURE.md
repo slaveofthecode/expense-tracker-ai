@@ -93,8 +93,8 @@ expense-tracker-ai/
     ├── index.tsx        # Entry point: abre DB, render
     ├── ai/              # Capa de IA: tools de lectura + proveedor LLM + agente
     │   ├── tools.ts     # Registry de tools de solo lectura
-    │   ├── provider.ts  # Interfaz LLMProvider + implementación Ollama
-    │   ├── agent.ts     # Loop de tool-calling con system prompt de dominio
+    │   ├── provider.ts  # Interfaz LLMProvider + implementación Ollama (+ streaming API /api/chat)
+    │   ├── agent.ts     # Loop de tool-calling con system prompt de dominio (+ onToken en ask)
     │   ├── expenseIntent.ts # Extracción de intención de gasto + matching de concepto (creación por chat)
     │   └── suggest.ts   # Sugerencia de ítem por IA (fallback del matching local)
     ├── app/
@@ -102,7 +102,7 @@ expense-tracker-ai/
     │   └── components/
     │       ├── Dashboard.tsx
     │       ├── Charts.tsx
-    │       ├── Chat.tsx        # Chat con IA (consultas + creación de gastos con confirmación s/n)
+    │       ├── Chat.tsx        # Chat con IA (consultas con streaming en vivo + creación de gastos con confirmación s/n)
     │       ├── ItemDetail.tsx
     │       ├── ExpenseDetail.tsx
     │       ├── SearchPalette.tsx # Búsqueda global con resultados en vivo

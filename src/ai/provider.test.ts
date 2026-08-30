@@ -285,6 +285,146 @@ describe("chat", () => {
   });
 });
 
+describe("chat streaming", () => {
+  const messages: ChatMessage[] = [
+    { role: "user", content: "¿cuánto gasté en marzo?" },
+  ];
+  const tool: ToolDefinition = {
+    name: "get_monthly_summary",
+    description: "Resumen de gastos de un mes.",
+    parameters: [
+      {
+        name: "month",
+        type: "string",
+        description: "Mes en formato YYYY-MM.",
+        required: true,
+      },
+    ],
+  };
+
+  function ndjsonResponse(chunks: Record<string, unknown>[]): Response {
+    const body = chunks.map((chunk) => JSON.stringify(chunk)).join("\n") + "\n";
+    return new Response(body, {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  it("sends stream=true and emits content deltas as they arrive", async () => {
+    let requestBody: Record<string, unknown> | undefined;
+    const tokens: string[] = [];
+    const provider = createOllamaProvider({
+      fetch: mockFetch((_url, init) => {
+        requestBody = JSON.parse(String(init?.body));
+        return ndjsonResponse([
+          { message: { role: "assistant", content: "Hola" }, done: false },
+          { message: { role: "assistant", content: ", ¿" }, done: false },
+          {
+            message: { role: "assistant", content: "todo bien?" },
+            done: false,
+          },
+          { message: { role: "assistant", content: "" }, done: true },
+        ]);
+      }),
+    });
+
+    const response = await provider.chat(messages, undefined, {
+      onToken: (token) => tokens.push(token),
+    });
+
+    expect(requestBody?.stream).toBe(true);
+    expect(tokens.join("")).toBe("Hola, ¿todo bien?");
+    expect(response.content).toBe("Hola, ¿todo bien?");
+    expect(response.toolCalls).toEqual([]);
+  });
+
+  it("keeps stream=false when no onToken callback is provided", async () => {
+    let requestBody: Record<string, unknown> | undefined;
+    const provider = createOllamaProvider({
+      fetch: mockFetch((_url, init) => {
+        requestBody = JSON.parse(String(init?.body));
+        return { message: { role: "assistant", content: "hola" } };
+      }),
+    });
+
+    await provider.chat(messages);
+
+    expect(requestBody?.stream).toBe(false);
+  });
+
+  it("aggregates streamed tool calls and keeps the Ollama id", async () => {
+    const provider = createOllamaProvider({
+      fetch: mockFetch(() =>
+        ndjsonResponse([
+          {
+            message: {
+              role: "assistant",
+              content: "",
+              tool_calls: [
+                {
+                  id: "call_abc",
+                  function: {
+                    name: "get_monthly_summary",
+                    arguments: { month: "2026-03" },
+                  },
+                },
+              ],
+            },
+            done: false,
+          },
+          { message: { role: "assistant", content: "" }, done: true },
+        ]),
+      ),
+    });
+
+    const response = await provider.chat(messages, [tool], {
+      onToken: () => {},
+    });
+
+    expect(response.content).toBe("");
+    expect(response.toolCalls).toEqual([
+      {
+        id: "call_abc",
+        name: "get_monthly_summary",
+        arguments: { month: "2026-03" },
+      },
+    ]);
+  });
+
+  it("merges fragmented tool call chunks by index", async () => {
+    const provider = createOllamaProvider({
+      fetch: mockFetch(() =>
+        ndjsonResponse([
+          {
+            message: { role: "assistant", tool_calls: [{ id: "call_1", function: {} }] },
+            done: false,
+          },
+          {
+            message: { role: "assistant", tool_calls: [{ function: { name: "list_items" } }] },
+            done: false,
+          },
+          {
+            message: {
+              role: "assistant",
+              tool_calls: [{ function: { arguments: { type: "kids" } } }],
+            },
+            done: false,
+          },
+          { message: { role: "assistant", content: "" }, done: true },
+        ]),
+      ),
+    });
+
+    const response = await provider.chat(messages, [tool], {
+      onToken: () => {},
+    });
+
+    expect(response.toolCalls).toEqual([
+      { id: "call_1", name: "list_items", arguments: { type: "kids" } },
+    ]);
+  });
+});
+
 describe("checkHealth", () => {
   it("reports ok when Ollama is running and the model is pulled", async () => {
     const provider = createOllamaProvider({

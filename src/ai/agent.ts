@@ -58,8 +58,15 @@ export interface AgentResult {
   toolCallCount: number;
 }
 
+export interface AskOptions {
+  /**
+   * Recibe cada token de contenido apenas llega (streaming en vivo para la UI).
+   */
+  onToken?: (token: string) => void;
+}
+
 export interface Agent {
-  ask(question: string): Promise<AgentResult>;
+  ask(question: string, options?: AskOptions): Promise<AgentResult>;
   readonly maxIterations: number;
   readonly toolDefinitions: readonly ToolDefinition[];
 }
@@ -87,7 +94,7 @@ export function createAgent(options: AgentOptions): Agent {
     maxIterations,
     toolDefinitions,
 
-    async ask(question: string) {
+    async ask(question: string, askOptions?: AskOptions) {
       const messages: ChatMessage[] = [
         { role: "system", content: systemPrompt },
         { role: "user", content: question },
@@ -95,7 +102,11 @@ export function createAgent(options: AgentOptions): Agent {
       let toolCallCount = 0;
 
       for (let iteration = 0; iteration < maxIterations; iteration++) {
-        const response = await options.provider.chat(messages, toolDefinitions);
+        const response = await options.provider.chat(
+          messages,
+          toolDefinitions,
+          askOptions,
+        );
 
         if (response.toolCalls.length === 0) {
           return { answer: response.content, toolCallCount };
