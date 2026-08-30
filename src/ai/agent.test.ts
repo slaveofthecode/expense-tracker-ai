@@ -8,7 +8,12 @@ import {
   DEFAULT_MAX_ITERATIONS,
   type AgentResult,
 } from "./agent";
-import type { ChatMessage, LLMProvider, LLMResponse } from "./provider";
+import type {
+  ChatMessage,
+  ChatOptions,
+  LLMProvider,
+  LLMResponse,
+} from "./provider";
 
 const items: Item[] = [
   { id: "alquiler", name: "Alquiler", type: "home" },
@@ -46,12 +51,18 @@ class FakeProvider implements LLMProvider {
   async chat(
     messages: readonly ChatMessage[],
     tools?: readonly unknown[],
+    options?: ChatOptions,
   ): Promise<LLMResponse> {
     this.chatCalls.push({ messages: [...messages], tools });
     const snapshot = [...messages];
     const index = Math.min(this.responseIndex, this.responses.length - 1);
     this.responseIndex += 1;
-    return this.responses[index](snapshot);
+    const result = this.responses[index](snapshot);
+    if (options?.onToken && result.content) {
+      const pieces = result.content.match(/.{1,3}/g) ?? [];
+      for (const piece of pieces) options.onToken(piece);
+    }
+    return result;
   }
 
   async checkHealth() {
@@ -244,6 +255,28 @@ describe("createAgent", () => {
     expect(provider.chatCalls[0]?.messages[0]?.content).toBe(
       "Respondé solo con números.",
     );
+  });
+
+  it("streams answer tokens through the onToken callback", async () => {
+    const provider = fakeProvider([
+      (m) => ({
+        content: "",
+        toolCalls: [{ id: "call_0", name: "list_items", arguments: {} }],
+      }),
+      (m) => ({
+        content: "Hay 2 grupos desde el primer token.",
+        toolCalls: [],
+      }),
+    ]);
+    const agent = createAgent({ provider, tools });
+
+    const tokens: string[] = [];
+    const result: AgentResult = await agent.ask("¿qué grupos tengo?", {
+      onToken: (token) => tokens.push(token),
+    });
+
+    expect(result.answer).toBe("Hay 2 grupos desde el primer token.");
+    expect(tokens.join("")).toBe("Hay 2 grupos desde el primer token.");
   });
 
   it("propagates provider errors instead of swallowing them", async () => {

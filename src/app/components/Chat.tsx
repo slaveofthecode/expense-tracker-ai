@@ -92,6 +92,7 @@ export function Chat({
 	const [messages, setMessages] = useState<ChatMessage[]>([]);
 	const [input, setInput] = useState('');
 	const [thinking, setThinking] = useState(false);
+	const [streamingText, setStreamingText] = useState<string | null>(null);
 	const [pending, setPending] = useState<PendingCreation | null>(null);
 	const [collecting, setCollecting] = useState<GuidedCollection | null>(null);
 
@@ -222,6 +223,7 @@ export function Chat({
 			return;
 		}
 		setThinking(true);
+		setStreamingText(null);
 		extractExpenseIntent(provider, question, items)
 			.then((intent) => {
 				if (intent?.intent === 'create_expense_incomplete') {
@@ -238,16 +240,21 @@ export function Chat({
 					);
 					return undefined;
 				}
-				return agent.ask(question).then((result) => {
-					setMessages((prev) => [
-						...prev,
-						{
-							role: 'assistant',
-							content: result.answer,
-							toolCallCount: result.toolCallCount,
-						},
-					]);
-				});
+				return agent
+					.ask(question, {
+						onToken: (token) =>
+							setStreamingText((prev) => (prev ?? '') + token),
+					})
+					.then((result) => {
+						setMessages((prev) => [
+							...prev,
+							{
+								role: 'assistant',
+								content: result.answer,
+								toolCallCount: result.toolCallCount,
+							},
+						]);
+					});
 			})
 			.catch((err: unknown) => {
 				const message = err instanceof Error ? err.message : String(err);
@@ -256,6 +263,7 @@ export function Chat({
 			})
 			.finally(() => {
 				setThinking(false);
+				setStreamingText(null);
 			});
 	};
 
@@ -347,7 +355,17 @@ export function Chat({
 						))}
 						{thinking ? (
 							<Box>
-								<Text color={MUTED_COLOR}>{'  ⏳ pensando…'}</Text>
+								<Text color={ASSISTANT_COLOR}>
+									{'  🤖 '}
+									{streamingText ? (
+										<>
+											{streamingText}
+											<Text color={ACCENT_COLOR}>{'▌'}</Text>
+										</>
+									) : (
+										<Text color={MUTED_COLOR}>{'⏳ pensando…'}</Text>
+									)}
+								</Text>
 							</Box>
 						) : null}
 					</>

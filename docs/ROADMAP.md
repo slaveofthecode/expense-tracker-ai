@@ -108,6 +108,7 @@ TUI funcional con datos hardcodeados que muestra grupos de gastos con sus totale
 - Confirmación humana en el agente: `createAgent` acepta `onWriteCall` — una tool no-`readonly` requiere aprobación (sin handler, la escritura se rechaza y el modelo recibe el error).
 - Flujo de diálogo guiado: si faltan `itemName`, `description` o `amount`, el extractor devuelve `create_expense_incomplete` y el chat pregunta campo por campo lo que falta (`applyGuidedAnswer`, `parseAmountFromText` para montos en texto, Esc cancela).
 - Ownership compartido desde el chat: el prompt del extractor reconoce "a medias", "mitad y mitad", "compartido con X" y devuelve `ownershipPercentage`/`ownershipPerson` (si hay persona sin reparto, 50%); el borrador y la creación aplican el ownership.
+- Streaming en el chat: las respuestas de Q&A se muestran token a token en vivo. `LLMProvider.chat` acepta `ChatOptions.onToken` (con callback envía `stream: true` y consume el NDJSON de `/api/chat`, fusionando los `tool_calls` que llegan fraccionados y conservando el `id` de Ollama); `Agent.ask(question, { onToken })` lo propaga por todas las iteraciones; `Chat.tsx` reemplaza el "pensando…" fijo por una burbuja que acumula los tokens con cursor (`▌`) mientras el modelo decide y responde (ver `src/ai/provider.ts` / `src/ai/agent.ts`).
 
 **Decisiones finales:**
 - El MCP queda **solo lectura** (hereda `createReadTools`); la escritura con confirmación es exclusiva del chat de la TUI.
