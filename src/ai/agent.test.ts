@@ -257,3 +257,90 @@ describe("createAgent", () => {
     await expect(agent.ask("hola")).rejects.toThrow("boom");
   });
 });
+
+describe("createAgent write tool confirmation", () => {
+  function writeToolSet() {
+    const created: Expense[] = [];
+    const writeTools = buildTools({
+      listItems: () => items,
+      listExpenses: () => expenses,
+      createItem: (input: { name: string; type: Item["type"] }) => ({
+        id: "new-item",
+        ...input,
+      }),
+      createExpense: (input: Omit<Expense, "id">) => {
+        const expense: Expense = { id: `exp-${created.length + 1}`, ...input };
+        created.push(expense);
+        return expense;
+      },
+    });
+    return { writeTools, created };
+  }
+
+  const callCreateExpense = () => ({
+    content: "",
+    toolCalls: [
+      {
+        id: "call_0",
+        name: "create_expense",
+        arguments: { itemName: "cafe", description: "cafe", amount: 1000 },
+      },
+    ],
+  });
+
+  it("refuses to run a write tool when no onWriteCall handler is provided", async () => {
+    const { writeTools } = writeToolSet();
+    const provider = fakeProvider([callCreateExpense, (m) => ({ content: lastContent(m), toolCalls: [] })]);
+    const agent = createAgent({ provider, tools: writeTools });
+
+    await agent.ask("creá un gasto");
+
+    const toolMsg = provider.chatCalls[1]?.messages.find(
+      (msg) => msg.role === "tool",
+    );
+    expect(toolMsg?.name).toBe("create_expense");
+    expect(JSON.parse(toolMsg?.content ?? "null").error).toContain(
+      "confirmación humana",
+    );
+  });
+
+  it("cancels a write tool when onWriteCall returns false", async () => {
+    const { writeTools, created } = writeToolSet();
+    const provider = fakeProvider([callCreateExpense, (m) => ({ content: lastContent(m), toolCalls: [] })]);
+    const agent = createAgent({
+      provider,
+      tools: writeTools,
+      onWriteCall: () => false,
+    });
+
+    const result = await agent.ask("creá un gasto");
+
+    expect(created).toHaveLength(0);
+    expect(result.toolCallCount).toBe(1);
+    const toolMsg = provider.chatCalls[1]?.messages.find(
+      (msg) => msg.role === "tool",
+    );
+    expect(JSON.parse(toolMsg?.content ?? "null").error).toContain("cancelada");
+  });
+
+  it("executes a write tool when onWriteCall returns true", async () => {
+    const { writeTools, created } = writeToolSet();
+    const provider = fakeProvider([callCreateExpense, (m) => ({ content: lastContent(m), toolCalls: [] })]);
+    const agent = createAgent({
+      provider,
+      tools: writeTools,
+      onWriteCall: () => true,
+    });
+
+    await agent.ask("creá un gasto");
+
+    expect(created).toHaveLength(1);
+    const toolMsg = provider.chatCalls[1]?.messages.find(
+      (msg) => msg.role === "tool",
+    );
+    expect(JSON.parse(toolMsg?.content ?? "null").item).toBeDefined();
+    expect(JSON.parse(toolMsg?.content ?? "null").expense.description).toBe(
+      "cafe",
+    );
+  });
+});
