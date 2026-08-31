@@ -93,6 +93,7 @@ export function Chat({
 	const [input, setInput] = useState('');
 	const [thinking, setThinking] = useState(false);
 	const [streamingText, setStreamingText] = useState<string | null>(null);
+	const [currentTool, setCurrentTool] = useState<string | null>(null);
 	const [pending, setPending] = useState<PendingCreation | null>(null);
 	const [collecting, setCollecting] = useState<GuidedCollection | null>(null);
 
@@ -244,6 +245,7 @@ export function Chat({
 					.ask(question, {
 						onToken: (token) =>
 							setStreamingText((prev) => (prev ?? '') + token),
+						onToolCall: (toolName) => setCurrentTool(toolName),
 					})
 					.then((result) => {
 						setMessages((prev) => [
@@ -264,6 +266,7 @@ export function Chat({
 			.finally(() => {
 				setThinking(false);
 				setStreamingText(null);
+				setCurrentTool(null);
 			});
 	};
 
@@ -356,14 +359,18 @@ export function Chat({
 							<Box>
 								<Text color={ASSISTANT_COLOR}>
 									{'  🤖 '}
-									{streamingText ? (
-										<>
-											{streamingText}
-											<Text color={ACCENT_COLOR}>{'▌'}</Text>
-										</>
-									) : (
-										<Text color={MUTED_COLOR}>{'⏳ pensando…'}</Text>
-									)}
+								{streamingText ? (
+									<>
+										{streamingText}
+										<Text color={ACCENT_COLOR}>{'▌'}</Text>
+									</>
+								) : (
+									<Text color={MUTED_COLOR}>
+										{currentTool
+											? `⏳ consultando ${currentTool}…`
+											: '⏳ pensando…'}
+									</Text>
+								)}
 								</Text>
 							</Box>
 						) : null}
