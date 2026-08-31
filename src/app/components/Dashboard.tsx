@@ -80,7 +80,7 @@ export function Dashboard({
 			total: s.totalAmount,
 			myShare: s.myShare,
 		}))
-		.sort((a, b) => b.total - a.total);
+		.sort((a, b) => a.name.localeCompare(b.name));
 	const currentIndex = Math.min(
 		selectedIndex,
 		Math.max(rows.length - 1, 0)
@@ -119,10 +119,11 @@ export function Dashboard({
 			onAddExpense();
 			return;
 		}
-		if (_input.toLowerCase() === 'g') {
-			onOpenCharts();
-			return;
-		}
+		// Charts disabled temporarily — to be revisited with future improvements.
+		// if (_input.toLowerCase() === 'g') {
+		// 	onOpenCharts();
+		// 	return;
+		// }
 		if (_input.toLowerCase() === 'c') {
 			onOpenChat();
 			return;
@@ -287,7 +288,8 @@ export function Dashboard({
 						{' · '}<Text bold>e</Text> Editar · <Text bold>d</Text> Eliminar
 					</>
 				) : null}
-				{' · '}<Text bold>g</Text> Gráficos ·{' '}
+				{' · '}<Text bold dimColor>g</Text>{' '}
+				<Text dimColor>Gráficos</Text> ·{' '}
 				<Text bold>c</Text> Chat · <Text bold>Esc</Text> Salir
 			</Text>
 		</Box>
