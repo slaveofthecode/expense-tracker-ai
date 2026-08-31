@@ -114,14 +114,14 @@ describe("list_expenses", () => {
 describe("get_monthly_summary", () => {
   it("returns per-item totals for the month", () => {
     const result = run("get_monthly_summary", { month: "2026-06" }) as {
-      itemId: string;
-      totalAmount: number;
-      myShare: number;
+      grupo: string;
+      total: number;
+      miParte: number;
     }[];
-    const naranja = result.find((r) => r.itemId === "naranja");
+    const naranja = result.find((r) => r.grupo === "Tarjeta Naranja");
     expect(naranja).toBeDefined();
-    expect(naranja!.totalAmount).toBe(60000);
-    expect(naranja!.myShare).toBe(30000);
+    expect(naranja!.total).toBe(60000);
+    expect(naranja!.miParte).toBe(30000);
   });
 
   it("defaults to the current month when omitted", () => {
@@ -154,19 +154,24 @@ describe("get_yearly_summary", () => {
     const tool = getTool(buildTools({ ...withInstallment, listExpenses: () => allExpenses }), "get_yearly_summary");
     expect(tool).toBeDefined();
     const result = tool!.execute({ year: 2026 }) as {
-      itemId: string;
-      months: { total: number }[];
+      grupo: string;
+      meses: Record<string, number>;
     }[];
-    const naranja = result.find((r) => r.itemId === "naranja");
+    const naranja = result.find((r) => r.grupo === "Tarjeta Naranja");
     expect(naranja).toBeDefined();
-    expect(naranja!.months[0].total).toBe(10000);
-    expect(naranja!.months[11].total).toBe(10000);
-    expect(naranja!.months[5].total).toBe(70000);
+    expect(naranja!.meses["ene"]).toBe(10000);
+    expect(naranja!.meses["dic"]).toBe(10000);
+    expect(naranja!.meses["jun"]).toBe(70000);
   });
 
   it("defaults to the latest year with data when omitted", () => {
-    const result = run("get_yearly_summary") as { itemId: string }[];
-    expect(result).toHaveLength(items.length);
+    const result = run("get_yearly_summary") as { grupo: string }[];
+    // El grupo "Café" no tiene gastos, por lo que se filtra del resumen anual.
+    expect(result.map((r) => r.grupo)).toEqual([
+      "Alquiler",
+      "Tarjeta Naranja",
+      "Seguro Auto",
+    ]);
   });
 });
 

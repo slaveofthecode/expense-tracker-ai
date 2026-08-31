@@ -16,7 +16,9 @@ import {
   currentMonth,
   getLatestYear,
   monthOf,
+  type YearlySummary,
 } from "../utils/summaries";
+import type { MonthlySummary } from "../types";
 import {
   filterExpenses,
   filterItems,
@@ -166,12 +168,14 @@ export function buildTools(ctx: ToolsContext): AiTool[] {
         },
       ],
       readonly: true,
-      execute: (args): ReturnType<typeof calcMonthlySummaries> => {
+      execute: (args): Record<string, unknown>[] => {
         const month = asString(args.month) ?? currentMonth();
         if (!/^\d{4}-\d{2}$/.test(month)) {
           throw new Error(`Invalid month "${month}", expected format YYYY-MM`);
         }
-        return calcMonthlySummaries(ctx.listItems(), ctx.listExpenses(), month);
+        const items = ctx.listItems();
+        const summaries = calcMonthlySummaries(items, ctx.listExpenses(), month);
+        return summarizeMonthForModel(items, summaries);
       },
     },
     {
@@ -189,10 +193,12 @@ export function buildTools(ctx: ToolsContext): AiTool[] {
         },
       ],
       readonly: true,
-      execute: (args): ReturnType<typeof calcYearlySummaries> => {
+      execute: (args): Record<string, unknown>[] => {
         const expenses = ctx.listExpenses();
         const year = asNumber(args.year) ?? getLatestYear(expenses) ?? new Date().getFullYear();
-        return calcYearlySummaries(ctx.listItems(), expenses, year);
+        const items = ctx.listItems();
+        const summaries = calcYearlySummaries(items, expenses, year);
+        return summarizeYearForModel(items, summaries);
       },
     },
     {
@@ -397,4 +403,46 @@ export function getTool(
   name: string,
 ): AiTool | undefined {
   return tools.find((tool) => tool.name === name);
+}
+
+/**
+ * Convierte el resumen mensual en un formato legible para el modelo: usa el
+ * nombre del grupo en vez de su id (UUID) y etiquetas claras. Reduce ruido y
+ * ayuda a que el LLM interprete los montos correctamente.
+ */
+function summarizeMonthForModel(
+  items: Item[],
+  summaries: MonthlySummary[],
+): Record<string, unknown>[] {
+  const nameById = new Map(items.map((item) => [item.id, item]));
+  return summaries.map((s) => ({
+    grupo: nameById.get(s.itemId)?.name ?? s.itemId,
+    total: s.totalAmount,
+    miParte: s.myShare,
+  }));
+}
+
+/**
+ * Igual que summarizeMonthForModel pero para el resumen anual; solo incluye
+ * los grupos con movimiento y los meses abreviados (ene, feb, ...). Compacto
+ * para no inflar el contexto del modelo.
+ */
+function summarizeYearForModel(
+  items: Item[],
+  summaries: YearlySummary[],
+): Record<string, unknown>[] {
+  const nameById = new Map(items.map((item) => [item.id, item]));
+  const MONTH_KEYS = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+  return summaries
+    .filter((s) => s.months.some((m) => m.total > 0))
+    .map((s) => {
+      const valores: Record<string, number> = {};
+      s.months.forEach((m, i) => {
+        if (m.total > 0 || m.myShare > 0) valores[MONTH_KEYS[i]] = m.total;
+      });
+      return {
+        grupo: nameById.get(s.itemId)?.name ?? s.itemId,
+        meses: valores,
+      };
+    });
 }
