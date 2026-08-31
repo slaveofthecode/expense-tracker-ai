@@ -329,7 +329,6 @@ export function Chat({
 				flexDirection="column"
 				borderStyle="round"
 				borderColor={ACCENT_COLOR}
-				padding={1}
 				marginBottom={1}
 			>
 				{messages.length === 0 ? (
