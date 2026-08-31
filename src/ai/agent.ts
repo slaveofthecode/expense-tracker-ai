@@ -63,6 +63,11 @@ export interface AskOptions {
    * Recibe cada token de contenido apenas llega (streaming en vivo para la UI).
    */
   onToken?: (token: string) => void;
+  /**
+   * Se invoca antes de ejecutar cada tool, con el nombre de la tool a ejecutar.
+   * Útil para que la UI muestre en vivo qué tool se está consultando.
+   */
+  onToolCall?: (toolName: string) => void;
 }
 
 export interface Agent {
@@ -120,6 +125,7 @@ export function createAgent(options: AgentOptions): Agent {
 
         for (const call of response.toolCalls) {
           toolCallCount += 1;
+          askOptions?.onToolCall?.(call.name);
           const tool = getTool(options.tools, call.name);
           if (tool && !tool.readonly) {
             let allowed = false;

@@ -279,6 +279,27 @@ describe("createAgent", () => {
     expect(tokens.join("")).toBe("Hay 2 grupos desde el primer token.");
   });
 
+  it("reports each tool name through the onToolCall callback", async () => {
+    const provider = fakeProvider([
+      (m) => ({
+        content: "",
+        toolCalls: [
+          { id: "call_0", name: "list_items", arguments: {} },
+          { id: "call_1", name: "list_expenses", arguments: {} },
+        ],
+      }),
+      (m) => ({ content: lastContent(m), toolCalls: [] }),
+    ]);
+    const agent = createAgent({ provider, tools });
+
+    const called: string[] = [];
+    await agent.ask("dame todo", {
+      onToolCall: (toolName) => called.push(toolName),
+    });
+
+    expect(called).toEqual(["list_items", "list_expenses"]);
+  });
+
   it("propagates provider errors instead of swallowing them", async () => {
     const provider = new FakeProvider([
       () => {
